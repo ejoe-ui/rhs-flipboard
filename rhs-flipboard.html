@@ -193,14 +193,16 @@
 
   /* flip animation */
   @keyframes flipDown {
-    0%   { transform: scaleY(1);   background: var(--tile-bg); }
-    35%  { transform: scaleY(0.05); background: var(--flip-mid); }
-    65%  { transform: scaleY(0.05); background: var(--flip-mid); }
-    100% { transform: scaleY(1);   background: var(--tile-bg); }
+    0%   { transform: scaleY(1);    background: var(--tile-bg); }
+    25%  { transform: scaleY(0.3);  background: var(--flip-mid); }
+    45%  { transform: scaleY(0.02); background: var(--flip-mid); }
+    65%  { transform: scaleY(0.02); background: var(--flip-mid); }
+    85%  { transform: scaleY(0.4);  background: var(--tile-bg); }
+    100% { transform: scaleY(1);    background: var(--tile-bg); }
   }
 
   .tile.flipping {
-    animation: flipDown 0.15s ease-in-out forwards;
+    animation: flipDown 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   /* row accent bars */
@@ -480,8 +482,8 @@ const COLS       = 28;
 const SYNC_INTERVAL = 60000;
 const CAL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
 const CHARS      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
-const SCRAMBLE_MS = 35;
-const SCRAMBLE_STEPS = 5;
+const SCRAMBLE_MS = 55;
+const SCRAMBLE_STEPS = 8;
 
 /* ════════════════════════════════════════
    DEMO DATA  (7 lines per screen)
@@ -674,7 +676,7 @@ function showMessage(idx) {
       const nc = newLines[r][c];
       const pc = prevLines[r][c];
       if (nc !== pc) {
-        const delay = Math.random() * 380;
+        const delay = Math.random() * 700;
         animateTile(tiles[r][c], nc, delay);
       }
     }
@@ -1015,7 +1017,10 @@ function startBoard(data, live) {
         let h = t.getHours() % 12 || 12;
         const m = t.getMinutes().toString().padStart(2,'0');
         setSyncStatus('live', `SYNCED ${h}:${m}`);
+        // Re-inject all live slots after sheet refresh
         await refreshCalendar();
+        refreshSchedule();
+        await refreshBirthdays();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -1262,22 +1267,34 @@ function getAudioCtx() {
 function playFlipClick(time, vol) {
   const ctx = getAudioCtx();
   if (!ctx) return;
-  const buf  = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < data.length; i++) {
-    // White noise burst with fast decay
-    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
+  // Longer buffer for a more mechanical thunk feel
+  const bufLen = Math.floor(ctx.sampleRate * 0.07);
+  const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const data   = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) {
+    // Attack + pitched decay — like plastic hitting a stop
+    const t     = i / bufLen;
+    const noise = Math.random() * 2 - 1;
+    const tone  = Math.sin(2 * Math.PI * 180 * t * bufLen / ctx.sampleRate);
+    data[i] = (noise * 0.7 + tone * 0.3) * Math.pow(1 - t, 2.2);
   }
   const src    = ctx.createBufferSource();
   src.buffer   = buf;
+  // Low-mid bandpass — airport board has a woody, resonant click
   const filter = ctx.createBiquadFilter();
   filter.type  = 'bandpass';
-  filter.frequency.value = 2200;
-  filter.Q.value = 0.8;
+  filter.frequency.value = 900;
+  filter.Q.value = 1.4;
+  // Slight high shelf for crispness
+  const shelf  = ctx.createBiquadFilter();
+  shelf.type   = 'highShelf';
+  shelf.frequency.value = 3500;
+  shelf.gain.value = 4;
   const gain   = ctx.createGain();
-  gain.gain.value = vol || 0.18;
+  gain.gain.value = vol || 0.22;
   src.connect(filter);
-  filter.connect(gain);
+  filter.connect(shelf);
+  shelf.connect(gain);
   gain.connect(ctx.destination);
   src.start(time);
 }
@@ -1285,27 +1302,27 @@ function playFlipClick(time, vol) {
 function playFlipSound(tileCount) {
   const ctx = getAudioCtx();
   if (!ctx) return;
-  // Resume context if suspended (browser autoplay policy)
   if (ctx.state === 'suspended') ctx.resume();
-  const now      = ctx.currentTime;
-  const duration = 0.55; // total sound duration seconds
-  const clicks   = Math.min(tileCount * 2, 38);
-  // Pre-animation clicks (ramp up)
-  for (let i = 0; i < clicks * 0.4; i++) {
-    const t   = now + (i / (clicks * 0.4)) * 0.15;
-    const vol = 0.08 + (i / (clicks * 0.4)) * 0.14;
+  const now    = ctx.currentTime;
+  // Slower, more spread out — total ~1.8 seconds like a real departures board
+  const clicks = Math.min(Math.floor(tileCount * 1.5), 52);
+
+  // Phase 1: slow ramp-up (0 - 0.4s) — board waking up
+  for (let i = 0; i < Math.floor(clicks * 0.3); i++) {
+    const t   = now + (i / (clicks * 0.3)) * 0.4;
+    const vol = 0.06 + (i / (clicks * 0.3)) * 0.1;
     playFlipClick(t, vol);
   }
-  // Peak during animation
-  for (let i = 0; i < clicks * 0.35; i++) {
-    const t   = now + 0.15 + (i / (clicks * 0.35)) * 0.2;
-    const vol = 0.22 - (i / (clicks * 0.35)) * 0.06;
+  // Phase 2: main cascade (0.4 - 1.1s) — tiles flipping
+  for (let i = 0; i < Math.floor(clicks * 0.45); i++) {
+    const t   = now + 0.4 + (i / (clicks * 0.45)) * 0.7;
+    const vol = 0.18 + Math.sin(i / (clicks * 0.45) * Math.PI) * 0.08;
     playFlipClick(t, vol);
   }
-  // Tail clicks (settling)
-  for (let i = 0; i < clicks * 0.25; i++) {
-    const t   = now + 0.35 + (i / (clicks * 0.25)) * 0.2;
-    const vol = 0.16 - (i / (clicks * 0.25)) * 0.14;
+  // Phase 3: slow settling (1.1 - 1.8s) — last tiles locking in
+  for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
+    const t   = now + 1.1 + (i / (clicks * 0.25)) * 0.7;
+    const vol = 0.14 - (i / (clicks * 0.25)) * 0.12;
     playFlipClick(t, vol);
   }
 }
