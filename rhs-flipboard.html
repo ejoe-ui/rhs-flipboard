@@ -53,23 +53,25 @@
     position: relative;
     width: 100%;
     height: 10vh;
-    min-height: 72px;
+    min-height: 56px;
+    max-height: 80px;
     background: var(--header-bg);
     border-bottom: 3px solid var(--green);
     display: flex;
     align-items: center;
-    padding: 0 2vw;
-    gap: 2vw;
+    padding: 0 1.5vw;
+    gap: 1.5vw;
     z-index: 10;
+    overflow: hidden;
   }
 
   .h-badge {
     background: var(--green);
     color: #fff;
-    font-size: clamp(11px, 1.1vw, 18px);
+    font-size: clamp(10px, 1vw, 16px);
     font-weight: 900;
-    letter-spacing: 0.18em;
-    padding: 6px 18px;
+    letter-spacing: 0.15em;
+    padding: 5px 14px;
     border-radius: 3px;
     text-transform: uppercase;
     white-space: nowrap;
@@ -78,28 +80,32 @@
 
   .h-divider {
     flex: 1;
+    min-width: 8px;
     height: 1px;
     background: linear-gradient(90deg, rgba(196,190,181,0.25) 0%, rgba(196,190,181,0.05) 100%);
   }
 
   .h-school {
     color: var(--tan);
-    font-size: clamp(12px, 1.3vw, 22px);
-    letter-spacing: 0.25em;
+    font-size: clamp(10px, 1.1vw, 18px);
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     white-space: nowrap;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
 
   .h-sync {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
   }
 
   .sync-dot {
-    width: 8px; height: 8px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     background: #333;
     transition: background 0.4s;
@@ -111,20 +117,19 @@
 
   .sync-label {
     color: #555;
-    font-size: clamp(9px, 0.75vw, 13px);
-    letter-spacing: 0.15em;
+    font-size: clamp(8px, 0.65vw, 11px);
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     white-space: nowrap;
   }
 
   .h-clock {
     color: #f0ebe0;
-    font-size: clamp(16px, 2vw, 34px);
+    font-size: clamp(18px, 2.2vw, 38px);
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     white-space: nowrap;
     flex-shrink: 0;
-    min-width: 120px;
     text-align: right;
   }
 
@@ -968,7 +973,7 @@ document.addEventListener('keydown', e => {
 ════════════════════════════════════════ */
 buildBoard();
 updateClock();
-setInterval(updateClock, 15000);
+setInterval(updateClock, 10000);
 </script>
 </body>
 </html>
