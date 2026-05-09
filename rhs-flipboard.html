@@ -1012,42 +1012,54 @@ document.addEventListener('keydown', e => {
 ════════════════════════════════════════ */
 
 function fmtTime(dtStr) {
-  // dtStr: 20260509T153000Z or 20260509 (all-day)
   if (!dtStr) return '';
-  const isAllDay = dtStr.length === 8;
-  if (isAllDay) return 'ALL DAY';
-  // parse UTC then convert to local
-  const y  = dtStr.substr(0,4), mo = dtStr.substr(4,2), d  = dtStr.substr(6,2);
-  const h  = dtStr.substr(9,2), mi = dtStr.substr(11,2);
-  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+  if (isAllDayEvent(dtStr)) return 'ALL DAY';
+  const dt = parseEventDate(dtStr);
+  if (!dt) return '';
   let hr = dt.getHours(), mn = dt.getMinutes();
   const ap = hr >= 12 ? 'PM' : 'AM';
   hr = hr % 12 || 12;
   return mn > 0 ? `${hr}:${mn.toString().padStart(2,'0')} ${ap}` : `${hr}:00 ${ap}`;
 }
 
+function parseEventDate(dtStr) {
+  if (!dtStr) return null;
+  // Handle ISO 8601 (2026-05-09 or 2026-05-09T15:30:00Z or 2026-05-09T15:30:00-07:00)
+  // Handle compact iCal (20260509 or 20260509T153000Z)
+  if (dtStr.includes('-') || dtStr.includes('T')) {
+    return new Date(dtStr);
+  }
+  // compact iCal format
+  const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
+  if (dtStr.length === 8) return new Date(`${y}-${mo}-${d}`);
+  const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
+  return new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+}
+
+function isAllDayEvent(dtStr) {
+  if (!dtStr) return false;
+  // ISO all-day: 2026-05-09 (10 chars, no T)
+  if (dtStr.length === 10 && dtStr.includes('-') && !dtStr.includes('T')) return true;
+  // compact all-day: 20260509 (8 chars)
+  if (dtStr.length === 8 && !dtStr.includes('T')) return true;
+  return false;
+}
+
 function isToday(dtStr) {
   if (!dtStr) return false;
+  const dt  = parseEventDate(dtStr);
+  if (!dt) return false;
   const now = new Date();
-  const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
-  if (dtStr.length === 8) {
-    return parseInt(y) === now.getFullYear() &&
-           parseInt(mo) === now.getMonth()+1 &&
-           parseInt(d)  === now.getDate();
-  }
-  const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
-  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
   return dt.toDateString() === now.toDateString();
 }
 
 function isUpcoming(dtStr) {
-  if (!dtStr || dtStr.length === 8) return false;
-  const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
-  const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
-  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
-  const now = new Date();
+  if (!dtStr) return false;
+  const dt  = parseEventDate(dtStr);
+  if (!dt) return false;
+  const now  = new Date();
   const diff = dt - now;
-  return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000; // within 7 days
+  return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
 }
 
 function truncate(str, max) {
@@ -1055,22 +1067,7 @@ function truncate(str, max) {
   return str.length <= max ? str : str.substr(0, max - 1) + '+';
 }
 
-function parseIcal(text) {
-  const events = [];
-  const blocks = text.split('BEGIN:VEVENT');
-  for (let i = 1; i < blocks.length; i++) {
-    const block = blocks[i];
-    const get   = key => {
-      const m = block.match(new RegExp(key + '[^:]*:([^\r\n]+)'));
-      return m ? m[1].trim() : '';
-    };
-    const summary = get('SUMMARY').replace(/\\n/g,' ').replace(/\n/g,' ');
-    const dtstart = get('DTSTART');
-    const dtend   = get('DTEND');
-    if (summary && dtstart) events.push({ summary, dtstart, dtend });
-  }
-  return events;
-}
+/* parseIcal removed — using GCal JSON feed */
 
 function buildCalScreen(events) {
   const now      = new Date();
@@ -1103,10 +1100,9 @@ function buildCalScreen(events) {
     // Line 7: next upcoming or branding
     if (upcoming.length) {
       const next = upcoming[0];
-      const d    = next.dtstart;
-      const dt   = new Date(`${d.substr(0,4)}-${d.substr(4,2)}-${d.substr(6,2)}T${d.substr(9,2)}:${d.substr(11,2)}:00Z`);
-      const label = truncate('NEXT: ' + next.summary.toUpperCase() + ' ' +
-        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28);
+      const dt   = parseEventDate(next.dtstart);
+      const label = dt ? truncate('NEXT: ' + next.summary.toUpperCase() + ' ' +
+        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28) : truncate('NEXT: ' + next.summary.toUpperCase(), 28);
       lines.push(label);
     } else {
       lines.push('RHS EVENTS CALENDAR');
@@ -1115,10 +1111,9 @@ function buildCalScreen(events) {
     // No today events — show upcoming
     lines.push('NO EVENTS TODAY');
     upcoming.slice(0,4).forEach(e => {
-      const d  = e.dtstart;
-      const dt = new Date(`${d.substr(0,4)}-${d.substr(4,2)}-${d.substr(6,2)}T${d.substr(9,2)}:${d.substr(11,2)}:00Z`);
-      const label = truncate(e.summary.toUpperCase() + '  ' +
-        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28);
+      const dt = parseEventDate(e.dtstart);
+      const label = dt ? truncate(e.summary.toUpperCase() + '  ' +
+        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28) : truncate(e.summary.toUpperCase(), 28);
       lines.push(label);
     });
     while (lines.length < 6) lines.push('');
@@ -1129,42 +1124,66 @@ function buildCalScreen(events) {
 }
 
 async function fetchCalendar() {
-  // Try multiple proxies in sequence — school networks block some but not all
-  const proxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://corsproxy.io/?',
-    'https://proxy.cors.sh/',
-  ];
+  // Use Google Calendar's public JSON feed — no proxy needed, works on school networks
+  // Extract calendar ID from iCal URL
+  const calId = 'rjusd.org_3stf3viha1tl799q7u41j8a75g@group.calendar.google.com';
+  const encoded = encodeURIComponent(calId);
 
-  for (const proxy of proxies) {
-    try {
-      const res = await fetch(proxy + encodeURIComponent(CAL_ICAL_URL), {
-        cache: 'no-store',
-        signal: AbortSignal.timeout(5000)
-      });
-      if (!res.ok) continue;
-      const text = await res.text();
-      if (!text.includes('BEGIN:VCALENDAR')) continue;
-      const evts = parseIcal(text);
-      return buildCalScreen(evts);
-    } catch(e) {
-      continue;
+  return new Promise((resolve) => {
+    const cbName = '_gcal_cb_' + Date.now();
+    const now    = new Date();
+    const tMin   = now.toISOString();
+    const tMax   = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Use Google Calendar API v3 public feed via JSONP
+    const apiKey = ''; // public calendars don't need a key for this endpoint
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encoded}/events?orderBy=startTime&singleEvents=true&timeMin=${encodeURIComponent(tMin)}&timeMax=${encodeURIComponent(tMax)}&maxResults=10&key=AIzaSyD-placeholder&callback=${cbName}`;
+
+    // Fallback: use the GViz feed approach which works without an API key
+    const gvizUrl = `https://www.google.com/calendar/feeds/${encoded}/public/full?alt=json&orderby=starttime&singleevents=true&sortorder=ascending&futureevents=true&max-results=10&jsonp=${cbName}`;
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; cleanup(); resolve(null); }
+    }, 8000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById(cbName + '_s');
+      if (s) s.remove();
     }
-  }
 
-  // All proxies failed — try direct fetch (works if CORS allowed)
-  try {
-    const res = await fetch(CAL_ICAL_URL, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
-    if (res.ok) {
-      const text = await res.text();
-      if (text.includes('BEGIN:VCALENDAR')) {
-        const evts = parseIcal(text);
-        return buildCalScreen(evts);
+    window[cbName] = function(data) {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      try {
+        const events = parseGCalFeed(data);
+        resolve(buildCalScreen(events));
+      } catch(e) {
+        resolve(null);
       }
-    }
-  } catch(e) {}
+    };
 
-  return null;
+    const script = document.createElement('script');
+    script.id  = cbName + '_s';
+    script.src = gvizUrl;
+    script.onerror = () => {
+      if (!resolved) { resolved = true; cleanup(); resolve(null); }
+    };
+    document.head.appendChild(script);
+  });
+}
+
+function parseGCalFeed(data) {
+  // Parse Google Calendar Atom/JSON feed
+  const entries = data?.feed?.entry || [];
+  return entries.map(e => {
+    const title   = e?.title?.$t || '';
+    const startRaw = e?.['gd$when']?.[0]?.startTime || '';
+    return { summary: title, dtstart: startRaw };
+  }).filter(e => e.summary && e.dtstart);
 }
 
 function injectCalScreen(screen) {
