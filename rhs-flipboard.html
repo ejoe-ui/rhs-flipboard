@@ -956,9 +956,13 @@ function startBoard(data, live) {
   currentIdx = messages.length - 1;
   showMessage(0);
 
+  // Always try calendar after messages load
+  setTimeout(refreshCalendar, 500);
+
   if (live) {
     setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
     clearInterval(fetchTimer);
+    clearInterval(calTimer);
     fetchTimer = setInterval(async () => {
       const fresh = await fetchSheet(sheetUrl);
       if (fresh) {
@@ -976,6 +980,8 @@ function startBoard(data, live) {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
     }, SYNC_INTERVAL);
+    // Refresh calendar every 5 minutes
+    calTimer = setInterval(refreshCalendar, 5 * 60 * 1000);
   } else {
     setSyncStatus('', 'DEMO MODE');
   }
@@ -1248,9 +1254,7 @@ setInterval(updateClock, 10000);
   // No saved URL or fetch failed — show setup screen
 })();
 
-// Fetch calendar on load and every 5 minutes
-refreshCalendar();
-calTimer = setInterval(refreshCalendar, 5 * 60 * 1000);
+// Calendar is initialized inside startBoard() after messages load
 </script>
 </body>
 </html>
