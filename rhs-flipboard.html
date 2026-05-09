@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>RHS FlipBoard · Room 27</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #006938;
+    --green-dark: #004d28;
+    --green-dim: #003d20;
+    --tan: #C4BEB5;
+    --tile-bg: #1a1a1a;
+    --tile-border: #2c2c2c;
+    --tile-text: #f0ebe0;
+    --board-bg: #0d0d0d;
+    --header-bg: #0a0a0a;
+    --scramble-a: #005a2e;
+    --scramble-b: #007a40;
+    --flip-mid: #006938;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--board-bg);
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.08) 3px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* ══════════════════════════════
+     HEADER BAR — ROW 1
+  ══════════════════════════════ */
+  #header {
+    position: relative;
+    width: 100%;
+    height: 10vh;
+    min-height: 72px;
+    background: var(--header-bg);
+    border-bottom: 3px solid var(--green);
+    display: flex;
+    align-items: center;
+    padding: 0 2vw;
+    gap: 2vw;
+    z-index: 10;
+  }
+
+  .h-badge {
+    background: var(--green);
+    color: #fff;
+    font-size: clamp(11px, 1.1vw, 18px);
+    font-weight: 900;
+    letter-spacing: 0.18em;
+    padding: 6px 18px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .h-divider {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(196,190,181,0.25) 0%, rgba(196,190,181,0.05) 100%);
+  }
+
+  .h-school {
+    color: var(--tan);
+    font-size: clamp(12px, 1.3vw, 22px);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .h-sync {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .sync-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #333;
+    transition: background 0.4s;
+    flex-shrink: 0;
+  }
+  .sync-dot.live { background: var(--green); animation: blink 2.5s infinite; }
+  .sync-dot.error { background: #882222; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  .sync-label {
+    color: #555;
+    font-size: clamp(9px, 0.75vw, 13px);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .h-clock {
+    color: #f0ebe0;
+    font-size: clamp(16px, 2vw, 34px);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 120px;
+    text-align: right;
+  }
+
+  /* ══════════════════════════════
+     BOARD — ROWS 2–8
+  ══════════════════════════════ */
+  #board-wrap {
+    width: 100%;
+    height: calc(100vh - 10vh - 3px);
+    display: flex;
+    flex-direction: column;
+    padding: 1.2vh 1.5vw 1.2vh 1.5vw;
+    gap: 0.5vh;
+  }
+
+  .tile-row {
+    flex: 1;
+    display: flex;
+    gap: 0.3vw;
+    align-items: stretch;
+  }
+
+  /* ── TILE ── */
+  .tile {
+    flex: 1;
+    background: var(--tile-bg);
+    border: 1px solid var(--tile-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    /* aspect enforced by flex layout — rows fill height, tiles fill width */
+  }
+
+  /* center split line */
+  .tile::after {
+    content: '';
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    top: 50%;
+    height: 1px;
+    background: rgba(0,0,0,0.55);
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  .tile-char {
+    font-size: clamp(14px, 2.8vh, 52px);
+    font-weight: 900;
+    color: var(--tile-text);
+    line-height: 1;
+    letter-spacing: 0;
+    user-select: none;
+    position: relative;
+    z-index: 3;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  /* flip animation */
+  @keyframes flipDown {
+    0%   { transform: scaleY(1);   background: var(--tile-bg); }
+    35%  { transform: scaleY(0.05); background: var(--flip-mid); }
+    65%  { transform: scaleY(0.05); background: var(--flip-mid); }
+    100% { transform: scaleY(1);   background: var(--tile-bg); }
+  }
+
+  .tile.flipping {
+    animation: flipDown 0.15s ease-in-out forwards;
+  }
+
+  /* row accent bars */
+  .tile-row:nth-child(odd) .tile {
+    border-color: #252525;
+  }
+
+  /* ── BOTTOM ACCENT ── */
+  #bottom-accent {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--green-dark) 0%, var(--green) 30%, var(--tan) 50%, var(--green) 70%, var(--green-dark) 100%);
+    z-index: 10;
+  }
+
+  /* ══════════════════════════════
+     SETUP OVERLAY
+  ══════════════════════════════ */
+  #setup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5,5,5,0.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 40px;
+  }
+
+  #setup-overlay.hidden { display: none; }
+
+  .setup-box {
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-top: 4px solid var(--green);
+    border-radius: 8px;
+    padding: 40px 48px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .setup-title {
+    color: #f0ebe0;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .setup-sub {
+    color: #444;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .setup-step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .step-num {
+    background: var(--green);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text {
+    color: #777;
+    font-size: 12px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+
+  .step-text strong { color: var(--tan); }
+  .step-text code {
+    background: #1a1a1a;
+    color: #00cc66;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    border: 1px solid #2a2a2a;
+  }
+
+  .url-input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #f0ebe0;
+    outline: none;
+    margin-top: 20px;
+    transition: border-color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .url-input:focus { border-color: var(--green); }
+  .url-input::placeholder { color: #333; }
+
+  .error-msg {
+    color: #884444;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  .btn-connect {
+    width: 100%;
+    margin-top: 12px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 13px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  .btn-connect:hover { background: var(--green-dark); }
+
+  .btn-demo {
+    width: 100%;
+    margin-top: 8px;
+    background: transparent;
+    color: #444;
+    border: 1px solid #222;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-demo:hover { border-color: #444; color: #777; }
+
+  /* ── INDICATOR ROW ── */
+  #indicator-bar {
+    position: fixed;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    z-index: 50;
+  }
+
+  .ind-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    transition: background 0.3s;
+  }
+  .ind-dot.active { background: var(--green); }
+
+  /* reconnect button (hidden until hover bottom-right) */
+  #reconnect-btn {
+    position: fixed;
+    bottom: 14px;
+    right: 20px;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    color: #444;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    z-index: 50;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    opacity: 0;
+  }
+  body:hover #reconnect-btn { opacity: 1; }
+  #reconnect-btn:hover { background: #1a1a1a; color: #777; border-color: #444; }
+
+</style>
+</head>
+<body>
+
+<!-- SETUP OVERLAY -->
+<div id="setup-overlay">
+  <div class="setup-box">
+    <div class="setup-title">RHS FlipBoard · Setup</div>
+    <div class="setup-sub">Room 27 · One-time configuration</div>
+
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        Create a Google Sheet with columns:
+        <code>Line1</code> <code>Line2</code> <code>Line3</code> <code>Line4</code>
+        <code>Line5</code> <code>Line6</code> <code>Line7</code> <code>Speed</code><br>
+        Each row = one full board screen. Speed is seconds (default: 8).
+        <strong>Row 1 must be the header row.</strong>
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        Click <strong>File → Share → Publish to web</strong>.
+        Choose <strong>Sheet1</strong>, format <strong>Comma-separated values (.csv)</strong>, click <strong>Publish</strong>.
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        Copy the published CSV URL and paste it below.
+        The board syncs automatically every 60 seconds.
+      </div>
+    </div>
+
+    <input class="url-input" id="sheetUrl"
+      placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv" />
+    <div class="error-msg" id="errorMsg"></div>
+    <button class="btn-connect" onclick="connectSheet()">▶ Connect &amp; Launch</button>
+    <button class="btn-demo" onclick="loadDemo()">Launch with demo data (no sheet needed)</button>
+  </div>
+</div>
+
+<!-- HEADER BAR -->
+<div id="header">
+  <div class="h-badge">RHS · Room 27</div>
+  <div class="h-divider"></div>
+  <div class="h-school">Riverdale High School · Multimedia Communications</div>
+  <div class="h-divider"></div>
+  <div class="h-sync">
+    <div class="sync-dot" id="syncDot"></div>
+    <span class="sync-label" id="syncLabel">Not connected</span>
+  </div>
+  <div class="h-divider" style="max-width:2vw"></div>
+  <div class="h-clock" id="clock">--:-- --</div>
+</div>
+
+<!-- BOARD -->
+<div id="board-wrap"></div>
+
+<!-- BOTTOM ACCENT -->
+<div id="bottom-accent"></div>
+
+<!-- INDICATORS -->
+<div id="indicator-bar"></div>
+
+<!-- RECONNECT -->
+<button id="reconnect-btn" onclick="showSetup()">⚙ reconnect sheet</button>
+
+<script>
+/* ════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════ */
+const ROWS       = 7;
+const COLS       = 28;
+const SYNC_INTERVAL = 60000;
+const CHARS      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
+const SCRAMBLE_MS = 35;
+const SCRAMBLE_STEPS = 5;
+
+/* ════════════════════════════════════════
+   DEMO DATA  (7 lines per screen)
+════════════════════════════════════════ */
+const DEMO = [
+  {
+    lines: [
+      'WELCOME TO ROOM 27',
+      'MULTIMEDIA COMMUNICATIONS',
+      'YEARBOOK · SMALL BUSINESS',
+      'MR. JOE · PERIOD 1-5',
+      '',
+      'GO COWBOYS!',
+      'RIVERDALE HIGH SCHOOL'
+    ],
+    speed: 10
+  },
+  {
+    lines: [
+      'TODAY\'S SCHEDULE',
+      'P1  MULTIMEDIA   8:00 AM',
+      'P2  YEARBOOK     9:45 AM',
+      'P3  PREP        11:30 AM',
+      'P4  SM BUSINESS  1:15 PM',
+      'P5  MULTIMEDIA   3:00 PM',
+      'SUPPLY CLOSET OPEN @ LUNCH'
+    ],
+    speed: 15
+  },
+  {
+    lines: [
+      'YEARBOOK DEADLINE',
+      'SPREAD 14 · COVERS + COLOPHON',
+      'DUE THIS FRIDAY BY 3:00 PM',
+      'SUBMIT IN JOSTENS YBA',
+      'SEE MR. JOE WITH QUESTIONS',
+      '',
+      'THIS IS RHS · 2025-26'
+    ],
+    speed: 12
+  },
+  {
+    lines: [
+      'RHS SUPPLY CLOSET',
+      'OPEN MON - FRI',
+      '8:00 - 9:00 AM',
+      'LUNCH  · 12:00 - 12:30 PM',
+      'CASH + CARD ACCEPTED',
+      'RUN BY SMALL BUSINESS CLASS',
+      'ROOM 27 · BUILDING C'
+    ],
+    speed: 12
+  },
+  {
+    lines: [
+      'WEEKLY NEWS SHOOT',
+      'THURSDAY @ 3:00 PM',
+      'STUDIO B · BUILDING A',
+      'ALL ANCHORS REPORT BY 2:45',
+      'B-ROLL DUE WEDNESDAY NOON',
+      'EDITOR: SUBMIT FINAL CUT',
+      'BY FRIDAY 5:00 PM'
+    ],
+    speed: 12
+  },
+  {
+    lines: [
+      'SMALL BIZ MGMT',
+      'PITCH DAY: MAY 23RD',
+      'PRESENT YOUR BUSINESS PLAN',
+      '5 MINUTES · DRESS SHARP',
+      'VISUAL AID REQUIRED',
+      'JUDGES FROM LOCAL INDUSTRY',
+      'GOOD LUCK COWBOYS!'
+    ],
+    speed: 10
+  },
+];
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let messages    = [];
+let currentIdx  = 0;
+let tiles       = [];   // tiles[row][col] = { el, charEl }
+let paused      = false;
+let rotateTimer = null;
+let fetchTimer  = null;
+let sheetUrl    = '';
+let prevLines   = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+
+/* ════════════════════════════════════════
+   BUILD BOARD
+════════════════════════════════════════ */
+function buildBoard() {
+  const wrap = document.getElementById('board-wrap');
+  wrap.innerHTML = '';
+  tiles = [];
+
+  for (let r = 0; r < ROWS; r++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'tile-row';
+    const rowTiles = [];
+
+    for (let c = 0; c < COLS; c++) {
+      const tileEl = document.createElement('div');
+      tileEl.className = 'tile';
+
+      const charEl = document.createElement('span');
+      charEl.className = 'tile-char';
+      charEl.textContent = '';
+      tileEl.appendChild(charEl);
+      rowEl.appendChild(tileEl);
+      rowTiles.push({ el: tileEl, charEl });
+    }
+
+    wrap.appendChild(rowEl);
+    tiles.push(rowTiles);
+  }
+}
+
+/* ════════════════════════════════════════
+   PAD / FORMAT
+════════════════════════════════════════ */
+function padCenter(text, cols) {
+  text = (text || '').toUpperCase().substring(0, cols);
+  const total = cols - text.length;
+  const left  = Math.floor(total / 2);
+  const right = total - left;
+  return ' '.repeat(left) + text + ' '.repeat(right);
+}
+
+/* ════════════════════════════════════════
+   TILE ANIMATION
+════════════════════════════════════════ */
+function animateTile(tile, finalChar, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      let step = 0;
+      const iv = setInterval(() => {
+        const rnd = CHARS[Math.floor(Math.random() * CHARS.length)];
+        tile.charEl.textContent = rnd;
+        tile.el.style.background = step % 2 === 0 ? '#0f2a1a' : '#162c1e';
+        tile.charEl.style.color   = step % 2 === 0 ? '#00cc66' : '#C4BEB5';
+        step++;
+        if (step >= SCRAMBLE_STEPS) {
+          clearInterval(iv);
+          const ch = (finalChar || ' ').trim();
+          tile.charEl.textContent = ch;
+          tile.charEl.style.color = 'var(--tile-text)';
+          tile.el.style.background = 'var(--tile-bg)';
+          tile.el.classList.add('flipping');
+          tile.el.addEventListener('animationend', () => {
+            tile.el.classList.remove('flipping');
+            resolve();
+          }, { once: true });
+        }
+      }, SCRAMBLE_MS);
+    }, delay);
+  });
+}
+
+/* ════════════════════════════════════════
+   SHOW MESSAGE
+════════════════════════════════════════ */
+function showMessage(idx) {
+  if (!messages.length) return;
+  idx = ((idx % messages.length) + messages.length) % messages.length;
+  currentIdx = idx;
+
+  const msg   = messages[idx];
+  const newLines = Array.from({length: ROWS}, (_, r) =>
+    padCenter(msg.lines[r] || '', COLS)
+  );
+
+  updateDots();
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const nc = newLines[r][c];
+      const pc = prevLines[r][c];
+      if (nc !== pc) {
+        const delay = Math.random() * 380;
+        animateTile(tiles[r][c], nc, delay);
+      }
+    }
+  }
+
+  prevLines = newLines;
+  scheduleNext(msg.speed || 8);
+}
+
+/* ════════════════════════════════════════
+   ROTATION
+════════════════════════════════════════ */
+function scheduleNext(speedSec) {
+  clearTimeout(rotateTimer);
+  if (!paused && messages.length > 1) {
+    rotateTimer = setTimeout(() => {
+      showMessage(currentIdx + 1);
+    }, (speedSec || 8) * 1000);
+  }
+}
+
+function nextMsg() { clearTimeout(rotateTimer); showMessage(currentIdx + 1); }
+function prevMsg() { clearTimeout(rotateTimer); showMessage(currentIdx - 1); }
+
+/* ════════════════════════════════════════
+   INDICATORS
+════════════════════════════════════════ */
+function buildDots() {
+  const bar   = document.getElementById('indicator-bar');
+  bar.innerHTML = '';
+  const count = Math.min(messages.length, 16);
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'ind-dot';
+    bar.appendChild(d);
+  }
+  if (messages.length > 16) {
+    const s = document.createElement('span');
+    s.style.cssText = 'color:#333;font-size:10px;letter-spacing:0.1em;font-family:Courier New';
+    s.textContent = '+' + (messages.length - 16);
+    bar.appendChild(s);
+  }
+  updateDots();
+}
+
+function updateDots() {
+  document.querySelectorAll('.ind-dot').forEach((d, i) => {
+    d.className = 'ind-dot' + (i === currentIdx ? ' active' : '');
+  });
+}
+
+/* ════════════════════════════════════════
+   CLOCK
+════════════════════════════════════════ */
+function updateClock() {
+  const now = new Date();
+  let   h   = now.getHours();
+  const m   = now.getMinutes().toString().padStart(2, '0');
+  const ap  = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock').textContent = `${h}:${m} ${ap}`;
+}
+
+/* ════════════════════════════════════════
+   SYNC STATUS
+════════════════════════════════════════ */
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
+  document.getElementById('syncLabel').textContent = label;
+}
+
+/* ════════════════════════════════════════
+   CSV PARSER
+════════════════════════════════════════ */
+function parseCSV(csv) {
+  const rows = csv.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) return null;
+
+  const header = rows[0].toLowerCase().replace(/\r/g, '').split(',')
+    .map(h => h.replace(/^"|"$/g, '').trim());
+
+  const lineIdxs = [];
+  for (let i = 1; i <= 7; i++) {
+    const idx = header.findIndex(h => h === 'line' + i);
+    lineIdxs.push(idx);
+  }
+  const speedIdx = header.findIndex(h => h === 'speed');
+
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cols = rows[i].replace(/\r/g, '').split(',');
+    const clean = c => (cols[c] || '').replace(/^"|"$/g, '').trim().toUpperCase();
+    const lines = lineIdxs.map(idx => idx >= 0 ? clean(idx) : '');
+    if (!lines[0]) continue;
+    const speed = speedIdx >= 0 ? parseFloat(cols[speedIdx]) || 8 : 8;
+    parsed.push({ lines, speed });
+  }
+  return parsed.length ? parsed : null;
+}
+
+/* ════════════════════════════════════════
+   FETCH SHEET
+   Strategy 1: Direct fetch (works if CORS headers present)
+   Strategy 2: Google Visualization API (no proxy needed)
+   Strategy 3: JSONP via gviz endpoint
+════════════════════════════════════════ */
+async function fetchSheet(url) {
+  // Strategy 1: direct fetch — works when opened as file:// locally
+  try {
+    const res = await fetch(url, { cache: 'no-store', mode: 'cors' });
+    if (res.ok) {
+      const csv = await res.text();
+      const parsed = parseCSV(csv);
+      if (parsed) return parsed;
+    }
+  } catch(e) {}
+
+  // Strategy 2: Google Visualization Query API — no proxy, school-network safe
+  // Converts published sheet URL to gviz/tq endpoint which returns JSONP
+  try {
+    const gvizData = await fetchViaGviz(url);
+    if (gvizData) return gvizData;
+  } catch(e) {}
+
+  return null;
+}
+
+function extractSheetId(url) {
+  const m = url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function fetchViaGviz(url) {
+  return new Promise((resolve) => {
+    const sheetId = extractSheetId(url);
+    if (!sheetId) { resolve(null); return; }
+
+    // Extract gid (sheet tab id) if present
+    const gidMatch = url.match(/gid=(\d+)/);
+    const gid = gidMatch ? gidMatch[1] : '0';
+
+    const cbName = '_gviz_cb_' + Date.now();
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=select+*&gid=${gid}&cb=${cbName}`;
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; cleanup(); resolve(null); }
+    }, 8000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if (s) s.remove();
+    }
+
+    window[cbName] = function(gvizResponse) {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      try {
+        const parsed = parseGviz(gvizResponse);
+        resolve(parsed);
+      } catch(e) {
+        resolve(null);
+      }
+    };
+
+    const script = document.createElement('script');
+    script.id  = cbName;
+    script.src = gvizUrl;
+    script.onerror = () => { if (!resolved) { resolved = true; cleanup(); resolve(null); } };
+    document.head.appendChild(script);
+  });
+}
+
+function parseGviz(data) {
+  // data is a Google Visualization DataTable response object
+  if (!data || !data.table) return null;
+  const table = data.table;
+  const cols  = table.cols || [];
+  const rows  = table.rows || [];
+  if (!cols.length || !rows.length) return null;
+
+  // Map column labels to indices
+  const headers = cols.map(c => (c.label || '').toLowerCase().trim());
+  const lineIdxs = Array.from({length: 7}, (_, i) =>
+    headers.findIndex(h => h === 'line' + (i + 1))
+  );
+  const speedIdx = headers.findIndex(h => h === 'speed');
+
+  const parsed = [];
+  for (const row of rows) {
+    const cells = row.c || [];
+    const val   = (idx) => idx >= 0 && cells[idx] && cells[idx].v != null
+      ? String(cells[idx].v).trim().toUpperCase() : '';
+    const lines = lineIdxs.map(val);
+    if (!lines[0]) continue;
+    const spRaw = speedIdx >= 0 && cells[speedIdx] ? cells[speedIdx].v : 8;
+    const speed = parseFloat(spRaw) || 8;
+    parsed.push({ lines, speed });
+  }
+  return parsed.length ? parsed : null;
+}
+
+/* ════════════════════════════════════════
+   CONNECT SHEET
+════════════════════════════════════════ */
+async function connectSheet() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  const err = document.getElementById('errorMsg');
+
+  if (!url) {
+    err.textContent = 'Paste your published CSV URL above.'; return;
+  }
+  if (!url.includes('docs.google.com')) {
+    err.textContent = 'Check the URL — must be a Google Sheets link (docs.google.com).'; return;
+  }
+
+  err.textContent = '';
+  setSyncStatus('', 'CONNECTING...');
+
+  const data = await fetchSheet(url);
+  if (!data) {
+    err.textContent = 'Could not load. Verify: sheet published as CSV, sharing is Anyone with the link, header row has Line1-Line7 and Speed.';
+    setSyncStatus('error', 'CONNECTION FAILED');
+    return;
+  }
+
+  sheetUrl = url;
+  startBoard(data, true);
+}
+
+/* ════════════════════════════════════════
+   LOAD DEMO
+════════════════════════════════════════ */
+function loadDemo() {
+  sheetUrl = '';
+  startBoard(DEMO, false);
+}
+
+/* ════════════════════════════════════════
+   START BOARD
+════════════════════════════════════════ */
+function startBoard(data, live) {
+  messages = data;
+  prevLines = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+
+  document.getElementById('setup-overlay').classList.add('hidden');
+  buildDots();
+
+  currentIdx = messages.length - 1;
+  showMessage(0);
+
+  if (live) {
+    setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
+    clearInterval(fetchTimer);
+    fetchTimer = setInterval(async () => {
+      const fresh = await fetchSheet(sheetUrl);
+      if (fresh) {
+        const currentLine1 = messages[currentIdx]?.lines[0] || '';
+        messages = fresh;
+        const ni = fresh.findIndex(m => m.lines[0] === currentLine1);
+        if (ni >= 0) currentIdx = ni;
+        buildDots();
+        const t = new Date();
+        let h = t.getHours() % 12 || 12;
+        const m = t.getMinutes().toString().padStart(2,'0');
+        setSyncStatus('live', `SYNCED ${h}:${m}`);
+      } else {
+        setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
+      }
+    }, SYNC_INTERVAL);
+  } else {
+    setSyncStatus('', 'DEMO MODE');
+  }
+}
+
+/* ════════════════════════════════════════
+   SETUP / KEYBOARD
+════════════════════════════════════════ */
+function showSetup() {
+  clearTimeout(rotateTimer);
+  clearInterval(fetchTimer);
+  document.getElementById('setup-overlay').classList.remove('hidden');
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('setup-overlay').classList.contains('hidden')) {
+    if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextMsg(); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); prevMsg(); }
+    if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+    if (e.key === 'Escape')  document.exitFullscreen?.();
+  }
+});
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+buildBoard();
+updateClock();
+setInterval(updateClock, 15000);
+</script>
+</body>
+</html>
