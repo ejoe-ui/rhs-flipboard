@@ -477,8 +477,7 @@
 const ROWS       = 7;
 const COLS       = 28;
 const SYNC_INTERVAL = 60000;
-const CAL_ICAL_URL  = 'https://calendar.google.com/calendar/ical/rjusd.org_3stf3viha1tl799q7u41j8a75g%40group.calendar.google.com/public/basic.ics';
-const CAL_PROXY     = 'https://api.allorigins.win/raw?url=';
+const CAL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
 const CHARS      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
 const SCRAMBLE_MS = 35;
 const SCRAMBLE_STEPS = 5;
@@ -1017,9 +1016,9 @@ document.addEventListener('keydown', e => {
    CALENDAR — iCal fetch + parser
 ════════════════════════════════════════ */
 
-function fmtTime(dtStr) {
+function fmtTime(dtStr, allDay) {
   if (!dtStr) return '';
-  if (isAllDayEvent(dtStr)) return 'ALL DAY';
+  if (allDay || isAllDayEvent(dtStr)) return 'ALL DAY';
   const dt = parseEventDate(dtStr);
   if (!dt) return '';
   let hr = dt.getHours(), mn = dt.getMinutes();
@@ -1130,66 +1129,20 @@ function buildCalScreen(events) {
 }
 
 async function fetchCalendar() {
-  // Use Google Calendar's public JSON feed — no proxy needed, works on school networks
-  // Extract calendar ID from iCal URL
-  const calId = 'rjusd.org_3stf3viha1tl799q7u41j8a75g@group.calendar.google.com';
-  const encoded = encodeURIComponent(calId);
-
-  return new Promise((resolve) => {
-    const cbName = '_gcal_cb_' + Date.now();
-    const now    = new Date();
-    const tMin   = now.toISOString();
-    const tMax   = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    // Use Google Calendar API v3 public feed via JSONP
-    const apiKey = ''; // public calendars don't need a key for this endpoint
-    const url = `https://www.googleapis.com/calendar/v3/calendars/${encoded}/events?orderBy=startTime&singleEvents=true&timeMin=${encodeURIComponent(tMin)}&timeMax=${encodeURIComponent(tMax)}&maxResults=10&key=AIzaSyD-placeholder&callback=${cbName}`;
-
-    // Fallback: use the GViz feed approach which works without an API key
-    const gvizUrl = `https://www.google.com/calendar/feeds/${encoded}/public/full?alt=json&orderby=starttime&singleevents=true&sortorder=ascending&futureevents=true&max-results=10&jsonp=${cbName}`;
-
-    let resolved = false;
-    const timeout = setTimeout(() => {
-      if (!resolved) { resolved = true; cleanup(); resolve(null); }
-    }, 8000);
-
-    function cleanup() {
-      clearTimeout(timeout);
-      delete window[cbName];
-      const s = document.getElementById(cbName + '_s');
-      if (s) s.remove();
-    }
-
-    window[cbName] = function(data) {
-      if (resolved) return;
-      resolved = true;
-      cleanup();
-      try {
-        const events = parseGCalFeed(data);
-        resolve(buildCalScreen(events));
-      } catch(e) {
-        resolve(null);
-      }
-    };
-
-    const script = document.createElement('script');
-    script.id  = cbName + '_s';
-    script.src = gvizUrl;
-    script.onerror = () => {
-      if (!resolved) { resolved = true; cleanup(); resolve(null); }
-    };
-    document.head.appendChild(script);
-  });
-}
-
-function parseGCalFeed(data) {
-  // Parse Google Calendar Atom/JSON feed
-  const entries = data?.feed?.entry || [];
-  return entries.map(e => {
-    const title   = e?.title?.$t || '';
-    const startRaw = e?.['gd$when']?.[0]?.startTime || '';
-    return { summary: title, dtstart: startRaw };
-  }).filter(e => e.summary && e.dtstart);
+  try {
+    const res  = await fetch(CAL_SCRIPT_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.events) throw new Error('bad response');
+    return buildCalScreen(data.events.map(e => ({
+      summary: e.title,
+      dtstart: e.start,
+      allDay:  e.allDay
+    })));
+  } catch(e) {
+    console.warn('Calendar fetch failed:', e.message);
+    return null;
+  }
 }
 
 function injectCalScreen(screen) {
@@ -1240,7 +1193,6 @@ setInterval(updateClock, 10000);
     const saved = localStorage.getItem('rhs-sheet-url');
     if (saved) {
       sheetUrl = saved;
-      // Pre-fill the input so user can see it
       const inp = document.getElementById('sheetUrl');
       if (inp) inp.value = saved;
       setSyncStatus('', 'AUTO-CONNECTING...');
@@ -1248,10 +1200,16 @@ setInterval(updateClock, 10000);
       if (data) {
         startBoard(data, true);
         return;
+      } else {
+        // Fetch failed — clear bad URL and show setup
+        try { localStorage.removeItem('rhs-sheet-url'); } catch(e2) {}
+        document.getElementById('errorMsg').textContent =
+          'Auto-connect failed. Please reconnect your sheet.';
       }
     }
   } catch(e) {}
-  // No saved URL or fetch failed — show setup screen
+  // Show setup screen
+  document.getElementById('setup-overlay').classList.remove('hidden');
 })();
 
 // Calendar is initialized inside startBoard() after messages load
