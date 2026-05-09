@@ -769,7 +769,18 @@ function parseCSV(csv) {
     if (speed) screens[screen].speed = speed;
   }
 
-  const parsed = Object.values(screens).filter(s => s.lines[0]);
+  const parsed = Object.values(screens).map(s => {
+    // Detect [CALENDAR] placeholder — any screen whose first non-empty line is [CALENDAR]
+    const firstLine = s.lines.find(l => l.trim()) || '';
+    if (firstLine === '[CALENDAR]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCalendarPlaceholder: true
+      };
+    }
+    return s;
+  }).filter(s => s._isCalendarPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -877,7 +888,18 @@ function parseGviz(data) {
     if (spRaw) screens[screen].speed = spRaw;
   }
 
-  const parsed = Object.values(screens).filter(s => s.lines[0]);
+  const parsed = Object.values(screens).map(s => {
+    // Detect [CALENDAR] placeholder — any screen whose first non-empty line is [CALENDAR]
+    const firstLine = s.lines.find(l => l.trim()) || '';
+    if (firstLine === '[CALENDAR]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCalendarPlaceholder: true
+      };
+    }
+    return s;
+  }).filter(s => s._isCalendarPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -945,7 +967,7 @@ function startBoard(data, live) {
         let h = t.getHours() % 12 || 12;
         const m = t.getMinutes().toString().padStart(2,'0');
         setSyncStatus('live', `SYNCED ${h}:${m}`);
-        refreshCalendar();
+        await refreshCalendar();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -1108,17 +1130,35 @@ async function fetchCalendar() {
 
 function injectCalScreen(screen) {
   calScreen = screen;
-  // Remove any existing calendar screen
-  messages = messages.filter(m => !m._isCalendar);
+  // Find placeholder position
+  const placeholderIdx = messages.findIndex(m => m._isCalendarPlaceholder);
+  if (placeholderIdx < 0) return; // no [CALENDAR] placeholder in sheet — do nothing
+
   if (screen) {
-    // Insert as second screen (after first content screen)
-    const insertAt = Math.min(1, messages.length);
-    messages.splice(insertAt, 0, screen);
-    buildDots();
+    // Replace placeholder with live calendar screen, preserve position
+    messages[placeholderIdx] = { ...screen, _isCalendarPlaceholder: false };
+  } else {
+    // No events — show a fallback screen at the placeholder slot
+    messages[placeholderIdx] = {
+      lines: [
+        'RHS EVENTS CALENDAR',
+        'NO EVENTS TODAY',
+        '',
+        'CHECK CALENDAR AT',
+        'RJUSD.ORG FOR UPDATES',
+        '',
+        'RIVERDALE HIGH SCHOOL'
+      ],
+      speed: 10,
+      _isCalendarPlaceholder: false
+    };
   }
+  buildDots();
 }
 
 async function refreshCalendar() {
+  // Only run if there's a placeholder in the current message list
+  if (!messages.some(m => m._isCalendarPlaceholder)) return;
   const screen = await fetchCalendar();
   injectCalScreen(screen);
 }

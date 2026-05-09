@@ -669,6 +669,14 @@
           <button class="btn-primary" id="submitBtn" onclick="submitForm()">+ Add to Queue</button>
         </div>
 
+        <div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">RHS Events Calendar</div>
+            <div style="font-size:10px;color:var(--text-muted);line-height:1.5">Inserts a live calendar screen at this position. Today's events auto-populate from Google Calendar.</div>
+          </div>
+          <button onclick="addCalendarPlaceholder()" style="background:var(--green);color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD CALENDAR</button>
+        </div>
+
       </div>
     </div>
 
@@ -1076,16 +1084,37 @@ function renderQueue() {
 /* ════════════════════════════════
    EXPORT CSV  (Google Sheets format)
 ════════════════════════════════ */
+function addCalendarPlaceholder() {
+  // Check if one already exists
+  if (messages.some(m => m._isCalendarPlaceholder)) {
+    showToast('Calendar screen already in queue — only one allowed');
+    return;
+  }
+  messages.push({
+    lines: ['[CALENDAR]', '', '', '', '', '', ''],
+    speed: 15,
+    _isCalendarPlaceholder: true
+  });
+  renderQueue();
+  autosave();
+  showToast('Calendar screen added to queue');
+}
+
 function exportCSV() {
   if (!messages.length) { showToast('Nothing to export yet'); return; }
 
   const header = 'Screen,Line,Text,Speed';
   const rows = [];
   messages.forEach((m, si) => {
-    for (let li = 0; li < 7; li++) {
-      const text  = csvCell(m.lines[li] || '');
-      const speed = li === 0 ? (m.speed || 8) : '';
-      rows.push([si + 1, li + 1, text, speed].join(','));
+    if (m._isCalendarPlaceholder) {
+      // Export as a single [CALENDAR] placeholder row
+      rows.push([si + 1, 1, '[CALENDAR]', m.speed || 15].join(','));
+    } else {
+      for (let li = 0; li < 7; li++) {
+        const text  = csvCell(m.lines[li] || '');
+        const speed = li === 0 ? (m.speed || 8) : '';
+        rows.push([si + 1, li + 1, text, speed].join(','));
+      }
     }
   });
 
@@ -1113,9 +1142,13 @@ function copySheetPaste() {
 
   const lines = ['Screen\tLine\tText\tSpeed'];
   messages.forEach((m, si) => {
-    for (let li = 0; li < 7; li++) {
-      const speed = li === 0 ? (m.speed || 8) : '';
-      lines.push([si + 1, li + 1, m.lines[li] || '', speed].join('\t'));
+    if (m._isCalendarPlaceholder) {
+      lines.push([si + 1, 1, '[CALENDAR]', m.speed || 15].join('\t'));
+    } else {
+      for (let li = 0; li < 7; li++) {
+        const speed = li === 0 ? (m.speed || 8) : '';
+        lines.push([si + 1, li + 1, m.lines[li] || '', speed].join('\t'));
+      }
     }
   });
 
@@ -1174,7 +1207,13 @@ function importCSVText(csv) {
     if (spRaw) screens[screen].speed = spRaw;
   }
 
-  const parsed = Object.values(screens).filter(s => s.lines[0]);
+  const parsed = Object.values(screens).map(s => {
+    const firstLine = s.lines.find(l => l.trim()) || '';
+    if (firstLine === '[CALENDAR]') {
+      return { lines: Array(7).fill(''), speed: s.speed || 15, _isCalendarPlaceholder: true };
+    }
+    return s;
+  }).filter(s => s._isCalendarPlaceholder || s.lines[0]);
   if (!parsed.length) { showToast('No valid screens found'); return; }
   messages = parsed;
   renderQueue();
