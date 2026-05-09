@@ -406,7 +406,10 @@
 <div id="setup-overlay">
   <div class="setup-box">
     <div class="setup-title">RHS FlipBoard · Setup</div>
-    <div class="setup-sub">Room 27 · One-time configuration</div>
+    <div class="setup-sub" style="display:flex;align-items:center;justify-content:space-between">
+      <span>Room 27 · One-time configuration</span>
+      <button onclick="forgetUrl()" style="background:none;border:none;color:#444;font-family:var(--mono);font-size:9px;letter-spacing:0.1em;cursor:pointer;text-transform:uppercase;text-decoration:underline">Forget saved URL</button>
+    </div>
 
     <div class="setup-step">
       <div class="step-num">1</div>
@@ -928,6 +931,7 @@ async function connectSheet() {
   }
 
   sheetUrl = url;
+  try { localStorage.setItem('rhs-sheet-url', url); } catch(e) {}
   startBoard(data, true);
 }
 
@@ -984,6 +988,14 @@ function showSetup() {
   clearTimeout(rotateTimer);
   clearInterval(fetchTimer);
   document.getElementById('setup-overlay').classList.remove('hidden');
+}
+
+function forgetUrl() {
+  try { localStorage.removeItem('rhs-sheet-url'); } catch(e) {}
+  sheetUrl = '';
+  const inp = document.getElementById('sheetUrl');
+  if (inp) inp.value = '';
+  document.getElementById('errorMsg').textContent = 'Saved URL cleared.';
 }
 
 document.addEventListener('keydown', e => {
@@ -1117,15 +1129,42 @@ function buildCalScreen(events) {
 }
 
 async function fetchCalendar() {
-  try {
-    const res  = await fetch(CAL_PROXY + encodeURIComponent(CAL_ICAL_URL), { cache: 'no-store' });
-    if (!res.ok) throw new Error('cal fetch failed');
-    const text = await res.text();
-    const evts = parseIcal(text);
-    return buildCalScreen(evts);
-  } catch(e) {
-    return null;
+  // Try multiple proxies in sequence — school networks block some but not all
+  const proxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://proxy.cors.sh/',
+  ];
+
+  for (const proxy of proxies) {
+    try {
+      const res = await fetch(proxy + encodeURIComponent(CAL_ICAL_URL), {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(5000)
+      });
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (!text.includes('BEGIN:VCALENDAR')) continue;
+      const evts = parseIcal(text);
+      return buildCalScreen(evts);
+    } catch(e) {
+      continue;
+    }
   }
+
+  // All proxies failed — try direct fetch (works if CORS allowed)
+  try {
+    const res = await fetch(CAL_ICAL_URL, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    if (res.ok) {
+      const text = await res.text();
+      if (text.includes('BEGIN:VCALENDAR')) {
+        const evts = parseIcal(text);
+        return buildCalScreen(evts);
+      }
+    }
+  } catch(e) {}
+
+  return null;
 }
 
 function injectCalScreen(screen) {
@@ -1169,6 +1208,27 @@ async function refreshCalendar() {
 buildBoard();
 updateClock();
 setInterval(updateClock, 10000);
+
+// Auto-connect from saved URL
+(async () => {
+  try {
+    const saved = localStorage.getItem('rhs-sheet-url');
+    if (saved) {
+      sheetUrl = saved;
+      // Pre-fill the input so user can see it
+      const inp = document.getElementById('sheetUrl');
+      if (inp) inp.value = saved;
+      setSyncStatus('', 'AUTO-CONNECTING...');
+      const data = await fetchSheet(saved);
+      if (data) {
+        startBoard(data, true);
+        return;
+      }
+    }
+  } catch(e) {}
+  // No saved URL or fetch failed — show setup screen
+})();
+
 // Fetch calendar on load and every 5 minutes
 refreshCalendar();
 calTimer = setInterval(refreshCalendar, 5 * 60 * 1000);
