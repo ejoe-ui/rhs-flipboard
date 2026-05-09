@@ -653,12 +653,20 @@ function showMessage(idx) {
   idx = ((idx % messages.length) + messages.length) % messages.length;
   currentIdx = idx;
 
-  const msg   = messages[idx];
+  const msg      = messages[idx];
   const newLines = Array.from({length: ROWS}, (_, r) =>
     padCenter(msg.lines[r] || '', COLS)
   );
 
   updateDots();
+
+  // Count changed tiles for sound
+  let changedTiles = 0;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (newLines[r][c] !== prevLines[r][c]) changedTiles++;
+
+  if (changedTiles > 0) playFlipSound(changedTiles);
 
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -788,8 +796,15 @@ function parseCSV(csv) {
         _isSchedulePlaceholder: true
       };
     }
+    if (firstLine === '[BIRTHDAY]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 12,
+        _isBirthdayPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -914,8 +929,15 @@ function parseGviz(data) {
         _isSchedulePlaceholder: true
       };
     }
+    if (firstLine === '[BIRTHDAY]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 12,
+        _isBirthdayPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -969,11 +991,12 @@ function startBoard(data, live) {
   currentIdx = messages.length - 1;
   showMessage(0);
 
-  // Always try calendar and schedule after messages load
+  // Always try calendar, schedule, and birthdays after messages load
   setTimeout(async () => {
     await refreshCalendar();
     refreshSchedule();
-  }, 500);
+    await refreshBirthdays();
+  }, 600);
 
   if (live) {
     setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
@@ -1210,6 +1233,275 @@ async function refreshCalendar() {
   injectCalScreen(screen);
 }
 
+
+
+/* ════════════════════════════════════════
+   FLIP SOUND ENGINE
+   Synthesized mechanical tile sound
+   using Web Audio API — no file needed
+════════════════════════════════════════ */
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return audioCtx;
+}
+
+function playFlipClick(time, vol) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const buf  = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    // White noise burst with fast decay
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
+  }
+  const src    = ctx.createBufferSource();
+  src.buffer   = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type  = 'bandpass';
+  filter.frequency.value = 2200;
+  filter.Q.value = 0.8;
+  const gain   = ctx.createGain();
+  gain.gain.value = vol || 0.18;
+  src.connect(filter);
+  filter.connect(gain);
+  gain.connect(ctx.destination);
+  src.start(time);
+}
+
+function playFlipSound(tileCount) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  // Resume context if suspended (browser autoplay policy)
+  if (ctx.state === 'suspended') ctx.resume();
+  const now      = ctx.currentTime;
+  const duration = 0.55; // total sound duration seconds
+  const clicks   = Math.min(tileCount * 2, 38);
+  // Pre-animation clicks (ramp up)
+  for (let i = 0; i < clicks * 0.4; i++) {
+    const t   = now + (i / (clicks * 0.4)) * 0.15;
+    const vol = 0.08 + (i / (clicks * 0.4)) * 0.14;
+    playFlipClick(t, vol);
+  }
+  // Peak during animation
+  for (let i = 0; i < clicks * 0.35; i++) {
+    const t   = now + 0.15 + (i / (clicks * 0.35)) * 0.2;
+    const vol = 0.22 - (i / (clicks * 0.35)) * 0.06;
+    playFlipClick(t, vol);
+  }
+  // Tail clicks (settling)
+  for (let i = 0; i < clicks * 0.25; i++) {
+    const t   = now + 0.35 + (i / (clicks * 0.25)) * 0.2;
+    const vol = 0.16 - (i / (clicks * 0.25)) * 0.14;
+    playFlipClick(t, vol);
+  }
+}
+
+/* ════════════════════════════════════════
+   BIRTHDAY SYSTEM
+   Reads from Birthdays tab in Google Sheet
+   Shows students with birthdays this week
+════════════════════════════════════════ */
+
+// Hardcoded birthdays from uploaded PDFs (fallback)
+const HARDCODED_BIRTHDAYS = [
+  // May
+  { name: 'CAMILA VILLANUEVA',   month: 5,  day: 9  },
+  { name: 'ELENA MENDES',        month: 5,  day: 10 },
+  { name: 'ISABEL VERA RIOS',    month: 5,  day: 19 },
+  { name: 'CELESTE CARRILLO',    month: 5,  day: 21 },
+  { name: 'EMILLY DIAZ',         month: 5,  day: 26 },
+  { name: 'YERALDINE LOPEZ VEGA',month: 5,  day: 29 },
+  { name: 'ELLA-JADE STOLLIKER', month: 5,  day: 31 },
+  // June
+  { name: 'ALYSSA HERNANDEZ',    month: 6,  day: 17 },
+  { name: 'PERLA MARIN ALVAREZ', month: 6,  day: 20 },
+  // July
+  { name: 'JAYLEE YBARRA',       month: 7,  day: 4  },
+  { name: 'GABRIEL GARCIA CORONA',month: 7, day: 6  },
+  { name: 'MIGUEL MARCOS-DELGADO',month: 7, day: 18 },
+  { name: 'ELPIDIO SOLORIO CARRILLO',month:7,day: 20 },
+  { name: 'MICHELLE RAMIREZ',    month: 7,  day: 22 },
+  { name: 'ALYSSA GONZALEZ',     month: 7,  day: 25 },
+  { name: 'CAMILA CORTES PEREZ', month: 7,  day: 27 },
+  { name: 'STARR GARCIA',        month: 7,  day: 28 },
+  // August
+  { name: 'LIYRISE AGUILAR',     month: 8,  day: 4  },
+  { name: 'SANTIAGO CHAVEZ',     month: 8,  day: 4  },
+  { name: 'CINTHIA LAWLESS',     month: 8,  day: 7  },
+  { name: 'NATALIE ARIAS',       month: 8,  day: 11 },
+  { name: 'DOMINIC FIGUEROA',    month: 8,  day: 11 },
+  { name: 'MARISOL FLORES RODRIGUEZ',month:8,day:12 },
+  { name: 'VIOLETA TAMAYO',      month: 8,  day: 15 },
+  { name: 'VALERIA PEREZ SOLIS', month: 8,  day: 24 },
+  { name: 'VALERIA OLGUIN',      month: 8,  day: 29 },
+];
+
+let allBirthdays = [...HARDCODED_BIRTHDAYS];
+
+function getWeekBirthdays() {
+  const now   = new Date();
+  const today = { m: now.getMonth() + 1, d: now.getDate() };
+  // Get Mon-Sun of current week
+  const dow   = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDates.push({ m: d.getMonth() + 1, d: d.getDate() });
+  }
+
+  const todayBdays   = [];
+  const weekBdays    = [];
+
+  for (const b of allBirthdays) {
+    const isToday_ = b.month === today.m && b.day === today.d;
+    const isWeek   = weekDates.some(wd => wd.m === b.month && wd.d === b.day);
+    if (isToday_) todayBdays.push(b);
+    else if (isWeek) weekBdays.push(b);
+  }
+
+  return { todayBdays, weekBdays };
+}
+
+function buildBirthdayScreen() {
+  const { todayBdays, weekBdays } = getWeekBirthdays();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN',
+                    'JUL','AUG','SEP','OCT','NOV','DEC'];
+
+  if (!todayBdays.length && !weekBdays.length) return null;
+
+  const lines = [];
+
+  if (todayBdays.length) {
+    lines.push('HAPPY BIRTHDAY!');
+    // Up to 3 today birthdays
+    todayBdays.slice(0, 3).forEach(b => {
+      lines.push(truncate(b.name, 28));
+    });
+    if (todayBdays.length > 3) {
+      lines.push('AND ' + (todayBdays.length - 3) + ' MORE TODAY');
+    }
+    // Fill remaining with this week
+    const remaining = 6 - lines.length;
+    if (remaining > 0 && weekBdays.length) {
+      lines.push(lines.length === 4 ? '' : '');
+      const upNext = weekBdays.slice(0, remaining - 1);
+      if (upNext.length) {
+        lines.push('ALSO THIS WEEK:');
+        upNext.forEach(b => {
+          const dateStr = monNames[b.month-1] + ' ' + b.day;
+          lines.push(truncate(b.name + '  ' + dateStr, 28));
+        });
+      }
+    }
+  } else {
+    // No birthdays today — show week birthdays
+    lines.push('BIRTHDAYS THIS WEEK');
+    weekBdays.slice(0, 5).forEach(b => {
+      const dateStr = monNames[b.month-1] + ' ' + b.day;
+      lines.push(truncate(b.name + '  ' + dateStr, 28));
+    });
+    if (weekBdays.length > 5) {
+      lines.push('+ ' + (weekBdays.length - 5) + ' MORE THIS WEEK');
+    }
+  }
+
+  while (lines.length < 7) lines.push('');
+
+  return { lines: lines.slice(0, 7), speed: 12, _isBirthday: true };
+}
+
+async function fetchSheetBirthdays(sheetUrl) {
+  // Fetch the Birthdays tab by replacing output=csv with sheet name
+  if (!sheetUrl) return;
+  try {
+    // Build URL for Birthdays sheet tab
+    const bdUrl = sheetUrl.replace('output=csv', 'output=csv').replace(
+      /gid=\d+/, 'gid=0'
+    );
+    // Use a named sheet approach — replace single=true with sheet name
+    const base   = sheetUrl.split('?')[0];
+    const bdTabUrl = base + '?gid=0&single=true&output=csv&sheet=Birthdays';
+
+    const proxies = [
+      'https://api.allorigins.win/raw?url=',
+      'https://corsproxy.io/?'
+    ];
+
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy + encodeURIComponent(bdTabUrl), {
+          cache: 'no-store', signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) continue;
+        const csv = await res.text();
+        if (!csv.includes('Name') && !csv.includes('name')) continue;
+        parseBirthdayCSV(csv);
+        return;
+      } catch(e) { continue; }
+    }
+  } catch(e) {}
+}
+
+function parseBirthdayCSV(csv) {
+  const rows = csv.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) return;
+  const header = rows[0].toLowerCase().replace(/\r/g,'').split(',')
+    .map(h => h.replace(/^"|"$/g,'').trim());
+  const nameIdx  = header.findIndex(h => h === 'name');
+  const monthIdx = header.findIndex(h => h === 'month');
+  const dayIdx   = header.findIndex(h => h === 'day');
+  if (nameIdx < 0 || monthIdx < 0 || dayIdx < 0) return;
+
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cols  = rows[i].replace(/\r/g,'').split(',');
+    const clean = c => (cols[c] || '').replace(/^"|"$/g,'').trim();
+    const name  = clean(nameIdx).toUpperCase();
+    const month = parseInt(clean(monthIdx));
+    const day   = parseInt(clean(dayIdx));
+    if (name && month && day) parsed.push({ name, month, day });
+  }
+  if (parsed.length) allBirthdays = parsed; // replace with sheet data
+}
+
+function injectBirthdayScreen(screen) {
+  const idx = messages.findIndex(m => m._isBirthdayPlaceholder);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isBirthdayPlaceholder: false };
+  } else {
+    // No birthdays this week — show a coming soon or hide
+    messages[idx] = {
+      lines: [
+        'BIRTHDAYS THIS WEEK',
+        'NO BIRTHDAYS TODAY',
+        '',
+        'CHECK BACK SOON',
+        '',
+        'GO COWBOYS',
+        'RIVERDALE HIGH SCHOOL'
+      ],
+      speed: 10,
+      _isBirthdayPlaceholder: false
+    };
+  }
+  buildDots();
+}
+
+async function refreshBirthdays() {
+  if (!messages.some(m => m._isBirthdayPlaceholder)) return;
+  if (sheetUrl) await fetchSheetBirthdays(sheetUrl);
+  const screen = buildBirthdayScreen();
+  injectBirthdayScreen(screen);
+}
 
 /* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM

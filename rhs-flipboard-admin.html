@@ -683,6 +683,13 @@
           </div>
           <button onclick="addSchedulePlaceholder()" style="background:#1a5c8a;color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD SCHEDULE</button>
         </div>
+        <div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Birthdays This Week</div>
+            <div style="font-size:10px;color:var(--text-muted);line-height:1.5">Auto-shows students with birthdays today and this week. Add a Birthdays tab to your Sheet (Name, Month, Day) to keep it current.</div>
+          </div>
+          <button onclick="addBirthdayPlaceholder()" style="background:#8a3a1a;color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD BIRTHDAYS</button>
+        </div>
 
       </div>
     </div>
@@ -1122,6 +1129,21 @@ function addSchedulePlaceholder() {
   showToast('Bell schedule screen added to queue');
 }
 
+function addBirthdayPlaceholder() {
+  if (messages.some(m => m._isBirthdayPlaceholder)) {
+    showToast('Birthday screen already in queue — only one allowed');
+    return;
+  }
+  messages.push({
+    lines: ['[BIRTHDAY]', '', '', '', '', '', ''],
+    speed: 12,
+    _isBirthdayPlaceholder: true
+  });
+  renderQueue();
+  autosave();
+  showToast('Birthday screen added to queue');
+}
+
 function exportCSV() {
   if (!messages.length) { showToast('Nothing to export yet'); return; }
 
@@ -1132,6 +1154,8 @@ function exportCSV() {
       rows.push([si + 1, 1, '[CALENDAR]', m.speed || 15].join(','));
     } else if (m._isSchedulePlaceholder) {
       rows.push([si + 1, 1, '[SCHEDULE]', m.speed || 15].join(','));
+    } else if (m._isBirthdayPlaceholder) {
+      rows.push([si + 1, 1, '[BIRTHDAY]', m.speed || 12].join(','));
     } else {
       for (let li = 0; li < 7; li++) {
         const text  = csvCell(m.lines[li] || '');
@@ -1169,6 +1193,8 @@ function copySheetPaste() {
       lines.push([si + 1, 1, '[CALENDAR]', m.speed || 15].join('\t'));
     } else if (m._isSchedulePlaceholder) {
       lines.push([si + 1, 1, '[SCHEDULE]', m.speed || 15].join('\t'));
+    } else if (m._isBirthdayPlaceholder) {
+      lines.push([si + 1, 1, '[BIRTHDAY]', m.speed || 12].join('\t'));
     } else {
       for (let li = 0; li < 7; li++) {
         const speed = li === 0 ? (m.speed || 8) : '';
@@ -1240,8 +1266,11 @@ function importCSVText(csv) {
     if (firstLine === '[SCHEDULE]') {
       return { lines: Array(7).fill(''), speed: s.speed || 15, _isSchedulePlaceholder: true };
     }
+    if (firstLine === '[BIRTHDAY]') {
+      return { lines: Array(7).fill(''), speed: s.speed || 12, _isBirthdayPlaceholder: true };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s.lines[0]);
   if (!parsed.length) { showToast('No valid screens found'); return; }
   messages = parsed;
   renderQueue();
