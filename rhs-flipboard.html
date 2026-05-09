@@ -180,7 +180,7 @@
   }
 
   .tile-char {
-    font-size: clamp(20px, 5.2vh, 92px);
+    font-size: clamp(24px, 6.4vh, 112px);
     font-weight: 900;
     color: var(--tile-text);
     line-height: 1;
@@ -189,7 +189,7 @@
     position: relative;
     z-index: 3;
     font-family: 'Courier New', Courier, monospace;
-    transform: scaleX(0.82);
+    transform: scaleX(0.78);
   }
 
   /* flip animation */
@@ -807,8 +807,15 @@ function parseCSV(csv) {
         _isBirthdayPlaceholder: true
       };
     }
+    if (firstLine === '[COUNTDOWN]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCountdownPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -940,8 +947,15 @@ function parseGviz(data) {
         _isBirthdayPlaceholder: true
       };
     }
+    if (firstLine === '[COUNTDOWN]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCountdownPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1006,6 +1020,9 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isBirthdayPlaceholder) {
       const existing = messages.find(m => m._isBirthdaySlot || m._isBirthdayPlaceholder);
       result.push(existing || item);
+    } else if (item._isCountdownPlaceholder) {
+      const existing = messages.find(m => m._isCountdownSlot || m._isCountdownPlaceholder);
+      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1028,6 +1045,8 @@ function startBoard(data, live) {
     await refreshCalendar();
     refreshSchedule();
     await refreshBirthdays();
+    if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
+    refreshCountdowns();
   }, 600);
 
   if (live) {
@@ -1051,6 +1070,7 @@ function startBoard(data, live) {
         await refreshCalendar();
         refreshSchedule();
         await refreshBirthdays();
+        refreshCountdowns();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -1559,6 +1579,155 @@ async function refreshBirthdays() {
   injectBirthdayScreen(screen);
 }
 
+
+/* ════════════════════════════════════════
+   COUNTDOWN SYSTEM
+   Hardcoded RJUSD 2025-26 dates + 
+   custom events from Sheet Countdowns tab
+   US Federal Holidays auto-included
+════════════════════════════════════════ */
+
+const HARDCODED_COUNTDOWNS = [
+  // RJUSD Academic Calendar 2025-26
+  { label: 'END OF SCHOOL YEAR',  date: '2026-06-12', emoji: '🎓', priority: 1 },
+  { label: 'GRADUATION',          date: '2026-06-05', emoji: '🎓', priority: 1 },
+  { label: 'SPRING BREAK',        date: '2026-03-28', emoji: '🌸', priority: 2 },
+  { label: 'WINTER BREAK',        date: '2025-12-20', emoji: '❄️',  priority: 2 },
+  { label: 'THANKSGIVING BREAK',  date: '2025-11-27', emoji: '🦃', priority: 2 },
+  { label: 'MEMORIAL DAY',        date: '2026-05-25', emoji: '🇺🇸', priority: 2 },
+  { label: 'MLK DAY',             date: '2026-01-19', emoji: '✊', priority: 3 },
+  { label: 'PRESIDENTS DAY',      date: '2026-02-16', emoji: '🇺🇸', priority: 3 },
+  { label: 'LINCOLN DAY',         date: '2026-02-09', emoji: '🎩', priority: 3 },
+  { label: 'VETERANS DAY',        date: '2025-11-11', emoji: '🎖️', priority: 3 },
+  { label: 'LABOR DAY',           date: '2025-09-01', emoji: '⚒️',  priority: 3 },
+  { label: 'JUNETEENTH',          date: '2026-06-19', emoji: '✊', priority: 3 },
+  // Progress reports / report cards (approximate — update as needed)
+  { label: 'PROGRESS REPORTS',    date: '2025-10-10', emoji: '📋', priority: 2 },
+  { label: 'END OF Q1',           date: '2025-11-07', emoji: '📊', priority: 2 },
+  { label: 'PROGRESS REPORTS',    date: '2025-12-05', emoji: '📋', priority: 2 },
+  { label: 'END OF SEMESTER 1',   date: '2026-01-23', emoji: '📚', priority: 1 },
+  { label: 'PROGRESS REPORTS',    date: '2026-02-27', emoji: '📋', priority: 2 },
+  { label: 'END OF Q3',           date: '2026-03-27', emoji: '📊', priority: 2 },
+  { label: 'PROGRESS REPORTS',    date: '2026-05-01', emoji: '📋', priority: 2 },
+  { label: 'END OF SEMESTER 2',   date: '2026-06-12', emoji: '📚', priority: 1 },
+];
+
+let customCountdowns = [];
+
+function getDaysUntil(dateStr) {
+  const now    = new Date();
+  const target = new Date(dateStr + 'T00:00:00');
+  const diff   = target - new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function getUpcomingCountdowns() {
+  const all = [...HARDCODED_COUNTDOWNS, ...customCountdowns];
+  const now  = new Date();
+
+  return all
+    .map(c => ({ ...c, days: getDaysUntil(c.date) }))
+    .filter(c => c.days >= 0 && c.days <= 180) // within 6 months
+    .sort((a, b) => {
+      // Sort by days ascending, then priority
+      if (a.days !== b.days) return a.days - b.days;
+      return (a.priority || 3) - (b.priority || 3);
+    });
+}
+
+function formatCountdownLine(c) {
+  const days = c.days;
+  if (days === 0) return truncate(c.label + '  TODAY!', 28);
+  if (days === 1) return truncate(c.label + '  TOMORROW', 28);
+  return truncate(c.label + '  ' + days + ' DAYS', 28);
+}
+
+function buildCountdownScreen() {
+  const upcoming = getUpcomingCountdowns();
+  if (!upcoming.length) return null;
+
+  const now      = new Date();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+  const lines = [];
+  lines.push('COMING UP AT RHS');
+
+  // Show up to 6 upcoming events
+  upcoming.slice(0, 6).forEach(c => {
+    lines.push(formatCountdownLine(c));
+  });
+
+  while (lines.length < 7) lines.push('');
+
+  return { lines: lines.slice(0, 7), speed: 15, _isCountdownSlot: true };
+}
+
+function injectCountdownScreen(screen) {
+  let idx = messages.findIndex(m => m._isCountdownPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isCountdownSlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isCountdownSlot: true };
+  } else {
+    messages[idx] = {
+      lines: ['COMING UP AT RHS','','NO UPCOMING EVENTS','','','',''],
+      speed: 10, _isCountdownSlot: true
+    };
+  }
+  buildDots();
+}
+
+function refreshCountdowns() {
+  const hasSlot = messages.some(m => m._isCountdownPlaceholder || m._isCountdownSlot);
+  if (!hasSlot) return;
+  const screen = buildCountdownScreen();
+  injectCountdownScreen(screen);
+}
+
+async function fetchSheetCountdowns(sheetUrl) {
+  if (!sheetUrl) return;
+  try {
+    const base     = sheetUrl.split('?')[0];
+    const tabUrl   = base + '?gid=0&single=true&output=csv&sheet=Countdowns';
+    const proxies  = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?'];
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy + encodeURIComponent(tabUrl), {
+          cache: 'no-store', signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) continue;
+        const csv = await res.text();
+        if (!csv.toLowerCase().includes('label') && !csv.toLowerCase().includes('date')) continue;
+        parseCountdownCSV(csv);
+        return;
+      } catch(e) { continue; }
+    }
+  } catch(e) {}
+}
+
+function parseCountdownCSV(csv) {
+  const rows = csv.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) return;
+  const header   = rows[0].toLowerCase().replace(/\r/g,'').split(',')
+    .map(h => h.replace(/^"|"$/g,'').trim());
+  const labelIdx = header.findIndex(h => h === 'label' || h === 'event' || h === 'name');
+  const dateIdx  = header.findIndex(h => h === 'date');
+  const emojiIdx = header.findIndex(h => h === 'emoji' || h === 'icon');
+  if (labelIdx < 0 || dateIdx < 0) return;
+
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cols  = rows[i].replace(/\r/g,'').split(',');
+    const clean = c => c >= 0 ? (cols[c] || '').replace(/^"|"$/g,'').trim() : '';
+    const label = clean(labelIdx).toUpperCase();
+    const date  = clean(dateIdx);
+    const emoji = clean(emojiIdx) || '📅';
+    if (label && date) parsed.push({ label, date, emoji, priority: 2 });
+  }
+  if (parsed.length) customCountdowns = parsed;
+}
+
 /* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
@@ -1872,6 +2041,7 @@ async function refreshSchedule() {
 
 // Update schedule every minute so NOW indicator stays accurate
 setInterval(refreshSchedule, 60 * 1000);
+setInterval(refreshCountdowns, 10 * 60 * 1000);
 
 /* ════════════════════════════════════════
    INIT
