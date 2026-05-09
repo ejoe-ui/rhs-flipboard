@@ -781,8 +781,15 @@ function parseCSV(csv) {
         _isCalendarPlaceholder: true
       };
     }
+    if (firstLine === '[SCHEDULE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isSchedulePlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -900,8 +907,15 @@ function parseGviz(data) {
         _isCalendarPlaceholder: true
       };
     }
+    if (firstLine === '[SCHEDULE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isSchedulePlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -955,8 +969,11 @@ function startBoard(data, live) {
   currentIdx = messages.length - 1;
   showMessage(0);
 
-  // Always try calendar after messages load
-  setTimeout(refreshCalendar, 500);
+  // Always try calendar and schedule after messages load
+  setTimeout(async () => {
+    await refreshCalendar();
+    refreshSchedule();
+  }, 500);
 
   if (live) {
     setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
@@ -1145,11 +1162,13 @@ async function fetchCalendar() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (data.status !== 'ok' || !data.events) throw new Error('bad response');
-    return buildCalScreen(data.events.map(e => ({
+    const events = data.events.map(e => ({
       summary: e.title,
       dtstart: e.start,
       allDay:  e.allDay
-    })));
+    }));
+    window._lastCalEvents = events; // cache for schedule detection
+    return buildCalScreen(events);
   } catch(e) {
     console.warn('Calendar fetch failed:', e.message);
     return null;
@@ -1190,6 +1209,275 @@ async function refreshCalendar() {
   const screen = await fetchCalendar();
   injectCalScreen(screen);
 }
+
+
+/* ════════════════════════════════════════
+   BELL SCHEDULE SYSTEM
+   Auto-detects schedule type from:
+   1. RHS Events calendar keywords
+   2. Default weekly pattern
+   3. Short week override (≤4 school days)
+════════════════════════════════════════ */
+
+const SCHEDULES = {
+  REGULAR: {
+    label: 'REGULAR BELL SCHEDULE',
+    periods: [
+      { name: 'P1',     start: '8:10',  end: '9:02'  },
+      { name: 'P2',     start: '9:06',  end: '9:56'  },
+      { name: 'BRUNCH', start: '9:56',  end: '10:11', break: true },
+      { name: 'P3',     start: '10:15', end: '11:05' },
+      { name: 'P4',     start: '11:09', end: '11:59' },
+      { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
+      { name: 'P5',     start: '12:37', end: '1:27'  },
+      { name: 'P6',     start: '1:31',  end: '2:21'  },
+      { name: 'P7',     start: '2:25',  end: '3:15'  },
+    ]
+  },
+  EARLY_RELEASE: {
+    label: 'EARLY RELEASE SCHEDULE',
+    periods: [
+      { name: 'P1',    start: '8:10',  end: '8:56'  },
+      { name: 'P2',    start: '9:00',  end: '9:41'  },
+      { name: 'P3',    start: '9:45',  end: '10:26' },
+      { name: 'P4',    start: '10:30', end: '11:11' },
+      { name: 'LUNCH', start: '11:11', end: '11:45', break: true },
+      { name: 'P5',    start: '11:49', end: '12:30' },
+      { name: 'P6',    start: '12:34', end: '1:15'  },
+      { name: 'P7',    start: '1:19',  end: '2:00'  },
+    ]
+  },
+  BLOCK_WED: {
+    label: 'BLOCK DAY · 1-3-5-7',
+    periods: [
+      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
+      { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
+      { name: 'P3+P4',  start: '10:16', end: '11:59' },
+      { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
+      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
+      { name: 'P7',     start: '2:24',  end: '3:15'  },
+    ]
+  },
+  BLOCK_THU: {
+    label: 'BLOCK DAY · 2-4-6-7',
+    periods: [
+      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
+      { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
+      { name: 'P3+P4',  start: '10:16', end: '11:59' },
+      { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
+      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
+      { name: 'P7',     start: '2:24',  end: '3:15'  },
+    ]
+  },
+  MINIMUM: {
+    label: 'MINIMUM DAY SCHEDULE',
+    periods: [
+      { name: 'P1',      start: '8:10',  end: '8:46'  },
+      { name: 'P2',      start: '8:50',  end: '9:23'  },
+      { name: 'P3',      start: '9:27',  end: '10:00' },
+      { name: 'P4',      start: '10:04', end: '10:37' },
+      { name: 'BRU/LUN', start: '10:37', end: '11:10', break: true },
+      { name: 'P5',      start: '11:14', end: '11:47' },
+      { name: 'P6',      start: '11:51', end: '12:24' },
+      { name: 'P7',      start: '12:28', end: '1:01'  },
+    ]
+  },
+  ACTIVITY: {
+    label: 'ACTIVITY DAY SCHEDULE',
+    periods: [
+      { name: 'P1',    start: '8:10',  end: '8:56'  },
+      { name: 'P2',    start: '9:00',  end: '9:44'  },
+      { name: 'BRUNCH',start: '9:44',  end: '9:59',  break: true },
+      { name: 'P3',    start: '10:03', end: '10:47' },
+      { name: 'P4',    start: '10:51', end: '11:35' },
+      { name: 'P5',    start: '11:39', end: '12:23' },
+      { name: 'LUNCH', start: '12:23', end: '12:57', break: true },
+      { name: 'P6',    start: '1:01',  end: '1:45'  },
+      { name: 'P7',    start: '1:49',  end: '2:33'  },
+    ]
+  },
+  FOGGY: {
+    label: 'FOGGY/LATE ARRIVAL DAY',
+    periods: [
+      { name: 'P1',    start: '10:00', end: '10:44' },
+      { name: 'P2',    start: '10:48', end: '11:28' },
+      { name: 'P3',    start: '11:32', end: '12:12' },
+      { name: 'LUNCH', start: '12:12', end: '12:49', break: true },
+      { name: 'P4',    start: '12:53', end: '1:33'  },
+      { name: 'P5',    start: '1:37',  end: '2:17'  },
+      { name: 'P6',    start: '2:21',  end: '3:01'  },
+      { name: 'P7',    start: '3:05',  end: '3:45'  },
+    ]
+  }
+};
+
+// Academic calendar special dates (from RJUSD 2025-26 PDF)
+// Format: 'YYYY-MM-DD': 'SCHEDULE_KEY'
+const SPECIAL_DATES = {
+  // Early Release days (green on academic calendar - select Mondays already handled by default)
+  // Minimum days
+  '2026-06-12': 'MINIMUM', // Last day of school
+  // Add more as needed — students can update via sheet override too
+};
+
+// Short weeks (weeks with holidays) — use Regular for all days
+// School holidays from academic calendar
+const NO_SCHOOL_DATES = new Set([
+  '2025-09-01', // Labor Day
+  '2025-11-10', // Non-school day
+  '2025-11-11', // Veterans Day
+  '2025-11-27', '2025-11-28', // Thanksgiving
+  '2025-12-22','2025-12-23','2025-12-24','2025-12-25',
+  '2025-12-26','2025-12-29','2025-12-30','2025-12-31',
+  '2026-01-01','2026-01-02','2026-01-05','2026-01-06',
+  '2026-01-07','2026-01-08','2026-01-09','2026-01-12', // Winter break + inservice
+  '2026-01-19', // MLK Day
+  '2026-02-09', // Lincoln Day
+  '2026-02-16', // Presidents Day
+  '2026-03-30','2026-03-31',
+  '2026-04-01','2026-04-02','2026-04-03', // Spring Break
+  '2026-05-25', // Memorial Day
+]);
+
+function getWeekSchoolDays(date) {
+  // Count school days in the current week (Mon-Fri)
+  const d = new Date(date);
+  const day = d.getDay();
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  let count = 0;
+  for (let i = 0; i < 5; i++) {
+    const check = new Date(monday);
+    check.setDate(monday.getDate() + i);
+    const str = localDateStr(check);
+    if (!NO_SCHOOL_DATES.has(str)) count++;
+  }
+  return count;
+}
+
+function detectScheduleType(calEvents) {
+  const now     = new Date();
+  const dateStr = localDateStr(now);
+  const dow     = now.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri
+
+  // 1. Check RHS Events calendar for schedule keywords
+  if (calEvents && calEvents.length) {
+    const todayEvents = calEvents.filter(e => isToday(e.dtstart, e.allDay));
+    for (const e of todayEvents) {
+      const t = (e.summary || e.title || '').toLowerCase();
+      if (t.includes('foggy') || t.includes('late arrival'))  return 'FOGGY';
+      if (t.includes('minimum'))                              return 'MINIMUM';
+      if (t.includes('activity'))                             return 'ACTIVITY';
+      if (t.includes('block'))                                return dow === 4 ? 'BLOCK_THU' : 'BLOCK_WED';
+      if (t.includes('early release'))                        return 'EARLY_RELEASE';
+    }
+  }
+
+  // 2. Check hardcoded special dates
+  if (SPECIAL_DATES[dateStr]) return SPECIAL_DATES[dateStr];
+
+  // 3. Short week override — if ≤4 school days this week, use Regular
+  const schoolDays = getWeekSchoolDays(now);
+  if (schoolDays <= 4) return 'REGULAR';
+
+  // 4. Default weekly pattern
+  if (dow === 1) return 'EARLY_RELEASE'; // Monday
+  if (dow === 2) return 'REGULAR';       // Tuesday
+  if (dow === 3) return 'BLOCK_WED';     // Wednesday
+  if (dow === 4) return 'BLOCK_THU';     // Thursday
+  if (dow === 5) return 'REGULAR';       // Friday
+
+  return 'REGULAR'; // Weekend fallback
+}
+
+function timeToMinutes(timeStr) {
+  // Converts "8:10" or "1:27" to minutes since midnight
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function getCurrentPeriodIdx(periods) {
+  const now     = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  for (let i = 0; i < periods.length; i++) {
+    const start = timeToMinutes(periods[i].start);
+    const end   = timeToMinutes(periods[i].end);
+    if (nowMins >= start && nowMins < end) return i;
+  }
+  return -1;
+}
+
+function buildScheduleScreen(calEvents) {
+  const scheduleKey = detectScheduleType(calEvents);
+  const schedule    = SCHEDULES[scheduleKey];
+  if (!schedule) return null;
+
+  const periods    = schedule.periods;
+  const currentIdx = getCurrentPeriodIdx(periods);
+  const now        = new Date();
+  const monNames   = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const dateLabel  = `${dayNames[now.getDay()]} ${monNames[now.getMonth()]} ${now.getDate()}`;
+
+  const lines = [];
+
+  // Line 1: schedule type + date
+  lines.push(truncate(schedule.label, 28));
+
+  // Lines 2-7: periods (up to 6, prioritize showing current period)
+  // Figure out which slice of periods to show — center around current period
+  let startIdx = 0;
+  if (currentIdx > 0) {
+    // Show 1 period before current if possible, fill rest after
+    startIdx = Math.max(0, Math.min(currentIdx - 1, periods.length - 6));
+  }
+  const visible = periods.slice(startIdx, startIdx + 6);
+
+  for (const p of visible) {
+    const isCurrent = periods.indexOf(p) === currentIdx;
+    const prefix    = isCurrent ? '▶ ' : '  ';
+    const suffix    = isCurrent ? ' NOW' : '';
+    const timeRange = `${p.start}-${p.end}`;
+    // Format: "▶ P3  10:15-11:05 NOW" or "  LUNCH  11:59-12:33"
+    const nameField = (prefix + p.name).padEnd(9);
+    const line      = truncate(nameField + timeRange + suffix, 28);
+    lines.push(line);
+  }
+
+  // Pad to 7 lines
+  while (lines.length < 7) lines.push('');
+
+  return { lines: lines.slice(0, 7), speed: 15, _isSchedule: true };
+}
+
+let scheduleScreen = null;
+let scheduleTimer  = null;
+
+function injectScheduleScreen(screen) {
+  scheduleScreen = screen;
+  // Find schedule placeholder
+  const idx = messages.findIndex(m => m._isSchedulePlaceholder);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isSchedulePlaceholder: false };
+  } else {
+    messages[idx] = {
+      lines: ['BELL SCHEDULE','NOT AVAILABLE','','CHECK RJUSD.ORG','','',''],
+      speed: 10, _isSchedulePlaceholder: false
+    };
+  }
+  buildDots();
+}
+
+async function refreshSchedule() {
+  if (!messages.some(m => m._isSchedulePlaceholder)) return;
+  // Use already-fetched calendar events if available
+  const screen = buildScheduleScreen(window._lastCalEvents || []);
+  injectScheduleScreen(screen);
+}
+
+// Update schedule every minute so NOW indicator stays accurate
+setInterval(refreshSchedule, 60 * 1000);
 
 /* ════════════════════════════════════════
    INIT
