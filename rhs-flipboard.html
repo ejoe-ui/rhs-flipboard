@@ -1387,7 +1387,31 @@ function detectScheduleType(calEvents) {
   if (dow === 4) return 'BLOCK_THU';     // Thursday
   if (dow === 5) return 'REGULAR';       // Friday
 
-  return 'REGULAR'; // Weekend fallback
+  // Weekend or no school day
+  if (dow === 0 || dow === 6) return null;
+
+  return 'REGULAR'; // fallback
+}
+
+function getNextSchoolDay() {
+  const now      = new Date();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  for (let i = 1; i <= 7; i++) {
+    const next    = new Date(now);
+    next.setDate(now.getDate() + i);
+    const dow     = next.getDay();
+    const dateStr = localDateStr(next);
+    if (dow === 0 || dow === 6) continue;
+    if (NO_SCHOOL_DATES.has(dateStr)) continue;
+    const dayLabel  = dayNames[dow] + ' ' + monNames[next.getMonth()] + ' ' + next.getDate();
+    let schedKey    = 'REGULAR';
+    if (dow === 1) schedKey = 'EARLY_RELEASE';
+    if (dow === 3) schedKey = 'BLOCK_WED';
+    if (dow === 4) schedKey = 'BLOCK_THU';
+    return { dayLabel, schedKey };
+  }
+  return null;
 }
 
 function timeToMinutes(timeStr) {
@@ -1409,15 +1433,36 @@ function getCurrentPeriodIdx(periods) {
 
 function buildScheduleScreen(calEvents) {
   const scheduleKey = detectScheduleType(calEvents);
-  const schedule    = SCHEDULES[scheduleKey];
+  const now         = new Date();
+  const monNames    = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const dateLabel   = dayNames[now.getDay()] + ' ' + monNames[now.getMonth()] + ' ' + now.getDate();
+
+  // Weekend or no-school day — show next school day info
+  if (!scheduleKey) {
+    const next = getNextSchoolDay();
+    const nextLabel = next ? next.schedKey.replace('_WED','').replace('_THU','').replace('_',' ') : 'REGULAR';
+    const nextDay   = next ? next.dayLabel : 'MONDAY';
+    return {
+      lines: [
+        'NO SCHOOL TODAY',
+        dateLabel,
+        '',
+        'NEXT SCHOOL DAY',
+        nextDay,
+        nextLabel + ' BELL',
+        'GO COWBOYS'
+      ],
+      speed: 15,
+      _isSchedule: true
+    };
+  }
+
+  const schedule   = SCHEDULES[scheduleKey];
   if (!schedule) return null;
 
   const periods    = schedule.periods;
   const currentIdx = getCurrentPeriodIdx(periods);
-  const now        = new Date();
-  const monNames   = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const dayNames   = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  const dateLabel  = `${dayNames[now.getDay()]} ${monNames[now.getMonth()]} ${now.getDate()}`;
 
   const lines = [];
 
