@@ -406,9 +406,9 @@
     <div class="setup-step">
       <div class="step-num">1</div>
       <div class="step-text">
-        Create a Google Sheet with columns:
-        <code>Line1</code> <code>Line2</code> <code>Line3</code> <code>Line4</code>
-        <code>Line5</code> <code>Line6</code> <code>Line7</code> <code>Speed</code><br>
+        Create a Google Sheet with 4 columns:
+        <code>Screen</code> <code>Line</code> <code>Text</code> <code>Speed</code><br>
+        Each screen uses 7 rows going down. Screen = number, Line = 1-7, Text = what displays, Speed = seconds (on Line 1 row only).
         Each row = one full board screen. Speed is seconds (default: 8).
         <strong>Row 1 must be the header row.</strong>
       </div>
@@ -728,7 +728,10 @@ function setSyncStatus(state, label) {
 }
 
 /* ════════════════════════════════════════
-   CSV PARSER
+   CSV PARSER — vertical format
+   Columns: Screen | Line | Text | Speed
+   Each screen is 7 rows going down.
+   Speed only needed on Line 1 row.
 ════════════════════════════════════════ */
 function parseCSV(csv) {
   const rows = csv.trim().split('\n').filter(r => r.trim());
@@ -737,22 +740,27 @@ function parseCSV(csv) {
   const header = rows[0].toLowerCase().replace(/\r/g, '').split(',')
     .map(h => h.replace(/^"|"$/g, '').trim());
 
-  const lineIdxs = [];
-  for (let i = 1; i <= 7; i++) {
-    const idx = header.findIndex(h => h === 'line' + i);
-    lineIdxs.push(idx);
-  }
-  const speedIdx = header.findIndex(h => h === 'speed');
+  const screenIdx = header.findIndex(h => h === 'screen');
+  const lineIdx   = header.findIndex(h => h === 'line');
+  const textIdx   = header.findIndex(h => h === 'text');
+  const speedIdx  = header.findIndex(h => h === 'speed');
 
-  const parsed = [];
+  if (screenIdx < 0 || textIdx < 0) return null;
+
+  const screens = {};
   for (let i = 1; i < rows.length; i++) {
-    const cols = rows[i].replace(/\r/g, '').split(',');
-    const clean = c => (cols[c] || '').replace(/^"|"$/g, '').trim().toUpperCase();
-    const lines = lineIdxs.map(idx => idx >= 0 ? clean(idx) : '');
-    if (!lines[0]) continue;
-    const speed = speedIdx >= 0 ? parseFloat(cols[speedIdx]) || 8 : 8;
-    parsed.push({ lines, speed });
+    const cols   = rows[i].replace(/\r/g, '').split(',');
+    const clean  = c => c >= 0 ? (cols[c] || '').replace(/^"|"$/g, '').trim() : '';
+    const screen = clean(screenIdx);
+    const text   = clean(textIdx).toUpperCase();
+    const speed  = speedIdx >= 0 ? parseFloat(clean(speedIdx)) || null : null;
+    if (!screen) continue;
+    if (!screens[screen]) screens[screen] = { lines: [], speed: 8 };
+    screens[screen].lines.push(text);
+    if (speed) screens[screen].speed = speed;
   }
+
+  const parsed = Object.values(screens).filter(s => s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -833,31 +841,34 @@ function fetchViaGviz(url) {
 }
 
 function parseGviz(data) {
-  // data is a Google Visualization DataTable response object
   if (!data || !data.table) return null;
   const table = data.table;
   const cols  = table.cols || [];
   const rows  = table.rows || [];
   if (!cols.length || !rows.length) return null;
 
-  // Map column labels to indices
-  const headers = cols.map(c => (c.label || '').toLowerCase().trim());
-  const lineIdxs = Array.from({length: 7}, (_, i) =>
-    headers.findIndex(h => h === 'line' + (i + 1))
-  );
-  const speedIdx = headers.findIndex(h => h === 'speed');
+  const headers   = cols.map(c => (c.label || '').toLowerCase().trim());
+  const screenIdx = headers.findIndex(h => h === 'screen');
+  const textIdx   = headers.findIndex(h => h === 'text');
+  const speedIdx  = headers.findIndex(h => h === 'speed');
 
-  const parsed = [];
+  if (screenIdx < 0 || textIdx < 0) return null;
+
+  const screens = {};
   for (const row of rows) {
-    const cells = row.c || [];
-    const val   = (idx) => idx >= 0 && cells[idx] && cells[idx].v != null
-      ? String(cells[idx].v).trim().toUpperCase() : '';
-    const lines = lineIdxs.map(val);
-    if (!lines[0]) continue;
-    const spRaw = speedIdx >= 0 && cells[speedIdx] ? cells[speedIdx].v : 8;
-    const speed = parseFloat(spRaw) || 8;
-    parsed.push({ lines, speed });
+    const cells  = row.c || [];
+    const val    = idx => idx >= 0 && cells[idx] && cells[idx].v != null
+      ? String(cells[idx].v).trim() : '';
+    const screen = val(screenIdx);
+    const text   = val(textIdx).toUpperCase();
+    const spRaw  = speedIdx >= 0 ? parseFloat(val(speedIdx)) || null : null;
+    if (!screen) continue;
+    if (!screens[screen]) screens[screen] = { lines: [], speed: 8 };
+    screens[screen].lines.push(text);
+    if (spRaw) screens[screen].speed = spRaw;
   }
+
+  const parsed = Object.values(screens).filter(s => s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -880,7 +891,7 @@ async function connectSheet() {
 
   const data = await fetchSheet(url);
   if (!data) {
-    err.textContent = 'Could not load. Verify: sheet published as CSV, sharing is Anyone with the link, header row has Line1-Line7 and Speed.';
+    err.textContent = 'Could not load. Verify: sheet published as CSV, sharing is Anyone with the link, header row must have: Screen, Line, Text, Speed.';
     setSyncStatus('error', 'CONNECTION FAILED');
     return;
   }

@@ -721,8 +721,7 @@
         <div style="margin-top:10px;padding:10px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
           <div style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px">Sheet Column Order</div>
           <div style="font-family:var(--mono);font-size:10px;color:var(--text-mid);line-height:1.8;letter-spacing:0.04em">
-            Line1 · Line2 · Line3 · Line4<br>
-            Line5 · Line6 · Line7 · Speed
+            Screen · Line · Text · Speed
           </div>
         </div>
       </div>
@@ -1080,14 +1079,17 @@ function renderQueue() {
 function exportCSV() {
   if (!messages.length) { showToast('Nothing to export yet'); return; }
 
-  const header = ['Line1','Line2','Line3','Line4','Line5','Line6','Line7','Speed'];
-  const rows   = messages.map(m => {
-    const cols = m.lines.map(l => csvCell(l));
-    cols.push(m.speed || 8);
-    return cols.join(',');
+  const header = 'Screen,Line,Text,Speed';
+  const rows = [];
+  messages.forEach((m, si) => {
+    for (let li = 0; li < 7; li++) {
+      const text  = csvCell(m.lines[li] || '');
+      const speed = li === 0 ? (m.speed || 8) : '';
+      rows.push([si + 1, li + 1, text, speed].join(','));
+    }
   });
 
-  const csv  = [header.join(','), ...rows].join('\r\n');
+  const csv  = [header, ...rows].join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
@@ -1109,13 +1111,15 @@ function csvCell(val) {
 function copySheetPaste() {
   if (!messages.length) { showToast('Nothing to copy yet'); return; }
 
-  const header = 'Line1\tLine2\tLine3\tLine4\tLine5\tLine6\tLine7\tSpeed';
-  const rows   = messages.map(m =>
-    [...m.lines, m.speed || 8].join('\t')
-  );
-  const text = [header, ...rows].join('\n');
+  const lines = ['Screen\tLine\tText\tSpeed'];
+  messages.forEach((m, si) => {
+    for (let li = 0; li < 7; li++) {
+      const speed = li === 0 ? (m.speed || 8) : '';
+      lines.push([si + 1, li + 1, m.lines[li] || '', speed].join('\t'));
+    }
+  });
 
-  navigator.clipboard.writeText(text)
+  navigator.clipboard.writeText(lines.join('\n'))
     .then(() => showToast('Copied! Open Sheets → click cell A1 → Paste'))
     .catch(() => showToast('Copy failed — try Export CSV instead'));
 }
@@ -1151,22 +1155,27 @@ function importCSVText(csv) {
   const header = rows[0].toLowerCase().replace(/\r/g, '').split(',')
     .map(h => h.replace(/^"|"$/g,'').trim());
 
-  const idxs = Array.from({length: 7}, (_, i) =>
-    header.findIndex(h => h === 'line' + (i + 1))
-  );
-  const speedIdx = header.findIndex(h => h === 'speed');
+  const screenIdx = header.findIndex(h => h === 'screen');
+  const textIdx   = header.findIndex(h => h === 'text');
+  const speedIdx  = header.findIndex(h => h === 'speed');
 
-  const parsed = [];
+  if (screenIdx < 0 || textIdx < 0) { showToast('Missing Screen or Text columns'); return; }
+
+  const screens = {};
   for (let i = 1; i < rows.length; i++) {
-    const cols  = rows[i].replace(/\r/g, '').split(',');
-    const clean = c => c >= 0 ? (cols[c] || '').replace(/^"|"$/g,'').trim().toUpperCase() : '';
-    const lines = idxs.map(clean);
-    if (!lines[0]) continue;
-    const speed = speedIdx >= 0 ? parseFloat(cols[speedIdx]) || 8 : 8;
-    parsed.push({ lines, speed });
+    const cols   = rows[i].replace(/\r/g, '').split(',');
+    const clean  = c => c >= 0 ? (cols[c] || '').replace(/^"|"$/g,'').trim() : '';
+    const screen = clean(screenIdx);
+    const text   = clean(textIdx).toUpperCase();
+    const spRaw  = speedIdx >= 0 ? parseFloat(clean(speedIdx)) || null : null;
+    if (!screen) continue;
+    if (!screens[screen]) screens[screen] = { lines: [], speed: 8 };
+    screens[screen].lines.push(text);
+    if (spRaw) screens[screen].speed = spRaw;
   }
 
-  if (!parsed.length) { showToast('No valid rows found'); return; }
+  const parsed = Object.values(screens).filter(s => s.lines[0]);
+  if (!parsed.length) { showToast('No valid screens found'); return; }
   messages = parsed;
   renderQueue();
   autosave();
