@@ -1029,47 +1029,58 @@ function fmtTime(dtStr, allDay) {
 
 function parseEventDate(dtStr) {
   if (!dtStr) return null;
-  // Handle ISO 8601 (2026-05-09 or 2026-05-09T15:30:00Z or 2026-05-09T15:30:00-07:00)
-  // Handle compact iCal (20260509 or 20260509T153000Z)
-  if (dtStr.includes('-') || dtStr.includes('T')) {
-    return new Date(dtStr);
-  }
-  // compact iCal format
+  if (dtStr.includes('-') || dtStr.includes('T')) return new Date(dtStr);
   const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
   if (dtStr.length === 8) return new Date(`${y}-${mo}-${d}`);
   const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
   return new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
 }
 
-function isAllDayEvent(dtStr) {
+function isAllDayEvent(dtStr, allDay) {
+  if (allDay === true) return true;
   if (!dtStr) return false;
-  // ISO all-day: 2026-05-09 (10 chars, no T)
   if (dtStr.length === 10 && dtStr.includes('-') && !dtStr.includes('T')) return true;
-  // compact all-day: 20260509 (8 chars)
   if (dtStr.length === 8 && !dtStr.includes('T')) return true;
   return false;
 }
 
-function isToday(dtStr) {
+function localDateStr(dt) {
+  // Returns YYYY-MM-DD in local time
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function isToday(dtStr, allDay) {
   if (!dtStr) return false;
   const dt  = parseEventDate(dtStr);
   if (!dt) return false;
   const now = new Date();
-  return dt.toDateString() === now.toDateString();
+  // For all-day events from Apps Script, end date is exclusive (next day at 07:00Z)
+  // so check if today falls within start..end range
+  if (allDay) {
+    const todayStr = localDateStr(now);
+    const startStr = localDateStr(dt);
+    return startStr <= todayStr;
+  }
+  return localDateStr(dt) === localDateStr(now);
 }
 
-function isUpcoming(dtStr) {
+function isUpcoming(dtStr, allDay) {
   if (!dtStr) return false;
   const dt  = parseEventDate(dtStr);
   if (!dt) return false;
   const now  = new Date();
+  if (isToday(dtStr, allDay)) return false; // today events handled separately
   const diff = dt - now;
   return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
 }
 
 function truncate(str, max) {
   str = (str || '').toUpperCase().trim();
-  return str.length <= max ? str : str.substr(0, max - 1) + '+';
+  if (str.length <= max) return str;
+  // Cut at last space before max to avoid mid-word cuts
+  const cut = str.substr(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return lastSpace > max * 0.6 ? cut.substr(0, lastSpace) : cut;
 }
 
 /* parseIcal removed — using GCal JSON feed */
@@ -1080,9 +1091,9 @@ function buildCalScreen(events) {
   const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
   const todayStr  = `${dayNames[now.getDay()]} ${monNames[now.getMonth()]} ${now.getDate()}`;
-  const todayEvts = events.filter(e => isToday(e.dtstart))
+  const todayEvts = events.filter(e => isToday(e.dtstart, e.allDay))
     .sort((a,b) => a.dtstart.localeCompare(b.dtstart));
-  const upcoming  = events.filter(e => isUpcoming(e.dtstart))
+  const upcoming  = events.filter(e => isUpcoming(e.dtstart, e.allDay))
     .sort((a,b) => a.dtstart.localeCompare(b.dtstart))
     .slice(0, 3);
 
@@ -1096,9 +1107,9 @@ function buildCalScreen(events) {
   if (todayEvts.length) {
     // Lines 2-6: today's events (up to 5)
     todayEvts.slice(0,5).forEach(e => {
-      const time = fmtTime(e.dtstart);
-      const name = truncate(e.summary, 28 - time.length - 2);
-      lines.push(truncate(name + (time ? '  ' + time : ''), 28));
+      const time = e.allDay ? '' : fmtTime(e.dtstart, false);
+      const name = truncate(e.summary, time ? 28 - time.length - 2 : 28);
+      lines.push(time ? truncate(name + '  ' + time, 28) : name);
     });
     // pad to 6 lines total if fewer events
     while (lines.length < 6) lines.push('');
