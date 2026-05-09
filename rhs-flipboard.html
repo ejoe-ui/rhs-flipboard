@@ -152,6 +152,25 @@
     align-items: stretch;
   }
 
+  .row-emoji {
+    flex-shrink: 0;
+    width: 5vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(16px, 3.8vh, 68px);
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.4s ease;
+    transform: scale(0.7);
+    user-select: none;
+  }
+
+  .row-emoji.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
   /* ── TILE ── */
   .tile {
     flex: 1;
@@ -578,6 +597,52 @@ let prevLines   = Array.from({length: ROWS}, () => ' '.repeat(COLS));
 let calScreen   = null;   // auto-generated from Google Calendar
 let calTimer    = null;
 
+
+/* ════════════════════════════════════════
+   EMOJI COLUMN
+   Shows contextual emojis left of tiles
+════════════════════════════════════════ */
+const SCREEN_EMOJIS = {
+  birthday:  ['🎂','🎉','🎈','🎁','✨','🎊','🎶'],
+  calendar:  ['📅','🎭','🎵','🏫','📌','🗓️','⭐'],
+  schedule:  ['🔔','📚','⏰','📖','✏️','🎒','🏫'],
+  countdown: ['⏳','🎓','🌸','❄️','🏆','📋','🎯'],
+  default:   ['','','','','','',''],
+};
+
+let currentEmojis = [...SCREEN_EMOJIS.default];
+
+function getScreenEmojis(msg) {
+  if (!msg) return SCREEN_EMOJIS.default;
+  const line0 = (msg.lines && msg.lines[0] || '').toLowerCase();
+  if (msg._isBirthdaySlot || line0.includes('birthday') || line0.includes('happy birth')) return SCREEN_EMOJIS.birthday;
+  if (msg._isCalendarSlot || line0.includes('today at rhs') || line0.includes('rhs events')) return SCREEN_EMOJIS.calendar;
+  if (msg._isScheduleSlot || line0.includes('bell schedule') || line0.includes('block day') || line0.includes('regular bell') || line0.includes('no school')) return SCREEN_EMOJIS.schedule;
+  if (msg._isCountdownSlot || line0.includes('coming up')) return SCREEN_EMOJIS.countdown;
+  return SCREEN_EMOJIS.default;
+}
+
+function updateEmojis(msg, delay) {
+  const emojis = getScreenEmojis(msg);
+  // Fade out first
+  for (let r = 0; r < ROWS; r++) {
+    const el = document.getElementById('emoji-row-' + r);
+    if (el) el.classList.remove('visible');
+  }
+  // Fade in new emojis with stagger
+  setTimeout(() => {
+    for (let r = 0; r < ROWS; r++) {
+      const el = document.getElementById('emoji-row-' + r);
+      if (!el) continue;
+      const emoji = emojis[r] || '';
+      el.textContent = emoji;
+      if (emoji) {
+        setTimeout(() => el.classList.add('visible'), r * 80);
+      }
+    }
+  }, delay || 300);
+}
+
 /* ════════════════════════════════════════
    BUILD BOARD
 ════════════════════════════════════════ */
@@ -589,8 +654,14 @@ function buildBoard() {
   for (let r = 0; r < ROWS; r++) {
     const rowEl = document.createElement('div');
     rowEl.className = 'tile-row';
-    const rowTiles = [];
 
+    // Emoji column — left side, outside tile grid
+    const emojiEl = document.createElement('div');
+    emojiEl.className = 'row-emoji';
+    emojiEl.id = 'emoji-row-' + r;
+    rowEl.appendChild(emojiEl);
+
+    const rowTiles = [];
     for (let c = 0; c < COLS; c++) {
       const tileEl = document.createElement('div');
       tileEl.className = 'tile';
@@ -663,6 +734,9 @@ function showMessage(idx) {
   );
 
   updateDots();
+
+  // Update emoji column for this screen
+  updateEmojis(messages[currentIdx], 250);
 
   // Count changed tiles for sound
   let changedTiles = 0;
