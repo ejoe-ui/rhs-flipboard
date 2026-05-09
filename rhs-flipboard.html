@@ -474,6 +474,8 @@
 const ROWS       = 7;
 const COLS       = 28;
 const SYNC_INTERVAL = 60000;
+const CAL_ICAL_URL  = 'https://calendar.google.com/calendar/ical/rjusd.org_3stf3viha1tl799q7u41j8a75g%40group.calendar.google.com/public/basic.ics';
+const CAL_PROXY     = 'https://api.allorigins.win/raw?url=';
 const CHARS      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
 const SCRAMBLE_MS = 35;
 const SCRAMBLE_STEPS = 5;
@@ -567,6 +569,8 @@ let rotateTimer = null;
 let fetchTimer  = null;
 let sheetUrl    = '';
 let prevLines   = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+let calScreen   = null;   // auto-generated from Google Calendar
+let calTimer    = null;
 
 /* ════════════════════════════════════════
    BUILD BOARD
@@ -941,6 +945,7 @@ function startBoard(data, live) {
         let h = t.getHours() % 12 || 12;
         const m = t.getMinutes().toString().padStart(2,'0');
         setSyncStatus('live', `SYNCED ${h}:${m}`);
+        refreshCalendar();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -969,11 +974,164 @@ document.addEventListener('keydown', e => {
 });
 
 /* ════════════════════════════════════════
+   CALENDAR — iCal fetch + parser
+════════════════════════════════════════ */
+
+function fmtTime(dtStr) {
+  // dtStr: 20260509T153000Z or 20260509 (all-day)
+  if (!dtStr) return '';
+  const isAllDay = dtStr.length === 8;
+  if (isAllDay) return 'ALL DAY';
+  // parse UTC then convert to local
+  const y  = dtStr.substr(0,4), mo = dtStr.substr(4,2), d  = dtStr.substr(6,2);
+  const h  = dtStr.substr(9,2), mi = dtStr.substr(11,2);
+  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+  let hr = dt.getHours(), mn = dt.getMinutes();
+  const ap = hr >= 12 ? 'PM' : 'AM';
+  hr = hr % 12 || 12;
+  return mn > 0 ? `${hr}:${mn.toString().padStart(2,'0')} ${ap}` : `${hr}:00 ${ap}`;
+}
+
+function isToday(dtStr) {
+  if (!dtStr) return false;
+  const now = new Date();
+  const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
+  if (dtStr.length === 8) {
+    return parseInt(y) === now.getFullYear() &&
+           parseInt(mo) === now.getMonth()+1 &&
+           parseInt(d)  === now.getDate();
+  }
+  const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
+  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+  return dt.toDateString() === now.toDateString();
+}
+
+function isUpcoming(dtStr) {
+  if (!dtStr || dtStr.length === 8) return false;
+  const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
+  const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
+  const dt = new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+  const now = new Date();
+  const diff = dt - now;
+  return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000; // within 7 days
+}
+
+function truncate(str, max) {
+  str = (str || '').toUpperCase().trim();
+  return str.length <= max ? str : str.substr(0, max - 1) + '+';
+}
+
+function parseIcal(text) {
+  const events = [];
+  const blocks = text.split('BEGIN:VEVENT');
+  for (let i = 1; i < blocks.length; i++) {
+    const block = blocks[i];
+    const get   = key => {
+      const m = block.match(new RegExp(key + '[^:]*:([^\r\n]+)'));
+      return m ? m[1].trim() : '';
+    };
+    const summary = get('SUMMARY').replace(/\\n/g,' ').replace(/\n/g,' ');
+    const dtstart = get('DTSTART');
+    const dtend   = get('DTEND');
+    if (summary && dtstart) events.push({ summary, dtstart, dtend });
+  }
+  return events;
+}
+
+function buildCalScreen(events) {
+  const now      = new Date();
+  const dayNames = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+  const todayStr  = `${dayNames[now.getDay()]} ${monNames[now.getMonth()]} ${now.getDate()}`;
+  const todayEvts = events.filter(e => isToday(e.dtstart))
+    .sort((a,b) => a.dtstart.localeCompare(b.dtstart));
+  const upcoming  = events.filter(e => isUpcoming(e.dtstart))
+    .sort((a,b) => a.dtstart.localeCompare(b.dtstart))
+    .slice(0, 3);
+
+  if (!todayEvts.length && !upcoming.length) return null;
+
+  const lines = [];
+
+  // Line 1: date header
+  lines.push(truncate('TODAY · ' + todayStr, 28));
+
+  if (todayEvts.length) {
+    // Lines 2-6: today's events (up to 5)
+    todayEvts.slice(0,5).forEach(e => {
+      const time = fmtTime(e.dtstart);
+      const name = truncate(e.summary, 28 - time.length - 2);
+      lines.push(truncate(name + (time ? '  ' + time : ''), 28));
+    });
+    // pad to 6 lines total if fewer events
+    while (lines.length < 6) lines.push('');
+    // Line 7: next upcoming or branding
+    if (upcoming.length) {
+      const next = upcoming[0];
+      const d    = next.dtstart;
+      const dt   = new Date(`${d.substr(0,4)}-${d.substr(4,2)}-${d.substr(6,2)}T${d.substr(9,2)}:${d.substr(11,2)}:00Z`);
+      const label = truncate('NEXT: ' + next.summary.toUpperCase() + ' ' +
+        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28);
+      lines.push(label);
+    } else {
+      lines.push('RHS EVENTS CALENDAR');
+    }
+  } else {
+    // No today events — show upcoming
+    lines.push('NO EVENTS TODAY');
+    upcoming.slice(0,4).forEach(e => {
+      const d  = e.dtstart;
+      const dt = new Date(`${d.substr(0,4)}-${d.substr(4,2)}-${d.substr(6,2)}T${d.substr(9,2)}:${d.substr(11,2)}:00Z`);
+      const label = truncate(e.summary.toUpperCase() + '  ' +
+        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28);
+      lines.push(label);
+    });
+    while (lines.length < 6) lines.push('');
+    lines.push('RHS EVENTS CALENDAR');
+  }
+
+  return { lines: lines.slice(0,7), speed: 15, _isCalendar: true };
+}
+
+async function fetchCalendar() {
+  try {
+    const res  = await fetch(CAL_PROXY + encodeURIComponent(CAL_ICAL_URL), { cache: 'no-store' });
+    if (!res.ok) throw new Error('cal fetch failed');
+    const text = await res.text();
+    const evts = parseIcal(text);
+    return buildCalScreen(evts);
+  } catch(e) {
+    return null;
+  }
+}
+
+function injectCalScreen(screen) {
+  calScreen = screen;
+  // Remove any existing calendar screen
+  messages = messages.filter(m => !m._isCalendar);
+  if (screen) {
+    // Insert as second screen (after first content screen)
+    const insertAt = Math.min(1, messages.length);
+    messages.splice(insertAt, 0, screen);
+    buildDots();
+  }
+}
+
+async function refreshCalendar() {
+  const screen = await fetchCalendar();
+  injectCalScreen(screen);
+}
+
+/* ════════════════════════════════════════
    INIT
 ════════════════════════════════════════ */
 buildBoard();
 updateClock();
 setInterval(updateClock, 10000);
+// Fetch calendar on load and every 5 minutes
+refreshCalendar();
+calTimer = setInterval(refreshCalendar, 5 * 60 * 1000);
 </script>
 </body>
 </html>
