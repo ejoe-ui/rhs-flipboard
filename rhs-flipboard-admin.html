@@ -704,6 +704,13 @@
           </div>
           <button onclick="addQuickMsgPlaceholder()" style="background:#6a1a6a;color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD MSG SLOT</button>
         </div>
+        <div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Educational Facts</div>
+            <div style="font-size:10px;color:var(--text-muted);line-height:1.5">Claude AI generates fresh surprising facts daily for your students — business, media, science, history, career readiness. Updates every hour automatically.</div>
+          </div>
+          <button onclick="addFactsPlaceholder()" style="background:#1a5a3a;color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD FACTS</button>
+        </div>
 
       </div>
     </div>
@@ -1188,6 +1195,21 @@ function addQuickMsgPlaceholder() {
   showToast('Quick message slot added');
 }
 
+function addFactsPlaceholder() {
+  if (messages.some(m => m._isFactsPlaceholder)) {
+    showToast('Facts screen already in queue — only one allowed');
+    return;
+  }
+  messages.push({
+    lines: ['[FACTS]', '', '', '', '', '', ''],
+    speed: 18,
+    _isFactsPlaceholder: true
+  });
+  renderQueue();
+  autosave();
+  showToast('Educational facts screen added');
+}
+
 function exportCSV() {
   if (!messages.length) { showToast('Nothing to export yet'); return; }
 
@@ -1204,6 +1226,8 @@ function exportCSV() {
       rows.push([si + 1, 1, '[COUNTDOWN]', m.speed || 15].join(','));
     } else if (m._isQuickMsgPlaceholder) {
       rows.push([si + 1, 1, '[QUICKMSG]', m.speed || 15].join(','));
+    } else if (m._isFactsPlaceholder) {
+      rows.push([si + 1, 1, '[FACTS]', m.speed || 18].join(','));
     } else {
       for (let li = 0; li < 7; li++) {
         const text  = csvCell(m.lines[li] || '');
@@ -1247,6 +1271,8 @@ function copySheetPaste() {
       lines.push([si + 1, 1, '[COUNTDOWN]', m.speed || 15].join('\t'));
     } else if (m._isQuickMsgPlaceholder) {
       lines.push([si + 1, 1, '[QUICKMSG]', m.speed || 15].join('\t'));
+    } else if (m._isFactsPlaceholder) {
+      lines.push([si + 1, 1, '[FACTS]', m.speed || 18].join('\t'));
     } else {
       for (let li = 0; li < 7; li++) {
         const speed = li === 0 ? (m.speed || 8) : '';
@@ -1327,8 +1353,11 @@ function importCSVText(csv) {
     if (firstLine === '[QUICKMSG]') {
       return { lines: Array(7).fill(''), speed: s.speed || 15, _isQuickMsgPlaceholder: true };
     }
+    if (firstLine === '[FACTS]') {
+      return { lines: Array(7).fill(''), speed: s.speed || 18, _isFactsPlaceholder: true };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s.lines[0]);
   if (!parsed.length) { showToast('No valid screens found'); return; }
   messages = parsed;
   renderQueue();
