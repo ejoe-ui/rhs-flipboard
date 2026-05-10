@@ -1090,7 +1090,7 @@ function startBoard(data, live) {
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
     refreshCountdowns();
     // Now show the first message — all slots are populated
-    prevLines = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+    prevLines = Array.from({length: ROWS}, () => '\x00'.repeat(COLS));
     showMessage(0);
   }, 400);
 

@@ -1021,15 +1021,21 @@ function startBoard(data, live) {
   currentIdx = 0;
   // showMessage called after slot injection
 
-  // Always try calendar, schedule, and birthdays after messages load
+  // Inject all live slots then show board
   setTimeout(async () => {
-    await refreshCalendar();
+    await Promise.all([
+      refreshCalendar(),
+      refreshBirthdays(),
+      refreshQuickMsg(),
+      refreshFacts(),
+    ]);
     refreshSchedule();
-    await refreshBirthdays();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
     refreshCountdowns();
-    await refreshQuickMsg();
-  }, 600);
+    // Force all tiles to animate on first display by using impossible prev state
+    prevLines = Array.from({length: ROWS}, () => '\x00'.repeat(COLS));
+    showMessage(0);
+  }, 400);
 
   if (live) {
     setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
@@ -1054,6 +1060,7 @@ function startBoard(data, live) {
         await refreshBirthdays();
         refreshCountdowns();
         await refreshQuickMsg();
+        await refreshFacts();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
