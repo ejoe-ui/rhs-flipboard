@@ -1064,9 +1064,7 @@ function enableSound(el) {
 }
 
 function showSetup() {
-  clearTimeout(rotateTimer);
-  clearInterval(fetchTimer);
-  document.getElementById('setup-overlay').classList.remove('hidden');
+  // Disabled in TV mode — sheet URL is hardcoded
 }
 
 function forgetUrl() {
@@ -2086,6 +2084,9 @@ setInterval(refreshQuickMsg, 30 * 1000);
 buildBoard();
 updateClock();
 setInterval(updateClock, 10000);
+// TV version — force hide setup overlay immediately
+const _overlay = document.getElementById('setup-overlay');
+if (_overlay) _overlay.style.display = 'none';
 
 // Auto-launch with hardcoded sheet URL — no setup needed
 (async () => {
