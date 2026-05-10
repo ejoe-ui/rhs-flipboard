@@ -1289,8 +1289,12 @@ let audioCtx = null;
 
 function getAudioCtx() {
   if (!audioCtx) {
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { return null; }
   }
+  // Don't attempt to use a suspended context — just return null silently
+  if (audioCtx && audioCtx.state === 'suspended') return null;
   return audioCtx;
 }
 
@@ -1315,16 +1319,10 @@ function playFlipClick(time, vol) {
   filter.type  = 'bandpass';
   filter.frequency.value = 900;
   filter.Q.value = 1.4;
-  // Slight high shelf for crispness
-  const shelf  = ctx.createBiquadFilter();
-  shelf.type   = 'highShelf';
-  shelf.frequency.value = 3500;
-  shelf.gain.value = 4;
   const gain   = ctx.createGain();
   gain.gain.value = vol || 0.22;
   src.connect(filter);
-  filter.connect(shelf);
-  shelf.connect(gain);
+  filter.connect(gain);
   gain.connect(ctx.destination);
   src.start(time);
 }
