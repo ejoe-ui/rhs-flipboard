@@ -1074,19 +1074,25 @@ function startBoard(data, live) {
   document.getElementById('setup-overlay').classList.add('hidden');
   buildDots();
 
-  currentIdx = messages.length - 1;
-  showMessage(0);
+  currentIdx = 0;
+  // Don't show yet — wait for slot injection in setTimeout above
 
-  // Always try calendar, schedule, and birthdays after messages load
+  // Inject all live slots before showing the board
   setTimeout(async () => {
-    await refreshCalendar();
+    // Run all slot injections in parallel where possible
+    await Promise.all([
+      refreshCalendar(),
+      refreshBirthdays(),
+      refreshQuickMsg(),
+      refreshFacts(),
+    ]);
     refreshSchedule();
-    await refreshBirthdays();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
     refreshCountdowns();
-    await refreshQuickMsg();
-    await refreshFacts();
-  }, 600);
+    // Now show the first message — all slots are populated
+    prevLines = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+    showMessage(0);
+  }, 400);
 
   if (live) {
     setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
