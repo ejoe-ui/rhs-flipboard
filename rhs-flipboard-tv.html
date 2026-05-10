@@ -951,7 +951,7 @@ async function connectSheet() {
     if(err) err.textContent = 'Check the URL — must be a Google Sheets link.'; return;
   }
 
-  err.textContent = '';
+  if (err) err.textContent = '';
   setSyncStatus('', 'CONNECTING...');
 
   const data = await fetchSheet(url);
