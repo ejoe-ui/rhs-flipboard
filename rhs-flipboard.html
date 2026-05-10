@@ -2319,7 +2319,7 @@ buildBoard();
 updateClock();
 setInterval(updateClock, 10000);
 
-// Auto-connect from saved URL
+// Auto-connect from saved URL — retries 3 times on network failure
 (async () => {
   try {
     const saved = localStorage.getItem('rhs-sheet-url');
@@ -2327,21 +2327,26 @@ setInterval(updateClock, 10000);
       sheetUrl = saved;
       const inp = document.getElementById('sheetUrl');
       if (inp) inp.value = saved;
-      setSyncStatus('', 'AUTO-CONNECTING...');
-      const data = await fetchSheet(saved);
-      if (data) {
-        startBoard(data, true);
-        return;
-      } else {
-        // Fetch failed — clear bad URL and show setup
-        try { localStorage.removeItem('rhs-sheet-url'); } catch(e2) {}
-        document.getElementById('errorMsg').textContent =
-          'Auto-connect failed. Please reconnect your sheet.';
+
+      // Try up to 3 times with 2 second delay between attempts
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        setSyncStatus('', attempt > 1 ? `RETRY ${attempt}/3...` : 'AUTO-CONNECTING...');
+        const data = await fetchSheet(saved);
+        if (data) {
+          startBoard(data, true);
+          return;
+        }
+        if (attempt < 3) await new Promise(r => setTimeout(r, 2000));
       }
+
+      // All retries failed — show setup but keep URL pre-filled
+      const em = document.getElementById('errorMsg');
+      if (em) em.textContent = 'Network issue. Click Connect & Launch to retry.';
     }
   } catch(e) {}
   // Show setup screen
-  document.getElementById('setup-overlay').classList.remove('hidden');
+  const ov = document.getElementById('setup-overlay');
+  if (ov) ov.classList.remove('hidden');
 })();
 
 // Calendar is initialized inside startBoard() after messages load
