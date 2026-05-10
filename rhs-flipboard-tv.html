@@ -941,11 +941,12 @@ function parseGviz(data) {
 async function connectSheet() {
   const _inp = document.getElementById('sheetUrl');
   const url = _inp ? _inp.value.trim() : sheetUrl;
-  const err = document.getElementById('errorMsg');
+  const err = document.getElementById('errorMsg') || {textContent:'',style:{}};
 
   if (!url) {
     err.textContent = 'Paste your published CSV URL above.'; return;
   }
+  if (!url) return; // TV version — url is hardcoded, skip validation
   if (!url.includes('docs.google.com')) {
     if(err) err.textContent = 'Check the URL — must be a Google Sheets link.'; return;
   }
@@ -1085,7 +1086,7 @@ function forgetUrl() {
   sheetUrl = '';
   const inp = document.getElementById('sheetUrl');
   if (inp) inp.value = '';
-  document.getElementById('errorMsg').textContent = 'Saved URL cleared.';
+  const _em2 = document.getElementById('errorMsg'); if(_em2) _em2.textContent = 'Saved URL cleared.';
 }
 
 document.addEventListener('keydown', e => {
