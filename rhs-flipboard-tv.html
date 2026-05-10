@@ -1022,7 +1022,7 @@ function startBoard(data, live) {
     clearInterval(fetchTimer);
     clearInterval(calTimer);
     fetchTimer = setInterval(async () => {
-      const fresh = await fetchSheet(sheetUrl);
+      const fresh = await fetchViaGviz_TV('1xkHmsc-7LgDWaQ0Oblb2hgSqOuABi56Zu2EeDcsJ_v4') || await fetchSheet(sheetUrl);
       if (fresh) {
         const currentLine1 = messages[currentIdx]?.lines[0] || '';
         // Smart merge: replace sheet-sourced messages but keep live slots in position
@@ -2081,6 +2081,41 @@ setInterval(refreshQuickMsg, 30 * 1000);
 /* ════════════════════════════════════════
    INIT
 ════════════════════════════════════════ */
+
+function fetchViaGviz_TV(sheetId) {
+  return new Promise((resolve) => {
+    const cbName = '_gviz_tv_' + Date.now();
+    const gvizUrl = 'https://docs.google.com/spreadsheets/d/' + sheetId +
+      '/gviz/tq?tqx=out:json&tq=select+*&gid=0&cb=' + cbName;
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; cleanup(); resolve(null); }
+    }, 10000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if (s) s.remove();
+    }
+
+    window[cbName] = function(gvizResponse) {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      try { resolve(parseGviz(gvizResponse)); }
+      catch(e) { resolve(null); }
+    };
+
+    const script = document.createElement('script');
+    script.id  = cbName;
+    script.src = gvizUrl;
+    script.onerror = () => { if (!resolved) { resolved = true; cleanup(); resolve(null); } };
+    document.head.appendChild(script);
+  });
+}
+
 buildBoard();
 updateClock();
 setInterval(updateClock, 10000);
@@ -2090,15 +2125,18 @@ if (_overlay) _overlay.style.display = 'none';
 
 // Auto-launch with hardcoded sheet URL — no setup needed
 (async () => {
+  // TV version — hardcoded sheet ID, skip direct fetch, go straight to gviz
+  const HARDCODED_SHEET_ID = '1xkHmsc-7LgDWaQ0Oblb2hgSqOuABi56Zu2EeDcsJ_v4';
   const HARDCODED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjqIQ3rsr_tr62T492hu3iEuXaNJnm9ayyAa6qgJGxm2YF5CsH9PStUPfmHpdOM2iHmGCQNsY-SZ9Q/pub?gid=0&single=true&output=csv';
   sheetUrl = HARDCODED_URL;
-  try { localStorage.setItem('rhs-sheet-url', HARDCODED_URL); } catch(e) {}
   setSyncStatus('', 'CONNECTING...');
-  const data = await fetchSheet(HARDCODED_URL);
+
+  // Use gviz directly with the sheet ID — no proxy needed, works on school networks
+  const data = await fetchViaGviz_TV(HARDCODED_SHEET_ID);
   if (data) {
     startBoard(data, true);
   } else {
-    // Fallback to demo if sheet unreachable
+    // Fallback to demo
     startBoard(DEMO, false);
     setSyncStatus('error', 'SHEET UNREACHABLE · DEMO MODE');
   }
