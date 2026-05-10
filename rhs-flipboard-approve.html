@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>RHS FlipBoard · Approve Messages</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #006938;
+    --green-dark: #004d28;
+    --green-light: #e8f3ed;
+    --red: #c0392b;
+    --red-light: #fdf0ee;
+    --tan: #C4BEB5;
+    --bg: #0d0d0d;
+    --surface: #151515;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #f0ebe0;
+    --text-mid: #888;
+    --text-dim: #444;
+    --mono: 'Courier New', Courier, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: #0a0a0a;
+    border-bottom: 3px solid var(--green);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .badge {
+    background: var(--green);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    padding: 5px 12px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .header-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--tan);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    flex: 1;
+  }
+
+  .refresh-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-mid);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    -webkit-appearance: none;
+  }
+  .refresh-btn:active { background: var(--surface2); }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 60px);
+    padding: 20px;
+  }
+
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--green);
+    border-radius: 12px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .login-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .key-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 12px;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+  .key-input:focus { border-color: var(--green); }
+
+  .login-btn {
+    width: 100%;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-appearance: none;
+  }
+  .login-btn:active { background: var(--green-dark); }
+
+  .login-error {
+    color: #ff6060;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 10px;
+    font-family: var(--mono);
+    display: none;
+  }
+
+  /* ── MAIN ── */
+  #mainScreen { display: none; padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  /* ── ACTIVE MESSAGE ── */
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .active-card {
+    background: var(--surface);
+    border: 1px solid #1a3a28;
+    border-left: 4px solid var(--green);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+
+  .active-card.empty {
+    border-left-color: var(--border);
+    border-color: var(--border);
+  }
+
+  .active-lines {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .active-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .clear-active-btn {
+    background: transparent;
+    border: 1px solid #441111;
+    color: #cc4444;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    -webkit-appearance: none;
+  }
+  .clear-active-btn:active { background: var(--red-light); }
+
+  /* ── PENDING CARDS ── */
+  .pending-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .pending-sender {
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .pending-time { color: var(--text-dim); }
+
+  .pending-lines {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+
+  .pending-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .approve-btn {
+    flex: 1;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-appearance: none;
+    transition: background 0.15s;
+  }
+  .approve-btn:active { background: var(--green-dark); }
+
+  .reject-btn {
+    flex: 1;
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+    border-radius: 8px;
+    padding: 13px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-appearance: none;
+    transition: all 0.15s;
+  }
+  .reject-btn:active { background: var(--red-light); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    padding: 32px 0;
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #0d0d0d;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border-top: 2px solid var(--green);
+    z-index: 999;
+    transition: transform 0.25s ease;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  .loading {
+    text-align: center;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 20px;
+  }
+
+  /* preview tiles */
+  .mini-board {
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 12px;
+  }
+  .mini-row {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+    justify-content: center;
+  }
+  .mtile {
+    flex: 1;
+    max-width: 11px;
+    height: 15px;
+    background: #1c1c1c;
+    border: 1px solid #2a2a2a;
+    border-radius: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 7px;
+    font-weight: 700;
+    color: #f0ebe0;
+  }
+  .mtile.lit { background: #0f2a1a; color: #00cc66; border-color: #004d28; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Room 27</div>
+  <div class="header-title">Message Approval</div>
+  <button class="refresh-btn" onclick="loadData()">↺ Refresh</button>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-title">Teacher Access</div>
+    <div class="login-sub">Enter your approval key to manage messages</div>
+    <input class="key-input" id="keyInput" type="password"
+      placeholder="Approval key"
+      autocomplete="current-password"
+      onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">▶ Sign In</button>
+    <div class="login-error" id="loginError">Incorrect key. Try again.</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="mainScreen">
+
+  <!-- ACTIVE -->
+  <div class="section-title">
+    Live on Board
+    <span id="activeCount" style="color:var(--green);font-size:10px;letter-spacing:0.1em"></span>
+  </div>
+  <div class="active-card" id="activeCard">
+    <div class="loading">Loading...</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PENDING -->
+  <div class="section-title">
+    Pending Approval
+    <span id="pendingCount" style="font-size:10px;letter-spacing:0.1em"></span>
+  </div>
+  <div id="pendingList">
+    <div class="loading">Loading...</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ⬇ Same Apps Script URL as the board and post page
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
+const COLS = 28;
+
+let teacherKey = '';
+let autoRefreshTimer = null;
+
+/* ── AUTH ── */
+async function login() {
+  const key = document.getElementById('keyInput').value.trim();
+  if (!key) return;
+
+  // Test key by fetching pending
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=pending&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      teacherKey = key;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainScreen').style.display  = 'block';
+      loadData();
+      // Auto-refresh every 20 seconds
+      autoRefreshTimer = setInterval(loadData, 20000);
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('loginError').textContent = 'Connection error. Try again.';
+  }
+}
+
+/* ── LOAD DATA ── */
+async function loadData() {
+  await Promise.all([loadActive(), loadPending()]);
+}
+
+async function loadActive() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=quickmsg`);
+    const data = await res.json();
+    renderActive(data.message);
+  } catch(e) {
+    renderActive(null);
+  }
+}
+
+async function loadPending() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=pending&key=${encodeURIComponent(teacherKey)}`);
+    const data = await res.json();
+    renderPending(data.pending || []);
+  } catch(e) {
+    renderPending([]);
+  }
+}
+
+/* ── RENDER ACTIVE ── */
+function renderActive(msg) {
+  const card  = document.getElementById('activeCard');
+  const count = document.getElementById('activeCount');
+
+  if (!msg) {
+    card.className = 'active-card empty';
+    card.innerHTML = '<div style="color:var(--text-dim);font-size:13px;font-family:var(--mono);letter-spacing:0.08em">NO ACTIVE MESSAGE</div>';
+    count.textContent = '';
+    return;
+  }
+
+  card.className = 'active-card';
+  const posted = new Date(msg.timestamp);
+  const timeStr = posted.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+  const lines = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim());
+
+  card.innerHTML = `
+    ${renderMiniBoard([msg.line1, msg.line2, msg.line3])}
+    <div class="active-lines">${lines.map(l => escHtml(l)).join('<br>')}</div>
+    <div class="active-meta">
+      <span>From ${escHtml(msg.sender || 'Anonymous')} · ${timeStr}</span>
+      <button class="clear-active-btn" onclick="clearBoard()">✕ Clear</button>
+    </div>
+  `;
+  count.textContent = '● LIVE';
+}
+
+/* ── RENDER PENDING ── */
+function renderPending(items) {
+  const list  = document.getElementById('pendingList');
+  const count = document.getElementById('pendingCount');
+
+  count.textContent = items.length ? items.length + ' waiting' : '';
+  count.style.color = items.length ? '#ff9900' : 'var(--text-dim)';
+
+  if (!items.length) {
+    list.innerHTML = '<div class="empty-state">NO PENDING MESSAGES</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(item => {
+    const posted = new Date(item.time);
+    const timeStr = posted.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const lines = [item.line1, item.line2, item.line3].filter(l => l && l.trim());
+
+    return `
+      <div class="pending-card">
+        <div class="pending-sender">
+          <span>From ${escHtml(item.sender || 'Anonymous')}</span>
+          <span class="pending-time">${timeStr}</span>
+        </div>
+        ${renderMiniBoard([item.line1, item.line2, item.line3])}
+        <div class="pending-lines">${lines.map(l => escHtml(l)).join('<br>')}</div>
+        <div class="pending-actions">
+          <button class="approve-btn" onclick="approve(${item.row})">✓ Approve</button>
+          <button class="reject-btn" onclick="reject(${item.row})">✕ Reject</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ── ACTIONS ── */
+async function approve(row) {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=approve&row=${row}&key=${encodeURIComponent(teacherKey)}`);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast('✓ Approved — live on board');
+      loadData();
+    }
+  } catch(e) { showToast('Connection error'); }
+}
+
+async function reject(row) {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=reject&row=${row}&key=${encodeURIComponent(teacherKey)}`);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast('Message rejected');
+      loadData();
+    }
+  } catch(e) { showToast('Connection error'); }
+}
+
+async function clearBoard() {
+  try {
+    const res  = await fetch(`${SCRIPT_URL}?action=clear&key=${encodeURIComponent(teacherKey)}`);
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast('Board cleared');
+      loadData();
+    }
+  } catch(e) { showToast('Connection error'); }
+}
+
+/* ── MINI BOARD PREVIEW ── */
+function padCenter(text, cols) {
+  text = (text || '').toUpperCase().trim().substring(0, cols);
+  const total = cols - text.length;
+  const left  = Math.floor(total / 2);
+  return ' '.repeat(left) + text + ' '.repeat(total - left);
+}
+
+function renderMiniBoard(lines) {
+  const rows = lines.slice(0, 3).map(l => padCenter(l || '', COLS));
+  return '<div class="mini-board">' + rows.map(row => {
+    const tiles = Array.from(row).map(ch => {
+      const lit = ch && ch !== ' ';
+      return `<div class="mtile${lit ? ' lit' : ''}">${lit ? ch : ''}</div>`;
+    }).join('');
+    return `<div class="mini-row">${tiles}</div>`;
+  }).join('<div style="height:1px"></div>') + '</div>';
+}
+
+/* ── HELPERS ── */
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
