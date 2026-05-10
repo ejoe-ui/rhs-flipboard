@@ -538,6 +538,12 @@ let prevLines   = Array.from({length: ROWS}, () => ' '.repeat(COLS));
 let calScreen   = null;   // auto-generated from Google Calendar
 let calTimer    = null;
 
+// Forward declaration stubs — real functions defined later in file
+// Needed because async functions aren't hoisted like regular functions
+async function refreshFacts()   { if(typeof _refreshFacts==='function') return _refreshFacts(); }
+async function refreshBirthdays(){ if(typeof _refreshBirthdays==='function') return _refreshBirthdays(); }
+async function refreshQuickMsg(){ if(typeof _refreshQuickMsg==='function') return _refreshQuickMsg(); }
+
 
 
 /* ════════════════════════════════════════
@@ -1574,7 +1580,7 @@ function injectBirthdayScreen(screen) {
   buildDots();
 }
 
-async function refreshBirthdays() {
+async function _refreshBirthdays() {
   const hasSlot = messages.some(m => m._isBirthdayPlaceholder || m._isBirthdaySlot);
   if (!hasSlot) return;
   if (sheetUrl) await fetchSheetBirthdays(sheetUrl);
@@ -1790,7 +1796,7 @@ function injectQuickMsgScreen(screen) {
   buildDots();
 }
 
-async function refreshQuickMsg() {
+async function _refreshQuickMsg() {
   const hasSlot = messages.some(m => m._isQuickMsgPlaceholder || m._isQuickMsgSlot);
   if (!hasSlot) return;
   const msg    = await fetchQuickMessage();
@@ -1922,7 +1928,7 @@ function injectFactsScreen(screen) {
   buildDots();
 }
 
-async function refreshFacts() {
+async function _refreshFacts() {
   const hasSlot = messages.some(m => m._isFactsPlaceholder || m._isFactsSlot);
   if (!hasSlot) return;
   const facts  = await fetchFacts();
