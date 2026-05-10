@@ -480,15 +480,18 @@ async function submitMessage() {
   showStatus('Posting to board...', 'loading');
 
   try {
-    const res = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        line1: line1,
-        line2: lines[1].trim(),
-        line3: lines[2].trim(),
-        sender: sender
-      })
+    // Use GET with URL params — avoids CORS preflight issues with Apps Script
+    const params = new URLSearchParams({
+      action: 'post',
+      line1:  line1,
+      line2:  lines[1].trim(),
+      line3:  lines[2].trim(),
+      sender: sender
+    });
+
+    const res  = await fetch(SCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode:   'cors'
     });
 
     const data = await res.json();
