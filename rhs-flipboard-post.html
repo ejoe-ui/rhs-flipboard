@@ -497,7 +497,7 @@ async function submitMessage() {
     const data = await res.json();
 
     if (data.status === 'ok') {
-      showStatus('✓ Posted! Appears on board within 60 seconds.', 'success');
+      showStatus('✓ Submitted! Mr. Joe will approve it shortly.', 'success');
       clearAll();
     } else {
       showStatus('Error: ' + (data.message || 'Try again.'), 'error');
