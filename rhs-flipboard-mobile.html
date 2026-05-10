@@ -1037,7 +1037,7 @@ function render(calEvents, quickMsg) {
       bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b=>`
         <div style="cursor:pointer;padding:3px 0;-webkit-tap-highlight-color:transparent" onclick='openBdayModal(${JSON.stringify(b)})'>
           ${monNames[b.month-1]} ${b.day} · ${b.name}
-          ${getBdayCount(b.name) > 0 ? `<span style="color:var(--green);font-size:10px"> · ${getBdayCount(b.name)} 🎉</span>` : ''}
+          <span class="bday-week-count-${b.name.replace(/\s/g,'-')}" style="color:var(--green);font-size:10px"></span>
         </div>`).join('')}</div>`;
     }
     bdCard.innerHTML = `
@@ -1187,18 +1187,29 @@ function openEventModal(evt) {
 /* ── BIRTHDAY MODAL ── */
 const BDAY_ICONS = ['🎉','🎂','🎁','🪅','🎈','🥳','🎊'];
 
-function getBdayCount(name) {
+// Shared birthday counts via Apps Script
+const bdayCountCache = {};
+
+async function getBdayCount(name) {
+  if (bdayCountCache[name] !== undefined) return bdayCountCache[name];
   try {
-    return parseInt(localStorage.getItem('bday_' + name) || '0');
+    const res  = await fetch(`${SCRIPT_URL}?action=bdaycount&name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    bdayCountCache[name] = data.count || 0;
+    return bdayCountCache[name];
   } catch(e) { return 0; }
 }
 
-function incrementBday(name) {
+async function incrementBday(name) {
   try {
-    const count = getBdayCount(name) + 1;
-    localStorage.setItem('bday_' + name, count);
-    return count;
-  } catch(e) { return 1; }
+    const res  = await fetch(`${SCRIPT_URL}?action=bdaytap&name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    bdayCountCache[name] = data.count || 0;
+    return bdayCountCache[name];
+  } catch(e) {
+    bdayCountCache[name] = (bdayCountCache[name] || 0) + 1;
+    return bdayCountCache[name];
+  }
 }
 
 function openBdayModal(person) {
