@@ -1001,7 +1001,7 @@ function startBoard(data, live) {
   messages = data;
   prevLines = Array.from({length: ROWS}, () => ' '.repeat(COLS));
 
-  document.getElementById('setup-overlay').classList.add('hidden');
+  const _so1 = document.getElementById('setup-overlay'); if(_so1) _so1.classList.add('hidden');
   buildDots();
 
   currentIdx = messages.length - 1;
@@ -1076,7 +1076,7 @@ function forgetUrl() {
 }
 
 document.addEventListener('keydown', e => {
-  if (document.getElementById('setup-overlay').classList.contains('hidden')) {
+  if ((!document.getElementById('setup-overlay') || document.getElementById('setup-overlay').classList.contains('hidden'))) {
     if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextMsg(); }
     if (e.key === 'ArrowLeft')  { e.preventDefault(); prevMsg(); }
     if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
