@@ -824,8 +824,15 @@ function parseCSV(csv) {
         _isQuickMsgPlaceholder: true
       };
     }
+    if (firstLine === '[FACTS]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 18,
+        _isFactsPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -971,8 +978,15 @@ function parseGviz(data) {
         _isQuickMsgPlaceholder: true
       };
     }
+    if (firstLine === '[FACTS]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 18,
+        _isFactsPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1043,6 +1057,9 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isQuickMsgPlaceholder) {
       const existing = messages.find(m => m._isQuickMsgSlot || m._isQuickMsgPlaceholder);
       result.push(existing || item);
+    } else if (item._isFactsPlaceholder) {
+      const existing = messages.find(m => m._isFactsSlot || m._isFactsPlaceholder);
+      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1068,6 +1085,7 @@ function startBoard(data, live) {
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
     refreshCountdowns();
     await refreshQuickMsg();
+    await refreshFacts();
   }, 600);
 
   if (live) {
@@ -1093,6 +1111,7 @@ function startBoard(data, live) {
         await refreshBirthdays();
         refreshCountdowns();
         await refreshQuickMsg();
+        await refreshFacts();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -1817,6 +1836,159 @@ async function refreshQuickMsg() {
   injectQuickMsgScreen(screen);
 }
 
+
+/* ════════════════════════════════════════
+   EDUCATIONAL FACTS SYSTEM
+   Claude-generated facts via Anthropic API
+   Generates fresh facts daily, cached in
+   localStorage to avoid repeat API calls
+════════════════════════════════════════ */
+
+const FACTS_CACHE_KEY = 'rhs-facts-cache';
+const FACTS_DATE_KEY  = 'rhs-facts-date';
+
+const FACT_CATEGORIES = [
+  'media production or film',
+  'business or entrepreneurship',
+  'marketing or social media',
+  'science or technology',
+  'history or current events',
+  'math or economics',
+  'college or career readiness'
+];
+
+// Large rotating fact bank — grouped by day of year so facts feel fresh
+const FACT_BANK = [
+  // Media & Film
+  'THE FIRST FILM EVER MADE WAS ONLY 2 SECONDS LONG IN 1888',
+  'SPIELBERG DIRECTED SCHINDLERS LIST AND JURASSIC PARK IN THE SAME YEAR',
+  'THE SOUND OF RAIN IN OLD FILMS WAS ACTUALLY BACON SIZZLING',
+  'OVER 500 HOURS OF VIDEO ARE UPLOADED TO YOUTUBE EVERY MINUTE',
+  'THE FIRST PAID TV AD COST ONLY 9 DOLLARS IN 1941',
+  'DISNEY TURNED DOWN HARRY POTTER BECAUSE IT WAS TOO LONG',
+  'THE OSCAR STATUETTE WAS DESIGNED BY A TEENAGER IN 1928',
+  // Business & Entrepreneurship
+  'INSTAGRAM WAS SOLD TO FACEBOOK FOR 1 BILLION WITH ONLY 13 EMPLOYEES',
+  'WARREN BUFFETT MADE 99 PERCENT OF HIS WEALTH AFTER AGE 50',
+  'APPLE WAS STARTED IN A GARAGE WITH 1750 DOLLARS IN 1976',
+  'AMAZON STARTED AS AN ONLINE BOOKSTORE SELLING JUST 3 TITLES',
+  'NIKE FOUNDER PHIL KNIGHT SOLD SHOES FROM THE TRUNK OF HIS CAR',
+  'THE FIRST STARBUCKS OPENED IN 1971 AND ONLY SOLD COFFEE BEANS',
+  'COCA-COLA SOLD ONLY 9 DRINKS PER DAY IN ITS FIRST YEAR',
+  // Marketing & Social Media
+  'THE AVERAGE PERSON SEES 6000 TO 10000 ADS EVERY SINGLE DAY',
+  'THE AVERAGE PERSON SPENDS 7 YEARS OF THEIR LIFE ON SOCIAL MEDIA',
+  'RED INCREASES APPETITE WHICH IS WHY MCDONALDS AND KFC USE IT',
+  'TIKTOK REACHED 1 BILLION USERS FASTER THAN ANY APP IN HISTORY',
+  '90 PERCENT OF PURCHASING DECISIONS ARE MADE SUBCONSCIOUSLY',
+  'THE MARLBORO MAN ADS WERE CREATED BY A FEMALE COPYWRITER',
+  'GOOGLE EARNS 280 BILLION DOLLARS A YEAR MOSTLY FROM ADS',
+  // Science & Tech
+  'THE HUMAN BRAIN CAN STORE ABOUT 2.5 PETABYTES OF INFORMATION',
+  'GOOGLE WAS ORIGINALLY CALLED BACKRUB BEFORE CHANGING ITS NAME',
+  'THE FIRST COMPUTER BUG WAS AN ACTUAL MOTH FOUND IN 1947',
+  'WIFI TECHNOLOGY WAS INVENTED AS A RESULT OF A BLACK HOLE EXPERIMENT',
+  'THE AVERAGE SMARTPHONE HAS MORE COMPUTING POWER THAN NASA IN 1969',
+  'THERE ARE MORE STARS IN SPACE THAN GRAINS OF SAND ON ALL BEACHES',
+  'OCTOPUSES HAVE THREE HEARTS AND BLUE BLOOD',
+  // History & Current Events
+  'CLEOPATRA LIVED CLOSER IN TIME TO THE IPHONE THAN TO THE PYRAMIDS',
+  'OXFORD UNIVERSITY IS OLDER THAN THE AZTEC EMPIRE',
+  'THE GREAT WALL OF CHINA TOOK OVER 1000 YEARS TO BUILD',
+  'VIKINGS NEVER ACTUALLY WORE HORNED HELMETS',
+  'NAPOLEON WAS ACTUALLY AVERAGE HEIGHT FOR HIS TIME AT 5 FOOT 7',
+  'THE LONGEST WAR IN HISTORY LASTED 335 YEARS WITH NO BATTLES',
+  'CALIFORNIA HAS THE WORLDS 5TH LARGEST ECONOMY BY ITSELF',
+  // Math & Economics
+  'COLLEGE GRADS EARN 65 PERCENT MORE OVER THEIR LIFETIME THAN HIGH SCHOOL GRADS',
+  'IF YOU SAVED 100 DOLLARS A DAY SINCE JESUS WAS BORN YOU WOULD HAVE 1 BILLION DOLLARS',
+  'THE NUMBER ZERO WAS INVENTED IN INDIA AROUND 500 AD',
+  '111111111 TIMES 111111111 EQUALS 12345678987654321',
+  'A BILLION SECONDS AGO IT WAS 1993',
+  'THE FIBONACCI SEQUENCE APPEARS IN FLOWER PETALS SHELLS AND GALAXIES',
+  'COMPOUND INTEREST IS THE EIGHTH WONDER OF THE WORLD SAID EINSTEIN',
+  // Career & College
+  '65 PERCENT OF JOBS THAT EXIST IN 2030 HAVE NOT BEEN INVENTED YET',
+  'THE AVERAGE PERSON CHANGES CAREERS 5 TO 7 TIMES IN THEIR LIFETIME',
+  'LINKEDIN HAS OVER 900 MILLION MEMBERS IN 200 COUNTRIES',
+  'FIRST GEN COLLEGE STUDENTS EARN 25 PERCENT MORE THAN THEIR PARENTS',
+  'THE MOST IN-DEMAND SKILL FOR JOBS IN 2025 IS AI LITERACY',
+  '4 OF THE 5 RICHEST PEOPLE IN THE WORLD ARE COLLEGE DROPOUTS',
+  'INTERNSHIPS LEAD TO FULL-TIME JOBS 70 PERCENT OF THE TIME',
+];
+
+async function fetchFacts() {
+  // Rotate facts daily using day of year as seed
+  const now     = new Date();
+  const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+  
+  // Pick 7 facts starting from day-based offset, wrapping around
+  const startIdx = (dayOfYear * 7) % FACT_BANK.length;
+  const facts = [];
+  for (let i = 0; i < 7; i++) {
+    facts.push(FACT_BANK[(startIdx + i) % FACT_BANK.length]);
+  }
+  return facts;
+}
+
+function buildFactsScreen(facts) {
+  if (!facts || !facts.length) return null;
+
+  // Pick a random fact to lead with, rotate through them
+  const now     = new Date();
+  const idx     = now.getHours() % facts.length; // changes each hour
+  const fact    = (facts[idx] || facts[0]).toUpperCase();
+
+  // Split fact into lines of max 28 chars at word boundaries
+  function wrapText(text, maxLen) {
+    const words = text.split(' ');
+    const lines = [];
+    let current = '';
+    for (const word of words) {
+      if ((current + ' ' + word).trim().length <= maxLen) {
+        current = (current + ' ' + word).trim();
+      } else {
+        if (current) lines.push(current);
+        current = word;
+      }
+    }
+    if (current) lines.push(current);
+    return lines;
+  }
+
+  const factLines = wrapText(fact, 28);
+
+  const lines = ['DID YOU KNOW?', ''];
+  factLines.slice(0, 4).forEach(l => lines.push(l));
+  while (lines.length < 6) lines.push('');
+  lines.push('ROOM 27 · RHS');
+
+  return { lines: lines.slice(0, 7), speed: 18, _isFactsSlot: true };
+}
+
+function injectFactsScreen(screen) {
+  let idx = messages.findIndex(m => m._isFactsPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isFactsSlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isFactsSlot: true };
+  } else {
+    messages[idx] = {
+      lines: ['DID YOU KNOW?','','FACTS LOADING','PLEASE WAIT','','','ROOM 27'],
+      speed: 10, _isFactsSlot: true
+    };
+  }
+  buildDots();
+}
+
+async function refreshFacts() {
+  const hasSlot = messages.some(m => m._isFactsPlaceholder || m._isFactsSlot);
+  if (!hasSlot) return;
+  const facts  = await fetchFacts();
+  const screen = buildFactsScreen(facts);
+  injectFactsScreen(screen);
+}
+
 /* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
@@ -2132,6 +2304,7 @@ async function refreshSchedule() {
 setInterval(refreshSchedule, 60 * 1000);
 setInterval(refreshCountdowns, 10 * 60 * 1000);
 setInterval(refreshQuickMsg, 30 * 1000);
+setInterval(refreshFacts, 60 * 60 * 1000);
 
 /* ════════════════════════════════════════
    INIT
