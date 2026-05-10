@@ -817,8 +817,15 @@ function parseCSV(csv) {
         _isCountdownPlaceholder: true
       };
     }
+    if (firstLine === '[QUICKMSG]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isQuickMsgPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -957,8 +964,15 @@ function parseGviz(data) {
         _isCountdownPlaceholder: true
       };
     }
+    if (firstLine === '[QUICKMSG]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isQuickMsgPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1026,6 +1040,9 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isCountdownPlaceholder) {
       const existing = messages.find(m => m._isCountdownSlot || m._isCountdownPlaceholder);
       result.push(existing || item);
+    } else if (item._isQuickMsgPlaceholder) {
+      const existing = messages.find(m => m._isQuickMsgSlot || m._isQuickMsgPlaceholder);
+      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1050,6 +1067,7 @@ function startBoard(data, live) {
     await refreshBirthdays();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
     refreshCountdowns();
+    await refreshQuickMsg();
   }, 600);
 
   if (live) {
@@ -1074,6 +1092,7 @@ function startBoard(data, live) {
         refreshSchedule();
         await refreshBirthdays();
         refreshCountdowns();
+        await refreshQuickMsg();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -1731,6 +1750,73 @@ function parseCountdownCSV(csv) {
   if (parsed.length) customCountdowns = parsed;
 }
 
+
+/* ════════════════════════════════════════
+   QUICK MESSAGE SYSTEM
+   Reads latest message posted via
+   the student submit page
+════════════════════════════════════════ */
+
+async function fetchQuickMessage() {
+  try {
+    const url = CAL_SCRIPT_URL + '?action=quickmsg';
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.message) return null;
+    return data.message;
+  } catch(e) {
+    return null;
+  }
+}
+
+function buildQuickMsgScreen(msg) {
+  if (!msg || !msg.line1) return null;
+  const now      = new Date();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const posted   = new Date(msg.timestamp);
+  const timeStr  = posted.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const sender   = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : '';
+  const from     = sender ? truncate('FROM ' + sender, 28) : 'ROOM 27 MESSAGE';
+
+  return {
+    lines: [
+      from,
+      '',
+      truncate(msg.line1 || '', 28),
+      truncate(msg.line2 || '', 28),
+      truncate(msg.line3 || '', 28),
+      '',
+      truncate('POSTED ' + timeStr, 28),
+    ],
+    speed: 15,
+    _isQuickMsgSlot: true
+  };
+}
+
+function injectQuickMsgScreen(screen) {
+  let idx = messages.findIndex(m => m._isQuickMsgPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isQuickMsgSlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isQuickMsgSlot: true };
+  } else {
+    messages[idx] = {
+      lines: ['ROOM 27 BOARD','','NO MESSAGES YET','','POST AT BIT.LY/RHSBOARD','','ROOM 27'],
+      speed: 10, _isQuickMsgSlot: true
+    };
+  }
+  buildDots();
+}
+
+async function refreshQuickMsg() {
+  const hasSlot = messages.some(m => m._isQuickMsgPlaceholder || m._isQuickMsgSlot);
+  if (!hasSlot) return;
+  const msg    = await fetchQuickMessage();
+  const screen = buildQuickMsgScreen(msg);
+  injectQuickMsgScreen(screen);
+}
+
 /* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
@@ -2045,6 +2131,7 @@ async function refreshSchedule() {
 // Update schedule every minute so NOW indicator stays accurate
 setInterval(refreshSchedule, 60 * 1000);
 setInterval(refreshCountdowns, 10 * 60 * 1000);
+setInterval(refreshQuickMsg, 30 * 1000);
 
 /* ════════════════════════════════════════
    INIT

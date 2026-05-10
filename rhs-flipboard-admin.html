@@ -697,6 +697,13 @@
           </div>
           <button onclick="addCountdownPlaceholder()" style="background:#4a3a8a;color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD COUNTDOWN</button>
         </div>
+        <div style="margin-top:8px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Quick Message</div>
+            <div style="font-size:10px;color:var(--text-muted);line-height:1.5">Reserves a screen for messages posted from the student submit page. Updates every 30 seconds automatically.</div>
+          </div>
+          <button onclick="addQuickMsgPlaceholder()" style="background:#6a1a6a;color:#fff;border:none;border-radius:5px;padding:7px 12px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.12em;cursor:pointer;white-space:nowrap;flex-shrink:0">+ ADD MSG SLOT</button>
+        </div>
 
       </div>
     </div>
@@ -1166,6 +1173,21 @@ function addCountdownPlaceholder() {
   showToast('Countdown screen added to queue');
 }
 
+function addQuickMsgPlaceholder() {
+  if (messages.some(m => m._isQuickMsgPlaceholder)) {
+    showToast('Quick message slot already in queue');
+    return;
+  }
+  messages.push({
+    lines: ['[QUICKMSG]', '', '', '', '', '', ''],
+    speed: 15,
+    _isQuickMsgPlaceholder: true
+  });
+  renderQueue();
+  autosave();
+  showToast('Quick message slot added');
+}
+
 function exportCSV() {
   if (!messages.length) { showToast('Nothing to export yet'); return; }
 
@@ -1180,6 +1202,8 @@ function exportCSV() {
       rows.push([si + 1, 1, '[BIRTHDAY]', m.speed || 12].join(','));
     } else if (m._isCountdownPlaceholder) {
       rows.push([si + 1, 1, '[COUNTDOWN]', m.speed || 15].join(','));
+    } else if (m._isQuickMsgPlaceholder) {
+      rows.push([si + 1, 1, '[QUICKMSG]', m.speed || 15].join(','));
     } else {
       for (let li = 0; li < 7; li++) {
         const text  = csvCell(m.lines[li] || '');
@@ -1221,6 +1245,8 @@ function copySheetPaste() {
       lines.push([si + 1, 1, '[BIRTHDAY]', m.speed || 12].join('\t'));
     } else if (m._isCountdownPlaceholder) {
       lines.push([si + 1, 1, '[COUNTDOWN]', m.speed || 15].join('\t'));
+    } else if (m._isQuickMsgPlaceholder) {
+      lines.push([si + 1, 1, '[QUICKMSG]', m.speed || 15].join('\t'));
     } else {
       for (let li = 0; li < 7; li++) {
         const speed = li === 0 ? (m.speed || 8) : '';
@@ -1298,8 +1324,11 @@ function importCSVText(csv) {
     if (firstLine === '[COUNTDOWN]') {
       return { lines: Array(7).fill(''), speed: s.speed || 15, _isCountdownPlaceholder: true };
     }
+    if (firstLine === '[QUICKMSG]') {
+      return { lines: Array(7).fill(''), speed: s.speed || 15, _isQuickMsgPlaceholder: true };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
   if (!parsed.length) { showToast('No valid screens found'); return; }
   messages = parsed;
   renderQueue();
