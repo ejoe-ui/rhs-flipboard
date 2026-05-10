@@ -382,6 +382,188 @@
     gap: 4px;
   }
 
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal-sheet {
+    background: #111;
+    border-top: 2px solid var(--green);
+    border-radius: 16px 16px 0 0;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 0 0 env(safe-area-inset-bottom, 16px);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .modal-overlay.open .modal-sheet {
+    transform: translateY(0);
+  }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 12px auto 8px;
+  }
+  .modal-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green);
+    padding: 0 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-body { padding: 12px 16px 20px; }
+
+  .modal-period-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+  }
+  .modal-period-row.now {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+  }
+  .modal-period-row.past { opacity: 0.35; }
+  .modal-p-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 76px;
+  }
+  .modal-p-time {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-mid);
+    flex: 1;
+  }
+  .modal-p-now {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+  .modal-break-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 12px;
+    margin-bottom: 4px;
+  }
+  .modal-break-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 76px;
+  }
+  .modal-break-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── TAPPABLE CARDS ── */
+  .card.tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .card.tappable:active { opacity: 0.8; transform: scale(0.99); }
+
+  /* ── BIRTHDAY MODAL ── */
+  .bday-card-modal {
+    text-align: center;
+    padding: 20px 0 10px;
+  }
+  .bday-icon {
+    font-size: 72px;
+    display: block;
+    margin-bottom: 12px;
+    animation: bounce 0.6s ease;
+  }
+  @keyframes bounce {
+    0%   { transform: scale(0.5); opacity: 0; }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .bday-name-big {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .bday-wish {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+    margin-bottom: 16px;
+  }
+  .bday-tap-btn {
+    display: inline-block;
+    background: var(--green);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s, background 0.15s;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .bday-tap-btn:active { transform: scale(0.95); background: var(--green-dark); }
+  .bday-tap-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── EVENT DETAIL ── */
+  .event-detail-title {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+  .event-detail-meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-mid);
+    letter-spacing: 0.04em;
+    line-height: 1.8;
+  }
+
   /* ── POST BUTTON (fixed bottom) ── */
   #post-btn-wrap {
     position: fixed;
@@ -491,6 +673,15 @@
     <div class="loading-dot"></div>
     <div class="loading-dot"></div>
     <div class="loading-dot"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
 
@@ -711,7 +902,7 @@ function render(calEvents, quickMsg) {
 
   /* ── SCHEDULE ── */
   const schedCard = document.createElement('div');
-  schedCard.className = 'card';
+  schedCard.className = 'card tappable';
   if (!schedule) {
     const next = getNextSchoolDay();
     schedCard.innerHTML = `
@@ -752,6 +943,7 @@ function render(calEvents, quickMsg) {
       </div>
       <div class="card-body">${rows}</div>`;
   }
+  if (schedKey) schedCard.onclick = () => openScheduleModal(schedKey);
   sections.push(schedCard);
 
   /* ── CALENDAR ── */
@@ -764,19 +956,19 @@ function render(calEvents, quickMsg) {
   const upcomingEvts = (calEvents || []).filter(e => {
     const d = new Date(e.start);
     return d.toDateString() !== now.toDateString() && d > now;
-  }).slice(0,3);
+  }).slice(0,6);
 
   let calContent = '';
   if (todayEvts.length) {
     calContent = todayEvts.map(e => `
-      <div class="event-row">
+      <div class="event-row tappable" style="cursor:pointer" onclick='openEventModal(${JSON.stringify(e)})'>
         <span class="event-time">${e.allDay ? 'All Day' : fmtTime12(e.start)}</span>
         <span class="event-title">${e.title}</span>
       </div>`).join('');
   } else if (upcomingEvts.length) {
     calContent = upcomingEvts.map(e => {
       const d = new Date(e.start);
-      return `<div class="event-row">
+      return `<div class="event-row tappable" style="cursor:pointer" onclick='openEventModal(${JSON.stringify(e)})'>
         <span class="event-time">${monNames[d.getMonth()]} ${d.getDate()}</span>
         <span class="event-title">${e.title}</span>
       </div>`;
@@ -795,9 +987,9 @@ function render(calEvents, quickMsg) {
   /* ── COUNTDOWNS ── */
   const upcoming = COUNTDOWNS
     .map(c => ({ ...c, days: daysUntil(c.date) }))
-    .filter(c => c.days >= 0 && c.days <= 120)
+    .filter(c => c.days >= 0 && c.days <= 365)
     .sort((a,b) => a.days - b.days)
-    .slice(0,5);
+    .slice(0,8);
 
   if (upcoming.length) {
     const cdCard = document.createElement('div');
@@ -835,10 +1027,18 @@ function render(calEvents, quickMsg) {
     bdCard.className = 'card';
     let bdContent = '';
     if (todayBdays.length) {
-      bdContent += `<div class="bday-today">${todayBdays.map(b=>`🎂 ${b.name}`).join('<br>')}</div>`;
+      bdContent += `<div class="bday-today">${todayBdays.map(b=>`
+        <div style="cursor:pointer;padding:4px 0;-webkit-tap-highlight-color:transparent" onclick='openBdayModal(${JSON.stringify(b)})'>
+          🎉 ${b.name}
+          <span style="font-size:10px;color:var(--green);margin-left:8px;font-family:var(--mono);letter-spacing:0.08em">TAP TO WISH ▶</span>
+        </div>`).join('')}</div>`;
     }
     if (weekBdays.length) {
-      bdContent += `<div class="bday-week">${weekBdays.slice(0,4).map(b=>`${monNames[b.month-1]} ${b.day} · ${b.name}`).join('<br>')}</div>`;
+      bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b=>`
+        <div style="cursor:pointer;padding:3px 0;-webkit-tap-highlight-color:transparent" onclick='openBdayModal(${JSON.stringify(b)})'>
+          ${monNames[b.month-1]} ${b.day} · ${b.name}
+          ${getBdayCount(b.name) > 0 ? `<span style="color:var(--green);font-size:10px"> · ${getBdayCount(b.name)} 🎉</span>` : ''}
+        </div>`).join('')}</div>`;
     }
     bdCard.innerHTML = `
       <div class="card-header">
@@ -924,6 +1124,123 @@ async function loadData() {
     // Still render with local data only
     render([], null);
     setSyncStatus('error', 'Offline');
+  }
+}
+
+/* ════ MODAL ════ */
+function openModal(title, bodyHTML) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal')) return;
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ── SCHEDULE MODAL ── */
+function openScheduleModal(schedKey) {
+  const schedule = SCHEDULES[schedKey];
+  if (!schedule) return;
+  const nm = nowMins();
+  let rows = '';
+  for (const p of schedule.periods) {
+    const start = timeToMins(p.start);
+    const end   = timeToMins(p.end);
+    const isNow  = nm >= start && nm < end;
+    const isPast = nm >= end;
+    if (p.break) {
+      rows += `<div class="modal-break-row${isPast?' past':''}">
+        <span class="modal-break-name">${p.name}</span>
+        <span class="modal-break-time">${p.start} – ${p.end}</span>
+        ${isNow?'<span class="modal-p-now">NOW</span>':''}
+      </div>`;
+    } else {
+      rows += `<div class="modal-period-row${isNow?' now':isPast?' past':''}">
+        <span class="modal-p-name">${p.name}</span>
+        <span class="modal-p-time">${p.start} – ${p.end}</span>
+        ${isNow?'<span class="modal-p-now">NOW</span>':''}
+      </div>`;
+    }
+  }
+  openModal(schedule.label, rows);
+}
+
+/* ── EVENT MODAL ── */
+function openEventModal(evt) {
+  const monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const d = new Date(evt.start);
+  const timeStr = evt.allDay ? 'All Day' : fmtTime12(evt.start);
+  const dateStr = `${monNames[d.getMonth()]} ${d.getDate()}`;
+  let body = `<div class="event-detail-title">${evt.title}</div>
+    <div class="event-detail-meta">
+      📅 ${dateStr}<br>
+      ⏰ ${timeStr}
+      ${evt.location ? `<br>📍 ${evt.location}` : ''}
+    </div>`;
+  openModal('Event Details', body);
+}
+
+/* ── BIRTHDAY MODAL ── */
+const BDAY_ICONS = ['🎉','🎂','🎁','🪅','🎈','🥳','🎊'];
+
+function getBdayCount(name) {
+  try {
+    return parseInt(localStorage.getItem('bday_' + name) || '0');
+  } catch(e) { return 0; }
+}
+
+function incrementBday(name) {
+  try {
+    const count = getBdayCount(name) + 1;
+    localStorage.setItem('bday_' + name, count);
+    return count;
+  } catch(e) { return 1; }
+}
+
+function openBdayModal(person) {
+  const icon = BDAY_ICONS[Math.floor(Math.random() * BDAY_ICONS.length)];
+  const count = getBdayCount(person.name);
+  const wishes = [
+    'HAPPY BIRTHDAY!',
+    'HAVE AN AMAZING DAY!',
+    'YOU ARE AWESOME!',
+    'MAKE IT A GREAT ONE!',
+    'WE SEE YOU TODAY!',
+  ];
+  const wish = wishes[Math.floor(Math.random() * wishes.length)];
+
+  const body = `
+    <div class="bday-card-modal">
+      <span class="bday-icon" id="bdayIcon">${icon}</span>
+      <div class="bday-name-big">${person.name}</div>
+      <div class="bday-wish">${wish}</div>
+      <button class="bday-tap-btn" onclick="tapBday('${person.name.replace(/'/g,"\'")}')">
+        🎉 Send Birthday Wishes
+      </button>
+      <div class="bday-tap-count" id="bdayCount">
+        ${count > 0 ? count + ' wish' + (count !== 1 ? 'es' : '') + ' sent so far' : 'Be the first to send wishes!'}
+      </div>
+    </div>`;
+  openModal('', body);
+}
+
+function tapBday(name) {
+  const count = incrementBday(name);
+  const el = document.getElementById('bdayCount');
+  if (el) el.textContent = count + ' wish' + (count !== 1 ? 'es' : '') + ' sent so far!';
+  // Animate icon
+  const icon = document.getElementById('bdayIcon');
+  if (icon) {
+    icon.style.animation = 'none';
+    icon.offsetHeight; // reflow
+    icon.style.animation = 'bounce 0.5s ease';
+    // Cycle icons
+    const icons = ['🎉','🎂','🎁','🪅','🎈','🥳','🎊'];
+    icon.textContent = icons[Math.floor(Math.random() * icons.length)];
   }
 }
 
