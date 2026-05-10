@@ -1018,8 +1018,8 @@ function startBoard(data, live) {
   const _so1 = document.getElementById('setup-overlay'); if(_so1) _so1.classList.add('hidden');
   buildDots();
 
-  currentIdx = messages.length - 1;
-  showMessage(0);
+  currentIdx = 0;
+  // showMessage called after slot injection
 
   // Always try calendar, schedule, and birthdays after messages load
   setTimeout(async () => {
