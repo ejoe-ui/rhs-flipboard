@@ -414,7 +414,19 @@
 
 <!-- BOTTOM ACCENT -->
 <div id="bottom-accent"></div>
-<div id="sound-prompt" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,105,56,0.85);color:#fff;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 18px;border-radius:4px;cursor:pointer;z-index:200;transition:opacity 0.5s" onclick="enableSound(this)">▶ Click to enable flip sound</div>
+<div id="sound-prompt" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,105,56,0.85);color:#fff;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 18px;border-radius:4px;cursor:pointer;z-index:200;transition:opacity 0.5s" onclick="enableSound(this)">▶ Click anywhere to enable flip sound</div>
+<script>
+// TV version — auto-dismiss sound prompt and enable on any click
+document.addEventListener('click', function() {
+  const sp = document.getElementById('sound-prompt');
+  if (sp) enableSound(sp);
+}, { once: true });
+// Also auto-hide prompt after 8 seconds even without click
+setTimeout(() => {
+  const sp = document.getElementById('sound-prompt');
+  if (sp) { sp.style.opacity='0'; setTimeout(()=>sp.remove(),600); }
+}, 8000);
+</script>
 
 <!-- INDICATORS -->
 <div id="indicator-bar"></div>
@@ -927,14 +939,15 @@ function parseGviz(data) {
    CONNECT SHEET
 ════════════════════════════════════════ */
 async function connectSheet() {
-  const url = document.getElementById('sheetUrl').value.trim();
+  const _inp = document.getElementById('sheetUrl');
+  const url = _inp ? _inp.value.trim() : sheetUrl;
   const err = document.getElementById('errorMsg');
 
   if (!url) {
     err.textContent = 'Paste your published CSV URL above.'; return;
   }
   if (!url.includes('docs.google.com')) {
-    err.textContent = 'Check the URL — must be a Google Sheets link (docs.google.com).'; return;
+    if(err) err.textContent = 'Check the URL — must be a Google Sheets link.'; return;
   }
 
   err.textContent = '';
@@ -942,7 +955,7 @@ async function connectSheet() {
 
   const data = await fetchSheet(url);
   if (!data) {
-    err.textContent = 'Could not load. Verify: sheet published as CSV, sharing is Anyone with the link, header row must have: Screen, Line, Text, Speed.';
+    if(err) err.textContent = 'Could not load sheet.';
     setSyncStatus('error', 'CONNECTION FAILED');
     return;
   }
@@ -2096,8 +2109,15 @@ if (_overlay) _overlay.style.display = 'none';
   const HARDCODED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjqIQ3rsr_tr62T492hu3iEuXaNJnm9ayyAa6qgJGxm2YF5CsH9PStUPfmHpdOM2iHmGCQNsY-SZ9Q/pub?gid=0&single=true&output=csv';
   const inp = document.getElementById('sheetUrl');
   if (inp) inp.value = HARDCODED_URL;
-  // Small delay to let page fully init then auto-connect
-  setTimeout(() => connectSheet(), 300);
+  // Auto-connect after DOM fully ready
+  setTimeout(() => {
+    // Pre-fill URL in case input exists
+    const _si = document.getElementById('sheetUrl');
+    const _url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjqIQ3rsr_tr62T492hu3iEuXaNJnm9ayyAa6qgJGxm2YF5CsH9PStUPfmHpdOM2iHmGCQNsY-SZ9Q/pub?gid=0&single=true&output=csv';
+    if (_si) _si.value = _url;
+    sheetUrl = _url;
+    connectSheet();
+  }, 500);
 })();
 
 // Calendar is initialized inside startBoard() after messages load
