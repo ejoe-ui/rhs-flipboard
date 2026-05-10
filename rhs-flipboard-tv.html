@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<title>RHS FlipBoard · Room 27 · TV</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #006938;
+    --green-dark: #004d28;
+    --green-dim: #003d20;
+    --tan: #C4BEB5;
+    --tile-bg: #1a1a1a;
+    --tile-border: #2c2c2c;
+    --tile-text: #f0ebe0;
+    --board-bg: #0d0d0d;
+    --header-bg: #0a0a0a;
+    --scramble-a: #005a2e;
+    --scramble-b: #007a40;
+    --flip-mid: #006938;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--board-bg);
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.08) 3px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* ══════════════════════════════
+     HEADER BAR — ROW 1
+  ══════════════════════════════ */
+  #header {
+    position: relative;
+    width: 100%;
+    height: 10vh;
+    min-height: 56px;
+    max-height: 80px;
+    background: var(--header-bg);
+    border-bottom: 3px solid var(--green);
+    display: flex;
+    align-items: center;
+    padding: 0 1.5vw;
+    gap: 1.5vw;
+    z-index: 10;
+    overflow: hidden;
+  }
+
+  .h-badge {
+    background: var(--green);
+    color: #fff;
+    font-size: clamp(10px, 1vw, 16px);
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    padding: 5px 14px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .h-divider {
+    flex: 1;
+    min-width: 8px;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(196,190,181,0.25) 0%, rgba(196,190,181,0.05) 100%);
+  }
+
+  .h-school {
+    color: var(--tan);
+    font-size: clamp(10px, 1.1vw, 18px);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .h-sync {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .sync-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #333;
+    transition: background 0.4s;
+    flex-shrink: 0;
+  }
+  .sync-dot.live { background: var(--green); animation: blink 2.5s infinite; }
+  .sync-dot.error { background: #882222; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  .sync-label {
+    color: #555;
+    font-size: clamp(8px, 0.65vw, 11px);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .h-clock {
+    color: #f0ebe0;
+    font-size: clamp(18px, 2.2vw, 38px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  /* ══════════════════════════════
+     BOARD — ROWS 2–8
+  ══════════════════════════════ */
+  #board-wrap {
+    width: 100%;
+    height: calc(100vh - 10vh - 3px);
+    display: flex;
+    flex-direction: column;
+    padding: 1.2vh 1.5vw 1.2vh 1.5vw;
+    gap: 0.5vh;
+  }
+
+  .tile-row {
+    flex: 1;
+    display: flex;
+    gap: 0.3vw;
+    align-items: stretch;
+  }
+
+
+  /* ── TILE ── */
+  .tile {
+    flex: 1;
+    background: var(--tile-bg);
+    border: 1px solid var(--tile-border);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    /* aspect enforced by flex layout — rows fill height, tiles fill width */
+  }
+
+  /* center split line */
+  .tile::after {
+    content: '';
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    top: 50%;
+    height: 1px;
+    background: rgba(0,0,0,0.55);
+    transform: translateY(-50%);
+    z-index: 2;
+  }
+
+  .tile-char {
+    font-size: clamp(24px, 6.4vh, 112px);
+    font-weight: 900;
+    color: var(--tile-text);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    user-select: none;
+    position: relative;
+    z-index: 3;
+    font-family: 'Courier New', Courier, monospace;
+    transform: scaleX(0.78);
+  }
+
+  /* flip animation */
+  @keyframes flipDown {
+    0%   { transform: scaleY(1);    background: var(--tile-bg); }
+    25%  { transform: scaleY(0.3);  background: var(--flip-mid); }
+    45%  { transform: scaleY(0.02); background: var(--flip-mid); }
+    65%  { transform: scaleY(0.02); background: var(--flip-mid); }
+    85%  { transform: scaleY(0.4);  background: var(--tile-bg); }
+    100% { transform: scaleY(1);    background: var(--tile-bg); }
+  }
+
+  .tile.flipping {
+    animation: flipDown 0.65s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  /* row accent bars */
+  .tile-row:nth-child(odd) .tile {
+    border-color: #252525;
+  }
+
+  /* ── BOTTOM ACCENT ── */
+  #bottom-accent {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--green-dark) 0%, var(--green) 30%, var(--tan) 50%, var(--green) 70%, var(--green-dark) 100%);
+    z-index: 10;
+  }
+
+  /* ══════════════════════════════
+     SETUP OVERLAY
+  ══════════════════════════════ */
+  #setup-overlay { display: none !important; }
+
+  .setup-box {
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-top: 4px solid var(--green);
+    border-radius: 8px;
+    padding: 40px 48px;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .setup-title {
+    color: #f0ebe0;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .setup-sub {
+    color: #444;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .setup-step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .step-num {
+    background: var(--green);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text {
+    color: #777;
+    font-size: 12px;
+    line-height: 1.7;
+    letter-spacing: 0.04em;
+  }
+
+  .step-text strong { color: var(--tan); }
+  .step-text code {
+    background: #1a1a1a;
+    color: #00cc66;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    border: 1px solid #2a2a2a;
+  }
+
+  .url-input {
+    width: 100%;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #f0ebe0;
+    outline: none;
+    margin-top: 20px;
+    transition: border-color 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .url-input:focus { border-color: var(--green); }
+  .url-input::placeholder { color: #333; }
+
+  .error-msg {
+    color: #884444;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+
+  .btn-connect {
+    width: 100%;
+    margin-top: 12px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 13px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.15s;
+  }
+  .btn-connect:hover { background: var(--green-dark); }
+
+  .btn-demo {
+    width: 100%;
+    margin-top: 8px;
+    background: transparent;
+    color: #444;
+    border: 1px solid #222;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-demo:hover { border-color: #444; color: #777; }
+
+  /* ── INDICATOR ROW ── */
+  #indicator-bar {
+    position: fixed;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    z-index: 50;
+  }
+
+  .ind-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    transition: background 0.3s;
+  }
+  .ind-dot.active { background: var(--green); }
+
+  /* reconnect button (hidden until hover bottom-right) */
+  #reconnect-btn {
+    position: fixed;
+    bottom: 14px;
+    right: 20px;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    color: #444;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    padding: 5px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    z-index: 50;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    opacity: 0;
+  }
+  body:hover #reconnect-btn { opacity: 1; }
+  #reconnect-btn:hover { background: #1a1a1a; color: #777; border-color: #444; }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER BAR -->
+<div id="header">
+  <div class="h-badge">RHS · Room 27</div>
+  <div class="h-divider"></div>
+  <div class="h-school">Riverdale High School · Multimedia Communications</div>
+  <div class="h-divider"></div>
+  <div class="h-sync">
+    <div class="sync-dot" id="syncDot"></div>
+    <span class="sync-label" id="syncLabel">Not connected</span>
+  </div>
+  <div class="h-divider" style="max-width:2vw"></div>
+  <div class="h-clock" id="clock">--:-- --</div>
+</div>
+
+<!-- BOARD -->
+<div id="board-wrap"></div>
+
+<!-- BOTTOM ACCENT -->
+<div id="bottom-accent"></div>
+<div id="sound-prompt" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,105,56,0.85);color:#fff;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 18px;border-radius:4px;cursor:pointer;z-index:200;transition:opacity 0.5s" onclick="enableSound(this)">▶ Click to enable flip sound</div>
+
+<!-- INDICATORS -->
+<div id="indicator-bar"></div>
+
+<!-- RECONNECT -->
+
+
+<script>
+/* ════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════ */
+const ROWS       = 7;
+const COLS       = 28;
+const SYNC_INTERVAL = 60000;
+const CAL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
+const CHARS      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
+const SCRAMBLE_MS = 75;
+const SCRAMBLE_STEPS = 10;
+
+/* ════════════════════════════════════════
+   DEMO DATA  (7 lines per screen)
+════════════════════════════════════════ */
+const DEMO = [
+  {
+    lines: [
+      'WELCOME TO ROOM 27',
+      'MULTIMEDIA COMMUNICATIONS',
+      'YEARBOOK · SMALL BUSINESS',
+      'MR. JOE · PERIOD 1-5',
+      '',
+      'GO COWBOYS!',
+      'RIVERDALE HIGH SCHOOL'
+    ],
+    speed: 10
+  },
+  {
+    lines: [
+      'TODAY\'S SCHEDULE',
+      'P1  MULTIMEDIA   8:00 AM',
+      'P2  YEARBOOK     9:45 AM',
+      'P3  PREP        11:30 AM',
+      'P4  SM BUSINESS  1:15 PM',
+      'P5  MULTIMEDIA   3:00 PM',
+      'SUPPLY CLOSET OPEN @ LUNCH'
+    ],
+    speed: 15
+  },
+  {
+    lines: [
+      'YEARBOOK DEADLINE',
+      'SPREAD 14 · COVERS + COLOPHON',
+      'DUE THIS FRIDAY BY 3:00 PM',
+      'SUBMIT IN JOSTENS YBA',
+      'SEE MR. JOE WITH QUESTIONS',
+      '',
+      'THIS IS RHS · 2025-26'
+    ],
+    speed: 12
+  },
+  {
+    lines: [
+      'RHS SUPPLY CLOSET',
+      'OPEN MON - FRI',
+      '8:00 - 9:00 AM',
+      'LUNCH  · 12:00 - 12:30 PM',
+      'CASH + CARD ACCEPTED',
+      'RUN BY SMALL BUSINESS CLASS',
+      'ROOM 27 · BUILDING C'
+    ],
+    speed: 12
+  },
+  {
+    lines: [
+      'WEEKLY NEWS SHOOT',
+      'THURSDAY @ 3:00 PM',
+      'STUDIO B · BUILDING A',
+      'ALL ANCHORS REPORT BY 2:45',
+      'B-ROLL DUE WEDNESDAY NOON',
+      'EDITOR: SUBMIT FINAL CUT',
+      'BY FRIDAY 5:00 PM'
+    ],
+    speed: 12
+  },
+  {
+    lines: [
+      'SMALL BIZ MGMT',
+      'PITCH DAY: MAY 23RD',
+      'PRESENT YOUR BUSINESS PLAN',
+      '5 MINUTES · DRESS SHARP',
+      'VISUAL AID REQUIRED',
+      'JUDGES FROM LOCAL INDUSTRY',
+      'GOOD LUCK COWBOYS!'
+    ],
+    speed: 10
+  },
+];
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let messages    = [];
+let currentIdx  = 0;
+let tiles       = [];   // tiles[row][col] = { el, charEl }
+let paused      = false;
+let rotateTimer = null;
+let fetchTimer  = null;
+let sheetUrl    = '';
+let prevLines   = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+let calScreen   = null;   // auto-generated from Google Calendar
+let calTimer    = null;
+
+
+
+/* ════════════════════════════════════════
+   BUILD BOARD
+════════════════════════════════════════ */
+function buildBoard() {
+  const wrap = document.getElementById('board-wrap');
+  wrap.innerHTML = '';
+  tiles = [];
+
+  for (let r = 0; r < ROWS; r++) {
+    const rowEl = document.createElement('div');
+    rowEl.className = 'tile-row';
+
+    const rowTiles = [];
+    for (let c = 0; c < COLS; c++) {
+      const tileEl = document.createElement('div');
+      tileEl.className = 'tile';
+
+      const charEl = document.createElement('span');
+      charEl.className = 'tile-char';
+      charEl.textContent = '';
+      tileEl.appendChild(charEl);
+      rowEl.appendChild(tileEl);
+      rowTiles.push({ el: tileEl, charEl });
+    }
+
+    wrap.appendChild(rowEl);
+    tiles.push(rowTiles);
+  }
+}
+
+/* ════════════════════════════════════════
+   PAD / FORMAT
+════════════════════════════════════════ */
+function padCenter(text, cols) {
+  text = (text || '').toUpperCase().substring(0, cols);
+  const total = cols - text.length;
+  const left  = Math.floor(total / 2);
+  const right = total - left;
+  return ' '.repeat(left) + text + ' '.repeat(right);
+}
+
+/* ════════════════════════════════════════
+   TILE ANIMATION
+════════════════════════════════════════ */
+function animateTile(tile, finalChar, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      let step = 0;
+      const iv = setInterval(() => {
+        const rnd = CHARS[Math.floor(Math.random() * CHARS.length)];
+        tile.charEl.textContent = rnd;
+        tile.el.style.background = step % 2 === 0 ? '#0f2a1a' : '#162c1e';
+        tile.charEl.style.color   = step % 2 === 0 ? '#00cc66' : '#C4BEB5';
+        step++;
+        if (step >= SCRAMBLE_STEPS) {
+          clearInterval(iv);
+          const ch = (finalChar || ' ').trim();
+          tile.charEl.textContent = ch;
+          tile.charEl.style.color = 'var(--tile-text)';
+          tile.el.style.background = 'var(--tile-bg)';
+          tile.el.classList.add('flipping');
+          tile.el.addEventListener('animationend', () => {
+            tile.el.classList.remove('flipping');
+            resolve();
+          }, { once: true });
+        }
+      }, SCRAMBLE_MS);
+    }, delay);
+  });
+}
+
+/* ════════════════════════════════════════
+   SHOW MESSAGE
+════════════════════════════════════════ */
+function showMessage(idx) {
+  if (!messages.length) return;
+  idx = ((idx % messages.length) + messages.length) % messages.length;
+  currentIdx = idx;
+
+  const msg      = messages[idx];
+  const newLines = Array.from({length: ROWS}, (_, r) =>
+    padCenter(msg.lines[r] || '', COLS)
+  );
+
+  updateDots();
+
+  // Count changed tiles for sound
+  let changedTiles = 0;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (newLines[r][c] !== prevLines[r][c]) changedTiles++;
+
+  if (changedTiles > 0) playFlipSound(changedTiles);
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const nc = newLines[r][c];
+      const pc = prevLines[r][c];
+      if (nc !== pc) {
+        const delay = Math.random() * 1200;
+        animateTile(tiles[r][c], nc, delay);
+      }
+    }
+  }
+
+  prevLines = newLines;
+  scheduleNext(msg.speed || 8);
+}
+
+/* ════════════════════════════════════════
+   ROTATION
+════════════════════════════════════════ */
+function scheduleNext(speedSec) {
+  clearTimeout(rotateTimer);
+  if (!paused && messages.length > 1) {
+    rotateTimer = setTimeout(() => {
+      showMessage(currentIdx + 1);
+    }, (speedSec || 8) * 1000);
+  }
+}
+
+function nextMsg() { clearTimeout(rotateTimer); showMessage(currentIdx + 1); }
+function prevMsg() { clearTimeout(rotateTimer); showMessage(currentIdx - 1); }
+
+/* ════════════════════════════════════════
+   INDICATORS
+════════════════════════════════════════ */
+function buildDots() {
+  const bar   = document.getElementById('indicator-bar');
+  bar.innerHTML = '';
+  const count = Math.min(messages.length, 16);
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'ind-dot';
+    bar.appendChild(d);
+  }
+  if (messages.length > 16) {
+    const s = document.createElement('span');
+    s.style.cssText = 'color:#333;font-size:10px;letter-spacing:0.1em;font-family:Courier New';
+    s.textContent = '+' + (messages.length - 16);
+    bar.appendChild(s);
+  }
+  updateDots();
+}
+
+function updateDots() {
+  document.querySelectorAll('.ind-dot').forEach((d, i) => {
+    d.className = 'ind-dot' + (i === currentIdx ? ' active' : '');
+  });
+}
+
+/* ════════════════════════════════════════
+   CLOCK
+════════════════════════════════════════ */
+function updateClock() {
+  const now = new Date();
+  let   h   = now.getHours();
+  const m   = now.getMinutes().toString().padStart(2, '0');
+  const ap  = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock').textContent = `${h}:${m} ${ap}`;
+}
+
+/* ════════════════════════════════════════
+   SYNC STATUS
+════════════════════════════════════════ */
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
+  document.getElementById('syncLabel').textContent = label;
+}
+
+/* ════════════════════════════════════════
+   CSV PARSER — vertical format
+   Columns: Screen | Line | Text | Speed
+   Each screen is 7 rows going down.
+   Speed only needed on Line 1 row.
+════════════════════════════════════════ */
+function parseCSV(csv) {
+  const rows = csv.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) return null;
+
+  const header = rows[0].toLowerCase().replace(/\r/g, '').split(',')
+    .map(h => h.replace(/^"|"$/g, '').trim());
+
+  const screenIdx = header.findIndex(h => h === 'screen');
+  const lineIdx   = header.findIndex(h => h === 'line');
+  const textIdx   = header.findIndex(h => h === 'text');
+  const speedIdx  = header.findIndex(h => h === 'speed');
+
+  if (screenIdx < 0 || textIdx < 0) return null;
+
+  const screens = {};
+  for (let i = 1; i < rows.length; i++) {
+    const cols   = rows[i].replace(/\r/g, '').split(',');
+    const clean  = c => c >= 0 ? (cols[c] || '').replace(/^"|"$/g, '').trim() : '';
+    const screen = clean(screenIdx);
+    const text   = clean(textIdx).toUpperCase();
+    const speed  = speedIdx >= 0 ? parseFloat(clean(speedIdx)) || null : null;
+    if (!screen) continue;
+    if (!screens[screen]) screens[screen] = { lines: [], speed: 8 };
+    screens[screen].lines.push(text);
+    if (speed) screens[screen].speed = speed;
+  }
+
+  const parsed = Object.values(screens).map(s => {
+    // Detect [CALENDAR] placeholder — any screen whose first non-empty line is [CALENDAR]
+    const firstLine = s.lines.find(l => l.trim()) || '';
+    if (firstLine === '[CALENDAR]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCalendarPlaceholder: true
+      };
+    }
+    if (firstLine === '[SCHEDULE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isSchedulePlaceholder: true
+      };
+    }
+    if (firstLine === '[BIRTHDAY]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 12,
+        _isBirthdayPlaceholder: true
+      };
+    }
+    if (firstLine === '[COUNTDOWN]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCountdownPlaceholder: true
+      };
+    }
+    if (firstLine === '[QUICKMSG]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isQuickMsgPlaceholder: true
+      };
+    }
+    return s;
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
+  return parsed.length ? parsed : null;
+}
+
+/* ════════════════════════════════════════
+   FETCH SHEET
+   Strategy 1: Direct fetch (works if CORS headers present)
+   Strategy 2: Google Visualization API (no proxy needed)
+   Strategy 3: JSONP via gviz endpoint
+════════════════════════════════════════ */
+async function fetchSheet(url) {
+  // Strategy 1: direct fetch — works when opened as file:// locally
+  try {
+    const res = await fetch(url, { cache: 'no-store', mode: 'cors' });
+    if (res.ok) {
+      const csv = await res.text();
+      const parsed = parseCSV(csv);
+      if (parsed) return parsed;
+    }
+  } catch(e) {}
+
+  // Strategy 2: Google Visualization Query API — no proxy, school-network safe
+  // Converts published sheet URL to gviz/tq endpoint which returns JSONP
+  try {
+    const gvizData = await fetchViaGviz(url);
+    if (gvizData) return gvizData;
+  } catch(e) {}
+
+  return null;
+}
+
+function extractSheetId(url) {
+  const m = url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+function fetchViaGviz(url) {
+  return new Promise((resolve) => {
+    const sheetId = extractSheetId(url);
+    if (!sheetId) { resolve(null); return; }
+
+    // Extract gid (sheet tab id) if present
+    const gidMatch = url.match(/gid=(\d+)/);
+    const gid = gidMatch ? gidMatch[1] : '0';
+
+    const cbName = '_gviz_cb_' + Date.now();
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=select+*&gid=${gid}&cb=${cbName}`;
+
+    let resolved = false;
+    const timeout = setTimeout(() => {
+      if (!resolved) { resolved = true; cleanup(); resolve(null); }
+    }, 8000);
+
+    function cleanup() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      const s = document.getElementById(cbName);
+      if (s) s.remove();
+    }
+
+    window[cbName] = function(gvizResponse) {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      try {
+        const parsed = parseGviz(gvizResponse);
+        resolve(parsed);
+      } catch(e) {
+        resolve(null);
+      }
+    };
+
+    const script = document.createElement('script');
+    script.id  = cbName;
+    script.src = gvizUrl;
+    script.onerror = () => { if (!resolved) { resolved = true; cleanup(); resolve(null); } };
+    document.head.appendChild(script);
+  });
+}
+
+function parseGviz(data) {
+  if (!data || !data.table) return null;
+  const table = data.table;
+  const cols  = table.cols || [];
+  const rows  = table.rows || [];
+  if (!cols.length || !rows.length) return null;
+
+  const headers   = cols.map(c => (c.label || '').toLowerCase().trim());
+  const screenIdx = headers.findIndex(h => h === 'screen');
+  const textIdx   = headers.findIndex(h => h === 'text');
+  const speedIdx  = headers.findIndex(h => h === 'speed');
+
+  if (screenIdx < 0 || textIdx < 0) return null;
+
+  const screens = {};
+  for (const row of rows) {
+    const cells  = row.c || [];
+    const val    = idx => idx >= 0 && cells[idx] && cells[idx].v != null
+      ? String(cells[idx].v).trim() : '';
+    const screen = val(screenIdx);
+    const text   = val(textIdx).toUpperCase();
+    const spRaw  = speedIdx >= 0 ? parseFloat(val(speedIdx)) || null : null;
+    if (!screen) continue;
+    if (!screens[screen]) screens[screen] = { lines: [], speed: 8 };
+    screens[screen].lines.push(text);
+    if (spRaw) screens[screen].speed = spRaw;
+  }
+
+  const parsed = Object.values(screens).map(s => {
+    // Detect [CALENDAR] placeholder — any screen whose first non-empty line is [CALENDAR]
+    const firstLine = s.lines.find(l => l.trim()) || '';
+    if (firstLine === '[CALENDAR]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCalendarPlaceholder: true
+      };
+    }
+    if (firstLine === '[SCHEDULE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isSchedulePlaceholder: true
+      };
+    }
+    if (firstLine === '[BIRTHDAY]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 12,
+        _isBirthdayPlaceholder: true
+      };
+    }
+    if (firstLine === '[COUNTDOWN]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isCountdownPlaceholder: true
+      };
+    }
+    if (firstLine === '[QUICKMSG]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isQuickMsgPlaceholder: true
+      };
+    }
+    return s;
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s.lines[0]);
+  return parsed.length ? parsed : null;
+}
+
+/* ════════════════════════════════════════
+   CONNECT SHEET
+════════════════════════════════════════ */
+async function connectSheet() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  const err = document.getElementById('errorMsg');
+
+  if (!url) {
+    err.textContent = 'Paste your published CSV URL above.'; return;
+  }
+  if (!url.includes('docs.google.com')) {
+    err.textContent = 'Check the URL — must be a Google Sheets link (docs.google.com).'; return;
+  }
+
+  err.textContent = '';
+  setSyncStatus('', 'CONNECTING...');
+
+  const data = await fetchSheet(url);
+  if (!data) {
+    err.textContent = 'Could not load. Verify: sheet published as CSV, sharing is Anyone with the link, header row must have: Screen, Line, Text, Speed.';
+    setSyncStatus('error', 'CONNECTION FAILED');
+    return;
+  }
+
+  sheetUrl = url;
+  try { localStorage.setItem('rhs-sheet-url', url); } catch(e) {}
+  startBoard(data, true);
+}
+
+/* ════════════════════════════════════════
+   LOAD DEMO
+════════════════════════════════════════ */
+function loadDemo() {
+  sheetUrl = '';
+  startBoard(DEMO, false);
+}
+
+/* ════════════════════════════════════════
+   START BOARD
+════════════════════════════════════════ */
+function mergeWithLiveSlots(freshData) {
+  // Build a new messages array from fresh sheet data,
+  // but preserve live slot content at their original positions
+  const result = [];
+  let freshIdx = 0;
+
+  // Walk through fresh data and insert live slots at their placeholder positions
+  for (let i = 0; i < freshData.length; i++) {
+    const item = freshData[i];
+    // Check if this position was a live slot in the current messages array
+    // by matching the placeholder flags
+    if (item._isCalendarPlaceholder) {
+      // Find existing cal slot to preserve its content
+      const existing = messages.find(m => m._isCalendarSlot || m._isCalendarPlaceholder);
+      result.push(existing || item);
+    } else if (item._isSchedulePlaceholder) {
+      const existing = messages.find(m => m._isScheduleSlot || m._isSchedulePlaceholder);
+      result.push(existing || item);
+    } else if (item._isBirthdayPlaceholder) {
+      const existing = messages.find(m => m._isBirthdaySlot || m._isBirthdayPlaceholder);
+      result.push(existing || item);
+    } else if (item._isCountdownPlaceholder) {
+      const existing = messages.find(m => m._isCountdownSlot || m._isCountdownPlaceholder);
+      result.push(existing || item);
+    } else if (item._isQuickMsgPlaceholder) {
+      const existing = messages.find(m => m._isQuickMsgSlot || m._isQuickMsgPlaceholder);
+      result.push(existing || item);
+    } else {
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+function startBoard(data, live) {
+  messages = data;
+  prevLines = Array.from({length: ROWS}, () => ' '.repeat(COLS));
+
+  document.getElementById('setup-overlay').classList.add('hidden');
+  buildDots();
+
+  currentIdx = messages.length - 1;
+  showMessage(0);
+
+  // Always try calendar, schedule, and birthdays after messages load
+  setTimeout(async () => {
+    await refreshCalendar();
+    refreshSchedule();
+    await refreshBirthdays();
+    if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
+    refreshCountdowns();
+    await refreshQuickMsg();
+  }, 600);
+
+  if (live) {
+    setSyncStatus('live', 'LIVE · SYNCS EVERY 60S');
+    clearInterval(fetchTimer);
+    clearInterval(calTimer);
+    fetchTimer = setInterval(async () => {
+      const fresh = await fetchSheet(sheetUrl);
+      if (fresh) {
+        const currentLine1 = messages[currentIdx]?.lines[0] || '';
+        // Smart merge: replace sheet-sourced messages but keep live slots in position
+        messages = mergeWithLiveSlots(fresh);
+        const ni = messages.findIndex(m => m.lines && m.lines[0] === currentLine1);
+        if (ni >= 0) currentIdx = ni;
+        buildDots();
+        const t = new Date();
+        let h = t.getHours() % 12 || 12;
+        const m = t.getMinutes().toString().padStart(2,'0');
+        setSyncStatus('live', `SYNCED ${h}:${m}`);
+        // Refresh all live slots with latest data
+        await refreshCalendar();
+        refreshSchedule();
+        await refreshBirthdays();
+        refreshCountdowns();
+        await refreshQuickMsg();
+      } else {
+        setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
+      }
+    }, SYNC_INTERVAL);
+    // Refresh calendar every 5 minutes
+    calTimer = setInterval(refreshCalendar, 5 * 60 * 1000);
+  } else {
+    setSyncStatus('', 'DEMO MODE');
+  }
+}
+
+/* ════════════════════════════════════════
+   SETUP / KEYBOARD
+════════════════════════════════════════ */
+function enableSound(el) {
+  const ctx = getAudioCtx();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+  // Play a test click so user knows it worked
+  playFlipSound(5);
+  el.style.opacity = '0';
+  setTimeout(() => el.remove(), 600);
+}
+
+function showSetup() {
+  clearTimeout(rotateTimer);
+  clearInterval(fetchTimer);
+  document.getElementById('setup-overlay').classList.remove('hidden');
+}
+
+function forgetUrl() {
+  try { localStorage.removeItem('rhs-sheet-url'); } catch(e) {}
+  sheetUrl = '';
+  const inp = document.getElementById('sheetUrl');
+  if (inp) inp.value = '';
+  document.getElementById('errorMsg').textContent = 'Saved URL cleared.';
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('setup-overlay').classList.contains('hidden')) {
+    if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); nextMsg(); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); prevMsg(); }
+    if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+    if (e.key === 'Escape')  document.exitFullscreen?.();
+  }
+});
+
+/* ════════════════════════════════════════
+   CALENDAR — iCal fetch + parser
+════════════════════════════════════════ */
+
+function fmtTime(dtStr, allDay) {
+  if (!dtStr) return '';
+  if (allDay || isAllDayEvent(dtStr)) return 'ALL DAY';
+  const dt = parseEventDate(dtStr);
+  if (!dt) return '';
+  let hr = dt.getHours(), mn = dt.getMinutes();
+  const ap = hr >= 12 ? 'PM' : 'AM';
+  hr = hr % 12 || 12;
+  return mn > 0 ? `${hr}:${mn.toString().padStart(2,'0')} ${ap}` : `${hr}:00 ${ap}`;
+}
+
+function parseEventDate(dtStr) {
+  if (!dtStr) return null;
+  if (dtStr.includes('-') || dtStr.includes('T')) return new Date(dtStr);
+  const y = dtStr.substr(0,4), mo = dtStr.substr(4,2), d = dtStr.substr(6,2);
+  if (dtStr.length === 8) return new Date(`${y}-${mo}-${d}`);
+  const h = dtStr.substr(9,2), mi = dtStr.substr(11,2);
+  return new Date(`${y}-${mo}-${d}T${h}:${mi}:00Z`);
+}
+
+function isAllDayEvent(dtStr, allDay) {
+  if (allDay === true) return true;
+  if (!dtStr) return false;
+  if (dtStr.length === 10 && dtStr.includes('-') && !dtStr.includes('T')) return true;
+  if (dtStr.length === 8 && !dtStr.includes('T')) return true;
+  return false;
+}
+
+function localDateStr(dt) {
+  // Returns YYYY-MM-DD in local time
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function isToday(dtStr, allDay) {
+  if (!dtStr) return false;
+  const dt  = parseEventDate(dtStr);
+  if (!dt) return false;
+  const now = new Date();
+  // For all-day events from Apps Script, end date is exclusive (next day at 07:00Z)
+  // so check if today falls within start..end range
+  if (allDay) {
+    const todayStr = localDateStr(now);
+    const startStr = localDateStr(dt);
+    return startStr <= todayStr;
+  }
+  return localDateStr(dt) === localDateStr(now);
+}
+
+function isUpcoming(dtStr, allDay) {
+  if (!dtStr) return false;
+  const dt  = parseEventDate(dtStr);
+  if (!dt) return false;
+  const now  = new Date();
+  if (isToday(dtStr, allDay)) return false; // today events handled separately
+  const diff = dt - now;
+  return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
+}
+
+function truncate(str, max) {
+  str = (str || '').toUpperCase().trim();
+  if (str.length <= max) return str;
+  // Cut at last space before max to avoid mid-word cuts
+  const cut = str.substr(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return lastSpace > max * 0.6 ? cut.substr(0, lastSpace) : cut;
+}
+
+/* parseIcal removed — using GCal JSON feed */
+
+function buildCalScreen(events) {
+  const now      = new Date();
+  const dayNames = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+  const todayStr  = `${dayNames[now.getDay()]} ${monNames[now.getMonth()]} ${now.getDate()}`;
+  const todayEvts = events.filter(e => isToday(e.dtstart, e.allDay))
+    .sort((a,b) => a.dtstart.localeCompare(b.dtstart));
+  const upcoming  = events.filter(e => isUpcoming(e.dtstart, e.allDay))
+    .sort((a,b) => a.dtstart.localeCompare(b.dtstart))
+    .slice(0, 3);
+
+  if (!todayEvts.length && !upcoming.length) return null;
+
+  const lines = [];
+
+  // Line 1: date header
+  lines.push(truncate('TODAY · ' + todayStr, 28));
+
+  if (todayEvts.length) {
+    // Lines 2-6: today's events (up to 5)
+    todayEvts.slice(0,5).forEach(e => {
+      const time = e.allDay ? '' : fmtTime(e.dtstart, false);
+      const name = truncate(e.summary, time ? 28 - time.length - 2 : 28);
+      lines.push(time ? truncate(name + '  ' + time, 28) : name);
+    });
+    // pad to 6 lines total if fewer events
+    while (lines.length < 6) lines.push('');
+    // Line 7: next upcoming or branding
+    if (upcoming.length) {
+      const next = upcoming[0];
+      const dt   = parseEventDate(next.dtstart);
+      const label = dt ? truncate('NEXT: ' + next.summary.toUpperCase() + ' ' +
+        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28) : truncate('NEXT: ' + next.summary.toUpperCase(), 28);
+      lines.push(label);
+    } else {
+      lines.push('RHS EVENTS CALENDAR');
+    }
+  } else {
+    // No today events — show upcoming
+    lines.push('NO EVENTS TODAY');
+    upcoming.slice(0,4).forEach(e => {
+      const dt = parseEventDate(e.dtstart);
+      const label = dt ? truncate(e.summary.toUpperCase() + '  ' +
+        monNames[dt.getMonth()] + ' ' + dt.getDate(), 28) : truncate(e.summary.toUpperCase(), 28);
+      lines.push(label);
+    });
+    while (lines.length < 6) lines.push('');
+    lines.push('RHS EVENTS CALENDAR');
+  }
+
+  return { lines: lines.slice(0,7), speed: 15, _isCalendar: true };
+}
+
+async function fetchCalendar() {
+  try {
+    const res  = await fetch(CAL_SCRIPT_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.events) throw new Error('bad response');
+    const events = data.events.map(e => ({
+      summary: e.title,
+      dtstart: e.start,
+      allDay:  e.allDay
+    }));
+    window._lastCalEvents = events; // cache for schedule detection
+    return buildCalScreen(events);
+  } catch(e) {
+    console.warn('Calendar fetch failed:', e.message);
+    return null;
+  }
+}
+
+function injectCalScreen(screen) {
+  calScreen = screen;
+  // Find placeholder OR existing cal slot
+  let placeholderIdx = messages.findIndex(m => m._isCalendarPlaceholder);
+  if (placeholderIdx < 0) placeholderIdx = messages.findIndex(m => m._isCalendarSlot);
+  if (placeholderIdx < 0) return;
+
+  if (screen) {
+    messages[placeholderIdx] = { ...screen, _isCalendarSlot: true };
+  } else {
+    // No events — show a fallback screen at the placeholder slot
+    messages[placeholderIdx] = {
+      lines: [
+        'RHS EVENTS CALENDAR',
+        'NO EVENTS TODAY',
+        '',
+        'CHECK CALENDAR AT',
+        'RJUSD.ORG FOR UPDATES',
+        '',
+        'RIVERDALE HIGH SCHOOL'
+      ],
+      speed: 10,
+      _isCalendarSlot: true
+    };
+  }
+  buildDots();
+}
+
+async function refreshCalendar() {
+  if (!messages.some(m => m._isCalendarPlaceholder || m._isCalendarSlot)) return;
+  const screen = await fetchCalendar();
+  injectCalScreen(screen);
+}
+
+
+
+/* ════════════════════════════════════════
+   FLIP SOUND ENGINE
+   Synthesized mechanical tile sound
+   using Web Audio API — no file needed
+════════════════════════════════════════ */
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return audioCtx;
+}
+
+function playFlipClick(time, vol) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  // Longer buffer for a more mechanical thunk feel
+  const bufLen = Math.floor(ctx.sampleRate * 0.07);
+  const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const data   = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) {
+    // Attack + pitched decay — like plastic hitting a stop
+    const t     = i / bufLen;
+    const noise = Math.random() * 2 - 1;
+    const tone  = Math.sin(2 * Math.PI * 180 * t * bufLen / ctx.sampleRate);
+    data[i] = (noise * 0.7 + tone * 0.3) * Math.pow(1 - t, 2.2);
+  }
+  const src    = ctx.createBufferSource();
+  src.buffer   = buf;
+  // Low-mid bandpass — airport board has a woody, resonant click
+  const filter = ctx.createBiquadFilter();
+  filter.type  = 'bandpass';
+  filter.frequency.value = 900;
+  filter.Q.value = 1.4;
+  // Slight high shelf for crispness
+  const shelf  = ctx.createBiquadFilter();
+  shelf.type   = 'highShelf';
+  shelf.frequency.value = 3500;
+  shelf.gain.value = 4;
+  const gain   = ctx.createGain();
+  gain.gain.value = vol || 0.22;
+  src.connect(filter);
+  filter.connect(shelf);
+  shelf.connect(gain);
+  gain.connect(ctx.destination);
+  src.start(time);
+}
+
+function playFlipSound(tileCount) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  const now    = ctx.currentTime;
+  // Total ~2.8 seconds — slow, satisfying departures board feel
+  const clicks = Math.min(Math.floor(tileCount * 1.8), 64);
+
+  // Phase 1: slow ramp-up (0 - 0.6s) — board waking up, sparse clicks
+  for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
+    const t   = now + (i / (clicks * 0.25)) * 0.6;
+    const vol = 0.05 + (i / (clicks * 0.25)) * 0.1;
+    playFlipClick(t, vol);
+  }
+  // Phase 2: main cascade (0.6 - 1.8s) — steady tile flipping
+  for (let i = 0; i < Math.floor(clicks * 0.5); i++) {
+    const t   = now + 0.6 + (i / (clicks * 0.5)) * 1.2;
+    const vol = 0.16 + Math.sin(i / (clicks * 0.5) * Math.PI) * 0.1;
+    playFlipClick(t, vol);
+  }
+  // Phase 3: slow settling (1.8 - 2.8s) — last tiles locking in, fading out
+  for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
+    const t   = now + 1.8 + (i / (clicks * 0.25)) * 1.0;
+    const vol = 0.13 - (i / (clicks * 0.25)) * 0.11;
+    playFlipClick(t, vol);
+  }
+}
+
+/* ════════════════════════════════════════
+   BIRTHDAY SYSTEM
+   Reads from Birthdays tab in Google Sheet
+   Shows students with birthdays this week
+════════════════════════════════════════ */
+
+// Hardcoded birthdays from uploaded PDFs (fallback)
+const HARDCODED_BIRTHDAYS = [
+  // May
+  { name: 'CAMILA VILLANUEVA',   month: 5,  day: 9  },
+  { name: 'ELENA MENDES',        month: 5,  day: 10 },
+  { name: 'ISABEL VERA RIOS',    month: 5,  day: 19 },
+  { name: 'CELESTE CARRILLO',    month: 5,  day: 21 },
+  { name: 'EMILLY DIAZ',         month: 5,  day: 26 },
+  { name: 'YERALDINE LOPEZ VEGA',month: 5,  day: 29 },
+  { name: 'ELLA-JADE STOLLIKER', month: 5,  day: 31 },
+  // June
+  { name: 'ALYSSA HERNANDEZ',    month: 6,  day: 17 },
+  { name: 'PERLA MARIN ALVAREZ', month: 6,  day: 20 },
+  // July
+  { name: 'JAYLEE YBARRA',       month: 7,  day: 4  },
+  { name: 'GABRIEL GARCIA CORONA',month: 7, day: 6  },
+  { name: 'MIGUEL MARCOS-DELGADO',month: 7, day: 18 },
+  { name: 'ELPIDIO SOLORIO CARRILLO',month:7,day: 20 },
+  { name: 'MICHELLE RAMIREZ',    month: 7,  day: 22 },
+  { name: 'ALYSSA GONZALEZ',     month: 7,  day: 25 },
+  { name: 'CAMILA CORTES PEREZ', month: 7,  day: 27 },
+  { name: 'STARR GARCIA',        month: 7,  day: 28 },
+  // August
+  { name: 'LIYRISE AGUILAR',     month: 8,  day: 4  },
+  { name: 'SANTIAGO CHAVEZ',     month: 8,  day: 4  },
+  { name: 'CINTHIA LAWLESS',     month: 8,  day: 7  },
+  { name: 'NATALIE ARIAS',       month: 8,  day: 11 },
+  { name: 'DOMINIC FIGUEROA',    month: 8,  day: 11 },
+  { name: 'MARISOL FLORES RODRIGUEZ',month:8,day:12 },
+  { name: 'VIOLETA TAMAYO',      month: 8,  day: 15 },
+  { name: 'VALERIA PEREZ SOLIS', month: 8,  day: 24 },
+  { name: 'VALERIA OLGUIN',      month: 8,  day: 29 },
+];
+
+let allBirthdays = [...HARDCODED_BIRTHDAYS];
+
+function getWeekBirthdays() {
+  const now   = new Date();
+  const today = { m: now.getMonth() + 1, d: now.getDate() };
+  // Get Mon-Sun of current week
+  const dow   = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+
+  const weekDates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    weekDates.push({ m: d.getMonth() + 1, d: d.getDate() });
+  }
+
+  const todayBdays   = [];
+  const weekBdays    = [];
+
+  for (const b of allBirthdays) {
+    const isToday_ = b.month === today.m && b.day === today.d;
+    const isWeek   = weekDates.some(wd => wd.m === b.month && wd.d === b.day);
+    if (isToday_) todayBdays.push(b);
+    else if (isWeek) weekBdays.push(b);
+  }
+
+  return { todayBdays, weekBdays };
+}
+
+function buildBirthdayScreen() {
+  const { todayBdays, weekBdays } = getWeekBirthdays();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN',
+                    'JUL','AUG','SEP','OCT','NOV','DEC'];
+
+  if (!todayBdays.length && !weekBdays.length) return null;
+
+  const lines = [];
+
+  if (todayBdays.length) {
+    lines.push('HAPPY BIRTHDAY!');
+    // Up to 3 today birthdays
+    todayBdays.slice(0, 3).forEach(b => {
+      lines.push(truncate(b.name, 28));
+    });
+    if (todayBdays.length > 3) {
+      lines.push('AND ' + (todayBdays.length - 3) + ' MORE TODAY');
+    }
+    // Fill remaining with this week
+    const remaining = 6 - lines.length;
+    if (remaining > 0 && weekBdays.length) {
+      lines.push(lines.length === 4 ? '' : '');
+      const upNext = weekBdays.slice(0, remaining - 1);
+      if (upNext.length) {
+        lines.push('ALSO THIS WEEK:');
+        upNext.forEach(b => {
+          const dateStr = monNames[b.month-1] + ' ' + b.day;
+          lines.push(truncate(b.name + '  ' + dateStr, 28));
+        });
+      }
+    }
+  } else {
+    // No birthdays today — show week birthdays
+    lines.push('BIRTHDAYS THIS WEEK');
+    weekBdays.slice(0, 5).forEach(b => {
+      const dateStr = monNames[b.month-1] + ' ' + b.day;
+      lines.push(truncate(b.name + '  ' + dateStr, 28));
+    });
+    if (weekBdays.length > 5) {
+      lines.push('+ ' + (weekBdays.length - 5) + ' MORE THIS WEEK');
+    }
+  }
+
+  while (lines.length < 7) lines.push('');
+
+  return { lines: lines.slice(0, 7), speed: 12, _isBirthday: true };
+}
+
+async function fetchSheetBirthdays(sheetUrl) {
+  // Fetch the Birthdays tab by replacing output=csv with sheet name
+  if (!sheetUrl) return;
+  try {
+    // Build URL for Birthdays sheet tab
+    const bdUrl = sheetUrl.replace('output=csv', 'output=csv').replace(
+      /gid=\d+/, 'gid=0'
+    );
+    // Use a named sheet approach — replace single=true with sheet name
+    const base   = sheetUrl.split('?')[0];
+    const bdTabUrl = base + '?gid=0&single=true&output=csv&sheet=Birthdays';
+
+    const proxies = [
+      'https://api.allorigins.win/raw?url=',
+      'https://corsproxy.io/?'
+    ];
+
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy + encodeURIComponent(bdTabUrl), {
+          cache: 'no-store', signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) continue;
+        const csv = await res.text();
+        if (!csv.includes('Name') && !csv.includes('name')) continue;
+        parseBirthdayCSV(csv);
+        return;
+      } catch(e) { continue; }
+    }
+  } catch(e) {}
+}
+
+function parseBirthdayCSV(csv) {
+  const rows = csv.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) return;
+  const header = rows[0].toLowerCase().replace(/\r/g,'').split(',')
+    .map(h => h.replace(/^"|"$/g,'').trim());
+  const nameIdx  = header.findIndex(h => h === 'name');
+  const monthIdx = header.findIndex(h => h === 'month');
+  const dayIdx   = header.findIndex(h => h === 'day');
+  if (nameIdx < 0 || monthIdx < 0 || dayIdx < 0) return;
+
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cols  = rows[i].replace(/\r/g,'').split(',');
+    const clean = c => (cols[c] || '').replace(/^"|"$/g,'').trim();
+    const name  = clean(nameIdx).toUpperCase();
+    const month = parseInt(clean(monthIdx));
+    const day   = parseInt(clean(dayIdx));
+    if (name && month && day) parsed.push({ name, month, day });
+  }
+  if (parsed.length) allBirthdays = parsed; // replace with sheet data
+}
+
+function injectBirthdayScreen(screen) {
+  let idx = messages.findIndex(m => m._isBirthdayPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isBirthdaySlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isBirthdaySlot: true };
+  } else {
+    messages[idx] = {
+      lines: [
+        'BIRTHDAYS THIS WEEK',
+        'NO BIRTHDAYS TODAY',
+        '',
+        'CHECK BACK SOON',
+        '',
+        'GO COWBOYS',
+        'RIVERDALE HIGH SCHOOL'
+      ],
+      speed: 10, _isBirthdaySlot: true
+    };
+  }
+  buildDots();
+}
+
+async function refreshBirthdays() {
+  const hasSlot = messages.some(m => m._isBirthdayPlaceholder || m._isBirthdaySlot);
+  if (!hasSlot) return;
+  if (sheetUrl) await fetchSheetBirthdays(sheetUrl);
+  const screen = buildBirthdayScreen();
+  injectBirthdayScreen(screen);
+}
+
+
+/* ════════════════════════════════════════
+   COUNTDOWN SYSTEM
+   Hardcoded RJUSD 2025-26 dates + 
+   custom events from Sheet Countdowns tab
+   US Federal Holidays auto-included
+════════════════════════════════════════ */
+
+const HARDCODED_COUNTDOWNS = [
+  // RJUSD Academic Calendar 2025-26
+  { label: 'END OF SCHOOL YEAR',  date: '2026-06-12', emoji: '🎓', priority: 1 },
+  { label: 'GRADUATION',          date: '2026-06-12', emoji: '🎓', priority: 1 },
+  { label: 'SPRING BREAK',        date: '2026-03-28', emoji: '🌸', priority: 2 },
+  { label: 'WINTER BREAK',        date: '2025-12-20', emoji: '❄️',  priority: 2 },
+  { label: 'THANKSGIVING BREAK',  date: '2025-11-27', emoji: '🦃', priority: 2 },
+  { label: 'MEMORIAL DAY',        date: '2026-05-25', emoji: '🇺🇸', priority: 2 },
+  { label: 'MLK DAY',             date: '2026-01-19', emoji: '✊', priority: 3 },
+  { label: 'PRESIDENTS DAY',      date: '2026-02-16', emoji: '🇺🇸', priority: 3 },
+  { label: 'LINCOLN DAY',         date: '2026-02-09', emoji: '🎩', priority: 3 },
+  { label: 'VETERANS DAY',        date: '2025-11-11', emoji: '🎖️', priority: 3 },
+  { label: 'LABOR DAY',           date: '2025-09-01', emoji: '⚒️',  priority: 3 },
+  { label: 'JUNETEENTH',          date: '2026-06-19', emoji: '✊', priority: 3 },
+  // Progress reports / report cards (approximate — update as needed)
+  { label: 'PROGRESS REPORTS',    date: '2025-10-10', emoji: '📋', priority: 2 },
+  { label: 'END OF Q1',           date: '2025-11-07', emoji: '📊', priority: 2 },
+  { label: 'PROGRESS REPORTS',    date: '2025-12-05', emoji: '📋', priority: 2 },
+  { label: 'END OF SEMESTER 1',   date: '2026-01-23', emoji: '📚', priority: 1 },
+  { label: 'PROGRESS REPORTS',    date: '2026-02-27', emoji: '📋', priority: 2 },
+  { label: 'END OF Q3',           date: '2026-03-27', emoji: '📊', priority: 2 },
+  { label: 'PROGRESS REPORTS',    date: '2026-05-01', emoji: '📋', priority: 2 },
+  { label: 'END OF SEMESTER 2',   date: '2026-06-12', emoji: '📚', priority: 1 },
+];
+
+let customCountdowns = [];
+
+function getDaysUntil(dateStr) {
+  const now    = new Date();
+  const target = new Date(dateStr + 'T00:00:00');
+  const diff   = target - new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function getUpcomingCountdowns() {
+  const all = [...HARDCODED_COUNTDOWNS, ...customCountdowns];
+  const now  = new Date();
+
+  return all
+    .map(c => ({ ...c, days: getDaysUntil(c.date) }))
+    .filter(c => c.days >= 0 && c.days <= 180) // within 6 months
+    .sort((a, b) => {
+      // Sort by days ascending, then priority
+      if (a.days !== b.days) return a.days - b.days;
+      return (a.priority || 3) - (b.priority || 3);
+    });
+}
+
+function formatCountdownLine(c) {
+  const days = c.days;
+  if (days === 0) return truncate(c.label + '  TODAY!', 28);
+  if (days === 1) return truncate(c.label + '  TOMORROW', 28);
+  return truncate(c.label + '  ' + days + ' DAYS', 28);
+}
+
+function buildCountdownScreen() {
+  const upcoming = getUpcomingCountdowns();
+  if (!upcoming.length) return null;
+
+  const now      = new Date();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+  const lines = [];
+  lines.push('COMING UP AT RHS');
+
+  // Show up to 6 upcoming events
+  upcoming.slice(0, 6).forEach(c => {
+    lines.push(formatCountdownLine(c));
+  });
+
+  while (lines.length < 7) lines.push('');
+
+  return { lines: lines.slice(0, 7), speed: 15, _isCountdownSlot: true };
+}
+
+function injectCountdownScreen(screen) {
+  let idx = messages.findIndex(m => m._isCountdownPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isCountdownSlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isCountdownSlot: true };
+  } else {
+    messages[idx] = {
+      lines: ['COMING UP AT RHS','','NO UPCOMING EVENTS','','','',''],
+      speed: 10, _isCountdownSlot: true
+    };
+  }
+  buildDots();
+}
+
+function refreshCountdowns() {
+  const hasSlot = messages.some(m => m._isCountdownPlaceholder || m._isCountdownSlot);
+  if (!hasSlot) return;
+  const screen = buildCountdownScreen();
+  injectCountdownScreen(screen);
+}
+
+async function fetchSheetCountdowns(sheetUrl) {
+  if (!sheetUrl) return;
+  try {
+    const base     = sheetUrl.split('?')[0];
+    const tabUrl   = base + '?gid=0&single=true&output=csv&sheet=Countdowns';
+    const proxies  = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?'];
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy + encodeURIComponent(tabUrl), {
+          cache: 'no-store', signal: AbortSignal.timeout(5000)
+        });
+        if (!res.ok) continue;
+        const csv = await res.text();
+        if (!csv.toLowerCase().includes('label') && !csv.toLowerCase().includes('date')) continue;
+        parseCountdownCSV(csv);
+        return;
+      } catch(e) { continue; }
+    }
+  } catch(e) {}
+}
+
+function parseCountdownCSV(csv) {
+  const rows = csv.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) return;
+  const header   = rows[0].toLowerCase().replace(/\r/g,'').split(',')
+    .map(h => h.replace(/^"|"$/g,'').trim());
+  const labelIdx = header.findIndex(h => h === 'label' || h === 'event' || h === 'name');
+  const dateIdx  = header.findIndex(h => h === 'date');
+  const emojiIdx = header.findIndex(h => h === 'emoji' || h === 'icon');
+  if (labelIdx < 0 || dateIdx < 0) return;
+
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cols  = rows[i].replace(/\r/g,'').split(',');
+    const clean = c => c >= 0 ? (cols[c] || '').replace(/^"|"$/g,'').trim() : '';
+    const label = clean(labelIdx).toUpperCase();
+    const date  = clean(dateIdx);
+    const emoji = clean(emojiIdx) || '📅';
+    if (label && date) parsed.push({ label, date, emoji, priority: 2 });
+  }
+  if (parsed.length) customCountdowns = parsed;
+}
+
+
+/* ════════════════════════════════════════
+   QUICK MESSAGE SYSTEM
+   Reads latest message posted via
+   the student submit page
+════════════════════════════════════════ */
+
+async function fetchQuickMessage() {
+  try {
+    const url = CAL_SCRIPT_URL + '?action=quickmsg';
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.message) return null;
+    return data.message;
+  } catch(e) {
+    return null;
+  }
+}
+
+function buildQuickMsgScreen(msg) {
+  if (!msg || !msg.line1) return null;
+  const now      = new Date();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const posted   = new Date(msg.timestamp);
+  const timeStr  = posted.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  const sender   = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : '';
+  const from     = sender ? truncate('FROM ' + sender, 28) : 'ROOM 27 MESSAGE';
+
+  return {
+    lines: [
+      from,
+      '',
+      truncate(msg.line1 || '', 28),
+      truncate(msg.line2 || '', 28),
+      truncate(msg.line3 || '', 28),
+      '',
+      truncate('POSTED ' + timeStr, 28),
+    ],
+    speed: 15,
+    _isQuickMsgSlot: true
+  };
+}
+
+function injectQuickMsgScreen(screen) {
+  let idx = messages.findIndex(m => m._isQuickMsgPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isQuickMsgSlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isQuickMsgSlot: true };
+  } else {
+    messages[idx] = {
+      lines: ['ROOM 27 BOARD','','NO MESSAGES YET','','POST AT BIT.LY/RHSBOARD','','ROOM 27'],
+      speed: 10, _isQuickMsgSlot: true
+    };
+  }
+  buildDots();
+}
+
+async function refreshQuickMsg() {
+  const hasSlot = messages.some(m => m._isQuickMsgPlaceholder || m._isQuickMsgSlot);
+  if (!hasSlot) return;
+  const msg    = await fetchQuickMessage();
+  const screen = buildQuickMsgScreen(msg);
+  injectQuickMsgScreen(screen);
+}
+
+/* ════════════════════════════════════════
+   BELL SCHEDULE SYSTEM
+   Auto-detects schedule type from:
+   1. RHS Events calendar keywords
+   2. Default weekly pattern
+   3. Short week override (≤4 school days)
+════════════════════════════════════════ */
+
+const SCHEDULES = {
+  REGULAR: {
+    label: 'REGULAR BELL SCHEDULE',
+    periods: [
+      { name: 'P1',     start: '8:10',  end: '9:02'  },
+      { name: 'P2',     start: '9:06',  end: '9:56'  },
+      { name: 'BRUNCH', start: '9:56',  end: '10:11', break: true },
+      { name: 'P3',     start: '10:15', end: '11:05' },
+      { name: 'P4',     start: '11:09', end: '11:59' },
+      { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
+      { name: 'P5',     start: '12:37', end: '1:27'  },
+      { name: 'P6',     start: '1:31',  end: '2:21'  },
+      { name: 'P7',     start: '2:25',  end: '3:15'  },
+    ]
+  },
+  EARLY_RELEASE: {
+    label: 'EARLY RELEASE SCHEDULE',
+    periods: [
+      { name: 'P1',    start: '8:10',  end: '8:56'  },
+      { name: 'P2',    start: '9:00',  end: '9:41'  },
+      { name: 'P3',    start: '9:45',  end: '10:26' },
+      { name: 'P4',    start: '10:30', end: '11:11' },
+      { name: 'LUNCH', start: '11:11', end: '11:45', break: true },
+      { name: 'P5',    start: '11:49', end: '12:30' },
+      { name: 'P6',    start: '12:34', end: '1:15'  },
+      { name: 'P7',    start: '1:19',  end: '2:00'  },
+    ]
+  },
+  BLOCK_WED: {
+    label: 'BLOCK DAY · 1-3-5-7',
+    periods: [
+      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
+      { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
+      { name: 'P3+P4',  start: '10:16', end: '11:59' },
+      { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
+      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
+      { name: 'P7',     start: '2:24',  end: '3:15'  },
+    ]
+  },
+  BLOCK_THU: {
+    label: 'BLOCK DAY · 2-4-6-7',
+    periods: [
+      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
+      { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
+      { name: 'P3+P4',  start: '10:16', end: '11:59' },
+      { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
+      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
+      { name: 'P7',     start: '2:24',  end: '3:15'  },
+    ]
+  },
+  MINIMUM: {
+    label: 'MINIMUM DAY SCHEDULE',
+    periods: [
+      { name: 'P1',      start: '8:10',  end: '8:46'  },
+      { name: 'P2',      start: '8:50',  end: '9:23'  },
+      { name: 'P3',      start: '9:27',  end: '10:00' },
+      { name: 'P4',      start: '10:04', end: '10:37' },
+      { name: 'BRU/LUN', start: '10:37', end: '11:10', break: true },
+      { name: 'P5',      start: '11:14', end: '11:47' },
+      { name: 'P6',      start: '11:51', end: '12:24' },
+      { name: 'P7',      start: '12:28', end: '1:01'  },
+    ]
+  },
+  ACTIVITY: {
+    label: 'ACTIVITY DAY SCHEDULE',
+    periods: [
+      { name: 'P1',    start: '8:10',  end: '8:56'  },
+      { name: 'P2',    start: '9:00',  end: '9:44'  },
+      { name: 'BRUNCH',start: '9:44',  end: '9:59',  break: true },
+      { name: 'P3',    start: '10:03', end: '10:47' },
+      { name: 'P4',    start: '10:51', end: '11:35' },
+      { name: 'P5',    start: '11:39', end: '12:23' },
+      { name: 'LUNCH', start: '12:23', end: '12:57', break: true },
+      { name: 'P6',    start: '1:01',  end: '1:45'  },
+      { name: 'P7',    start: '1:49',  end: '2:33'  },
+    ]
+  },
+  FOGGY: {
+    label: 'FOGGY/LATE ARRIVAL DAY',
+    periods: [
+      { name: 'P1',    start: '10:00', end: '10:44' },
+      { name: 'P2',    start: '10:48', end: '11:28' },
+      { name: 'P3',    start: '11:32', end: '12:12' },
+      { name: 'LUNCH', start: '12:12', end: '12:49', break: true },
+      { name: 'P4',    start: '12:53', end: '1:33'  },
+      { name: 'P5',    start: '1:37',  end: '2:17'  },
+      { name: 'P6',    start: '2:21',  end: '3:01'  },
+      { name: 'P7',    start: '3:05',  end: '3:45'  },
+    ]
+  }
+};
+
+// Academic calendar special dates (from RJUSD 2025-26 PDF)
+// Format: 'YYYY-MM-DD': 'SCHEDULE_KEY'
+const SPECIAL_DATES = {
+  // Early Release days (green on academic calendar - select Mondays already handled by default)
+  // Minimum days
+  '2026-06-12': 'MINIMUM', // Last day of school
+  // Add more as needed — students can update via sheet override too
+};
+
+// Short weeks (weeks with holidays) — use Regular for all days
+// School holidays from academic calendar
+const NO_SCHOOL_DATES = new Set([
+  '2025-09-01', // Labor Day
+  '2025-11-10', // Non-school day
+  '2025-11-11', // Veterans Day
+  '2025-11-27', '2025-11-28', // Thanksgiving
+  '2025-12-22','2025-12-23','2025-12-24','2025-12-25',
+  '2025-12-26','2025-12-29','2025-12-30','2025-12-31',
+  '2026-01-01','2026-01-02','2026-01-05','2026-01-06',
+  '2026-01-07','2026-01-08','2026-01-09','2026-01-12', // Winter break + inservice
+  '2026-01-19', // MLK Day
+  '2026-02-09', // Lincoln Day
+  '2026-02-16', // Presidents Day
+  '2026-03-30','2026-03-31',
+  '2026-04-01','2026-04-02','2026-04-03', // Spring Break
+  '2026-05-25', // Memorial Day
+]);
+
+function getWeekSchoolDays(date) {
+  // Count school days in the current week (Mon-Fri)
+  const d = new Date(date);
+  const day = d.getDay();
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+  let count = 0;
+  for (let i = 0; i < 5; i++) {
+    const check = new Date(monday);
+    check.setDate(monday.getDate() + i);
+    const str = localDateStr(check);
+    if (!NO_SCHOOL_DATES.has(str)) count++;
+  }
+  return count;
+}
+
+function detectScheduleType(calEvents) {
+  const now     = new Date();
+  const dateStr = localDateStr(now);
+  const dow     = now.getDay(); // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri
+
+  // 1. Check RHS Events calendar for schedule keywords
+  if (calEvents && calEvents.length) {
+    const todayEvents = calEvents.filter(e => isToday(e.dtstart, e.allDay));
+    for (const e of todayEvents) {
+      const t = (e.summary || e.title || '').toLowerCase();
+      if (t.includes('foggy') || t.includes('late arrival'))  return 'FOGGY';
+      if (t.includes('minimum'))                              return 'MINIMUM';
+      if (t.includes('activity'))                             return 'ACTIVITY';
+      if (t.includes('block'))                                return dow === 4 ? 'BLOCK_THU' : 'BLOCK_WED';
+      if (t.includes('early release'))                        return 'EARLY_RELEASE';
+    }
+  }
+
+  // 2. Check hardcoded special dates
+  if (SPECIAL_DATES[dateStr]) return SPECIAL_DATES[dateStr];
+
+  // 3. Short week override — if ≤4 school days this week, use Regular
+  const schoolDays = getWeekSchoolDays(now);
+  if (schoolDays <= 4) return 'REGULAR';
+
+  // 4. Default weekly pattern
+  if (dow === 1) return 'EARLY_RELEASE'; // Monday
+  if (dow === 2) return 'REGULAR';       // Tuesday
+  if (dow === 3) return 'BLOCK_WED';     // Wednesday
+  if (dow === 4) return 'BLOCK_THU';     // Thursday
+  if (dow === 5) return 'REGULAR';       // Friday
+
+  // Weekend or no school day
+  if (dow === 0 || dow === 6) return null;
+
+  return 'REGULAR'; // fallback
+}
+
+function getNextSchoolDay() {
+  const now      = new Date();
+  const monNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  for (let i = 1; i <= 7; i++) {
+    const next    = new Date(now);
+    next.setDate(now.getDate() + i);
+    const dow     = next.getDay();
+    const dateStr = localDateStr(next);
+    if (dow === 0 || dow === 6) continue;
+    if (NO_SCHOOL_DATES.has(dateStr)) continue;
+    const dayLabel  = dayNames[dow] + ' ' + monNames[next.getMonth()] + ' ' + next.getDate();
+    let schedKey    = 'REGULAR';
+    if (dow === 1) schedKey = 'EARLY_RELEASE';
+    if (dow === 3) schedKey = 'BLOCK_WED';
+    if (dow === 4) schedKey = 'BLOCK_THU';
+    return { dayLabel, schedKey };
+  }
+  return null;
+}
+
+function timeToMinutes(timeStr) {
+  // Converts "8:10" or "1:27" to minutes since midnight
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function getCurrentPeriodIdx(periods) {
+  const now     = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  for (let i = 0; i < periods.length; i++) {
+    const start = timeToMinutes(periods[i].start);
+    const end   = timeToMinutes(periods[i].end);
+    if (nowMins >= start && nowMins < end) return i;
+  }
+  return -1;
+}
+
+function buildScheduleScreen(calEvents) {
+  const scheduleKey = detectScheduleType(calEvents);
+  const now         = new Date();
+  const monNames    = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const dayNames    = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const dateLabel   = dayNames[now.getDay()] + ' ' + monNames[now.getMonth()] + ' ' + now.getDate();
+
+  // Weekend or no-school day — show next school day info
+  if (!scheduleKey) {
+    const next = getNextSchoolDay();
+    const nextLabel = next ? next.schedKey.replace('_WED','').replace('_THU','').replace('_',' ') : 'REGULAR';
+    const nextDay   = next ? next.dayLabel : 'MONDAY';
+    return {
+      lines: [
+        'NO SCHOOL TODAY',
+        dateLabel,
+        '',
+        'NEXT SCHOOL DAY',
+        nextDay,
+        nextLabel + ' BELL',
+        'GO COWBOYS'
+      ],
+      speed: 15,
+      _isSchedule: true
+    };
+  }
+
+  const schedule   = SCHEDULES[scheduleKey];
+  if (!schedule) return null;
+
+  const periods    = schedule.periods;
+  const currentIdx = getCurrentPeriodIdx(periods);
+
+  const lines = [];
+
+  // Line 1: schedule type + date
+  lines.push(truncate(schedule.label, 28));
+
+  // Lines 2-7: periods (up to 6, prioritize showing current period)
+  // Figure out which slice of periods to show — center around current period
+  let startIdx = 0;
+  if (currentIdx > 0) {
+    // Show 1 period before current if possible, fill rest after
+    startIdx = Math.max(0, Math.min(currentIdx - 1, periods.length - 6));
+  }
+  const visible = periods.slice(startIdx, startIdx + 6);
+
+  for (const p of visible) {
+    const isCurrent = periods.indexOf(p) === currentIdx;
+    const prefix    = isCurrent ? '▶ ' : '  ';
+    const suffix    = isCurrent ? ' NOW' : '';
+    const timeRange = `${p.start}-${p.end}`;
+    // Format: "▶ P3  10:15-11:05 NOW" or "  LUNCH  11:59-12:33"
+    const nameField = (prefix + p.name).padEnd(9);
+    const line      = truncate(nameField + timeRange + suffix, 28);
+    lines.push(line);
+  }
+
+  // Pad to 7 lines
+  while (lines.length < 7) lines.push('');
+
+  return { lines: lines.slice(0, 7), speed: 15, _isSchedule: true };
+}
+
+let scheduleScreen = null;
+let scheduleTimer  = null;
+
+function injectScheduleScreen(screen) {
+  scheduleScreen = screen;
+  // Find schedule slot (placeholder OR previously injected schedule)
+  let idx = messages.findIndex(m => m._isSchedulePlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isScheduleSlot);
+  if (idx < 0) return;
+  if (screen) {
+    messages[idx] = { ...screen, _isScheduleSlot: true };
+  } else {
+    messages[idx] = {
+      lines: ['BELL SCHEDULE','NOT AVAILABLE','','CHECK RJUSD.ORG','','',''],
+      speed: 10, _isScheduleSlot: true
+    };
+  }
+  buildDots();
+}
+
+async function refreshSchedule() {
+  const hasSlot = messages.some(m => m._isSchedulePlaceholder || m._isScheduleSlot);
+  if (!hasSlot) return;
+  const screen = buildScheduleScreen(window._lastCalEvents || []);
+  injectScheduleScreen(screen);
+}
+
+// Update schedule every minute so NOW indicator stays accurate
+setInterval(refreshSchedule, 60 * 1000);
+setInterval(refreshCountdowns, 10 * 60 * 1000);
+setInterval(refreshQuickMsg, 30 * 1000);
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+buildBoard();
+updateClock();
+setInterval(updateClock, 10000);
+
+// Auto-launch with hardcoded sheet URL — no setup needed
+(async () => {
+  const HARDCODED_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjqIQ3rsr_tr62T492hu3iEuXaNJnm9ayyAa6qgJGxm2YF5CsH9PStUPfmHpdOM2iHmGCQNsY-SZ9Q/pub?gid=0&single=true&output=csv';
+  sheetUrl = HARDCODED_URL;
+  try { localStorage.setItem('rhs-sheet-url', HARDCODED_URL); } catch(e) {}
+  setSyncStatus('', 'CONNECTING...');
+  const data = await fetchSheet(HARDCODED_URL);
+  if (data) {
+    startBoard(data, true);
+  } else {
+    // Fallback to demo if sheet unreachable
+    startBoard(DEMO, false);
+    setSyncStatus('error', 'SHEET UNREACHABLE · DEMO MODE');
+  }
+})();
+
+// Calendar is initialized inside startBoard() after messages load
+</script>
+</body>
+</html>
