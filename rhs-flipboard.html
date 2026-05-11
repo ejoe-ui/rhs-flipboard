@@ -448,7 +448,7 @@
   #honor-ticker-track { flex:1; overflow:hidden; position:relative; height:100%; }
   #honor-ticker-inner {
     display: inline-flex; align-items: center; height: 100%; white-space: nowrap;
-    animation: tickerScroll 120s linear infinite; will-change: transform;
+    animation: tickerScroll 400s linear infinite; will-change: transform;
   }
   @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
   .ticker-name  { font-family:'Courier New',monospace; font-size:11px; font-weight:700; color:var(--tan); letter-spacing:0.1em; text-transform:uppercase; padding:0 6px; }
@@ -2772,6 +2772,57 @@ setInterval(refreshQuickMsg, 30 * 1000);
 setInterval(refreshPassable, 30 * 1000);
 setInterval(refreshWeather, 30 * 60 * 1000);
 setInterval(refreshFacts, 60 * 60 * 1000);
+
+
+/* ════ HONOR ROLL TICKER ════ */
+function flipName(s){const c=s.indexOf(',');if(c<0)return s;return s.substring(c+1).trim()+' '+s.substring(0,c).trim();}
+function buildTickerHTML(hr){
+  if(!hr||!hr.length)return '';
+  const grades=['Freshman','Sophomore','Junior','Senior'];
+  const byG={};
+  for(const i of hr){const g=i.grade||'Other';if(!byG[g])byG[g]=[];byG[g].push(flipName(i.name));}
+  const seg=[];
+  for(const g of grades){
+    if(!byG[g]||!byG[g].length)continue;
+    seg.push('<span class="ticker-sep">&#9670;</span><span class="ticker-grade">'+g.toUpperCase()+'S</span><span class="ticker-sep">&#183;</span>');
+    for(const n of byG[g])seg.push('<span class="ticker-name">'+n+'</span><span class="ticker-sep">&#183;</span>');
+  }
+  const h=seg.join('');return h+h;
+}
+async function fetchHonorRoll(){
+  try{
+    const r=await fetch(CAL_SCRIPT_URL+'?action=honorroll',{cache:'no-store'});
+    if(!r.ok)return null;
+    const d=await r.json();
+    return(d.status==='ok'&&d.honorRoll)?d.honorRoll:null;
+  }catch(e){return null;}
+}
+async function initHonorRollTicker(){
+  const wrap=document.getElementById('honor-ticker-wrap');
+  const inner=document.getElementById('honor-ticker-inner');
+  if(!wrap||!inner)return;
+  const hr=await fetchHonorRoll();
+  if(!hr||!hr.length)return;
+  inner.innerHTML=buildTickerHTML(hr);
+  wrap.style.display='flex';
+  const bw=document.getElementById('board-wrap');
+  if(bw){const c=parseInt(getComputedStyle(bw).paddingBottom)||0;bw.style.paddingBottom=(c+32)+'px';}
+}
+setTimeout(initHonorRollTicker,2000);
+setInterval(initHonorRollTicker,30*60*1000);
+
+/* ════ CODE BEHAVIOR SCREENS ════ */
+const CODE_SCREENS=[
+  {letter:'C',lines:['C.O.D.E · COURTEOUS','','THANK YOU FOR LISTENING','WHEN OTHERS SPEAK','GOOD JOB KEEPING','COMMUNICATION OPEN',"IT'S GREAT TO SEE YOU"]},
+  {letter:'O',lines:['C.O.D.E · ON TASK','','THANK YOU FOR ARRIVING','READY AND ON TIME','GOOD JOB STAYING FOCUSED','ON YOUR LEARNING',"IT'S GREAT TO SEE YOU"]},
+  {letter:'D',lines:['C.O.D.E · DETERMINED','','GOOD JOB PUSHING THROUGH','WHEN IT GETS TOUGH',"IT'S GREAT TO SEE YOU",'ASKING QUESTIONS','THANK YOU FOR ALWAYS']},
+  {letter:'E',lines:['C.O.D.E · EXCELLENCE','','THANK YOU FOR YOUR','HONEST EFFORT TODAY','GOOD JOB SPEAKING UP','FOR YOURSELF',"IT'S GREAT TO SEE YOU"]}
+];
+let codeScreenIdx=0;
+function buildCodeScreen(){const s=CODE_SCREENS[codeScreenIdx%CODE_SCREENS.length];codeScreenIdx++;return{lines:s.lines,speed:10,_isCodeSlot:true};}
+function injectCodeScreen(s){let i=messages.findIndex(m=>m._isCodePlaceholder);if(i<0)i=messages.findIndex(m=>m._isCodeSlot);if(i<0)return;messages[i]={...s,_isCodeSlot:true};buildDots();}
+function refreshCode(){if(!messages.some(m=>m._isCodePlaceholder||m._isCodeSlot))return;injectCodeScreen(buildCodeScreen());}
+setInterval(refreshCode,10000);
 
 /* ════════════════════════════════════════
    INIT
