@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1920">
-<title>RHS FlipBoard · Room 27 · TV</title>
+<title>Cowboy Wire · Riverdale Pony Express · TV</title>
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -442,6 +442,8 @@ const ROWS       = 7;
 const COLS       = 28;
 const SYNC_INTERVAL = 60000;
 const CAL_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
+const SUPABASE_URL  = 'https://lgsfrhibzxjwcudjvfzx.supabase.co';
+// SUPABASE_KEY loaded from config.js
 const CHARS      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
 const SCRAMBLE_MS = 75;
 const SCRAMBLE_STEPS = 10;
@@ -796,8 +798,15 @@ function parseCSV(csv) {
         _isFactsPlaceholder: true
       };
     }
+    if (firstLine === '[PASSABLE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 20,
+        _isPassablePlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -950,8 +959,15 @@ function parseGviz(data) {
         _isFactsPlaceholder: true
       };
     }
+    if (firstLine === '[PASSABLE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 20,
+        _isPassablePlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1027,6 +1043,9 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isFactsPlaceholder) {
       const existing = messages.find(m => m._isFactsSlot || m._isFactsPlaceholder);
       result.push(existing || item);
+    } else if (item._isPassablePlaceholder) {
+      const existing = messages.find(m => m._isPassableSlot || m._isPassablePlaceholder);
+      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1051,6 +1070,7 @@ function startBoard(data, live) {
       refreshBirthdays(),
       refreshQuickMsg(),
       refreshFacts(),
+      refreshPassable(),
     ]);
     refreshSchedule();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
@@ -1084,6 +1104,7 @@ function startBoard(data, live) {
         refreshCountdowns();
         await refreshQuickMsg();
         await refreshFacts();
+        await refreshPassable();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -1937,6 +1958,60 @@ async function _refreshFacts() {
 }
 
 
+
+/* ════════════════════════════════════════
+   PASSABLE INTEGRATION
+   Live students-out data from Supabase
+════════════════════════════════════════ */
+
+async function fetchStudentsOut() {
+  try {
+    if (typeof SUPABASE_KEY === 'undefined' || SUPABASE_KEY === 'PASTE_YOUR_ANON_KEY_HERE') return null;
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/passes?select=*,students(full_name)&time_in=is.null&order=time_out.asc`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+function minsOutTV(timeOut) {
+  return Math.floor((new Date() - new Date(timeOut)) / 60000);
+}
+
+function buildStudentsOutScreen(passes) {
+  if (!passes || !passes.length) return null;
+  const lines = ['STUDENTS OUT NOW'];
+  passes.slice(0, 5).forEach(p => {
+    const name = ((p.students?.full_name || 'STUDENT').toUpperCase()).split(' ')[0];
+    const mins = minsOutTV(p.time_out);
+    const flag = mins > 10 ? ' !' : '';
+    lines.push(truncate(name + '  ' + mins + ' MIN' + flag, 28));
+  });
+  const over10 = passes.filter(p => minsOutTV(p.time_out) > 10).length;
+  while (lines.length < 6) lines.push('');
+  lines.push(passes.length + ' OUT' + (over10 ? '  ' + over10 + ' OVER 10 MIN' : '  ALL CLEAR'));
+  return { lines: lines.slice(0, 7), speed: 20, _isPassableSlot: true };
+}
+
+function injectPassableScreen(screen) {
+  let idx = messages.findIndex(m => m._isPassablePlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isPassableSlot);
+  if (idx < 0) return;
+  messages[idx] = screen
+    ? { ...screen, _isPassableSlot: true }
+    : { lines: ['STUDENTS OUT NOW','','ALL CLEAR','','NO PASSES ACTIVE','','GO COWBOYS'], speed: 15, _isPassableSlot: true };
+  buildDots();
+}
+
+async function refreshPassable() {
+  const hasSlot = messages.some(m => m._isPassablePlaceholder || m._isPassableSlot);
+  if (!hasSlot) return;
+  const passes = await fetchStudentsOut();
+  injectPassableScreen(passes && passes.length ? buildStudentsOutScreen(passes) : null);
+}
+
 /* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
@@ -2252,6 +2327,7 @@ async function refreshSchedule() {
 setInterval(refreshSchedule, 60 * 1000);
 setInterval(refreshCountdowns, 10 * 60 * 1000);
 setInterval(refreshQuickMsg, 30 * 1000);
+setInterval(refreshPassable, 30 * 1000);
 
 /* ════════════════════════════════════════
    INIT
