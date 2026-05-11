@@ -836,8 +836,15 @@ function parseCSV(csv) {
         _isPassablePlaceholder: true
       };
     }
+    if (firstLine === '[WEATHER]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 18,
+        _isWeatherPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -997,8 +1004,15 @@ function parseGviz(data) {
         _isPassablePlaceholder: true
       };
     }
+    if (firstLine === '[WEATHER]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 18,
+        _isWeatherPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1077,6 +1091,9 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isPassablePlaceholder) {
       const existing = messages.find(m => m._isPassableSlot || m._isPassablePlaceholder);
       result.push(existing || item);
+    } else if (item._isWeatherPlaceholder) {
+      const existing = messages.find(m => m._isWeatherSlot || m._isWeatherPlaceholder);
+      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1102,6 +1119,7 @@ function startBoard(data, live) {
       refreshQuickMsg(),
       refreshFacts(),
       refreshPassable(),
+      refreshWeather(),
     ]);
     refreshSchedule();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
@@ -1136,6 +1154,7 @@ function startBoard(data, live) {
         await refreshQuickMsg();
         await refreshFacts();
         await refreshPassable();
+        await refreshWeather();
       } else {
         setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
       }
@@ -2097,6 +2116,183 @@ function updatePeriodTimer() {
 }
 
 /* ════════════════════════════════════════
+   WEATHER SYSTEM
+   Live weather via Open-Meteo API
+   No API key needed — free forever
+   Riverdale, CA · 36.4552, -119.8785
+════════════════════════════════════════ */
+
+const WEATHER_LAT = 36.4552;
+const WEATHER_LON = -119.8785;
+
+const WEATHER_COMMENTS = {
+  scorcher: [
+    'STAY HYDRATED COWBOYS',
+    'DRINK WATER NOT ENERGY DRINKS',
+    'SUNSCREEN IS NOT OPTIONAL',
+    'FIND SOME SHADE OUT THERE',
+    'HOT OUT · DRINK PLENTY OF WATER',
+  ],
+  hot: [
+    'WARM ONE TODAY STAY HYDRATED',
+    'PERFECT WEATHER FOR STAYING FOCUSED',
+    'DRINK WATER BETWEEN CLASSES',
+    'CENTRAL VALLEY DOING ITS THING',
+  ],
+  warm: [
+    'NICE DAY OUT THERE COWBOYS',
+    'PERFECT WEATHER FOR A GREAT DAY',
+    'ENJOY THE SUNSHINE TODAY',
+    'GOOD VIBES AND GOOD WEATHER',
+  ],
+  mild: [
+    'GREAT DAY TO BE A COWBOY',
+    'PERFECT CLASSROOM WEATHER',
+    'NICE AND COMFORTABLE TODAY',
+    'ENJOY THE MILD WEATHER',
+  ],
+  cool: [
+    'A LITTLE CHILLY · BRING A JACKET',
+    'LAYER UP FOR OUTDOOR TIME',
+    'COOL DAY GREAT FOR FOCUSING',
+    'GRAB A HOODIE BEFORE YOU HEAD OUT',
+  ],
+  cold: [
+    'BUNDLE UP OUT THERE COWBOYS',
+    'COLD ONE TODAY · DRESS WARM',
+    'JACKET WEATHER FOR SURE TODAY',
+    'STAY WARM AND STAY FOCUSED',
+  ],
+  rainy: [
+    'RAIN TODAY · WATCH YOUR STEP',
+    'UMBRELLAS WELCOME IN THE HALLS',
+    'RAINY DAY GOOD FOR LEARNING',
+    'DON'T FORGET YOUR UMBRELLA',
+    'WET OUT THERE · STAY DRY COWBOYS',
+  ],
+  windy: [
+    'WINDY OUT THERE HOLD YOUR PAPERS',
+    'BREEZY DAY IN RIVERDALE',
+    'GUSTY WINDS TODAY HEADS UP',
+    'WIND IS GIVING TODAY · STAY SAFE',
+  ],
+  foggy: [
+    'FOGGY MORNING IN THE VALLEY',
+    'TULE FOG OUT THERE DRIVE SAFE',
+    'VISIBILITY LOW · WALK CAREFULLY',
+    'CLASSIC CENTRAL VALLEY MORNING',
+  ],
+};
+
+function getWeatherComment(condition, tempF) {
+  const hour = new Date().getHours();
+  const idx  = hour % 5; // rotate through comments by hour
+
+  if (condition === 'rainy' || condition === 'drizzle') return WEATHER_COMMENTS.rainy[idx % WEATHER_COMMENTS.rainy.length];
+  if (condition === 'foggy') return WEATHER_COMMENTS.foggy[idx % WEATHER_COMMENTS.foggy.length];
+  if (condition === 'windy') return WEATHER_COMMENTS.windy[idx % WEATHER_COMMENTS.windy.length];
+
+  if (tempF >= 100) return WEATHER_COMMENTS.scorcher[idx % WEATHER_COMMENTS.scorcher.length];
+  if (tempF >= 90)  return WEATHER_COMMENTS.hot[idx % WEATHER_COMMENTS.hot.length];
+  if (tempF >= 75)  return WEATHER_COMMENTS.warm[idx % WEATHER_COMMENTS.warm.length];
+  if (tempF >= 60)  return WEATHER_COMMENTS.mild[idx % WEATHER_COMMENTS.mild.length];
+  if (tempF >= 45)  return WEATHER_COMMENTS.cool[idx % WEATHER_COMMENTS.cool.length];
+  return WEATHER_COMMENTS.cold[idx % WEATHER_COMMENTS.cold.length];
+}
+
+function getWeatherCondition(wmoCode, windspeed) {
+  if (windspeed > 25) return 'windy';
+  if ([0].includes(wmoCode)) return 'clear';
+  if ([1,2,3].includes(wmoCode)) return 'cloudy';
+  if ([45,48].includes(wmoCode)) return 'foggy';
+  if ([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(wmoCode)) return 'rainy';
+  if ([71,73,75,77,85,86].includes(wmoCode)) return 'snowy';
+  if ([95,96,99].includes(wmoCode)) return 'stormy';
+  return 'clear';
+}
+
+function cToF(c) { return Math.round(c * 9/5 + 32); }
+
+function buildWeatherScreen(data) {
+  if (!data) return null;
+
+  const current  = data.current;
+  const daily    = data.daily;
+  const tempF    = cToF(current.temperature_2m);
+  const windspeed = current.wind_speed_10m || 0;
+  const wmoCode  = current.weather_code || 0;
+  const condition = getWeatherCondition(wmoCode, windspeed);
+  const comment  = getWeatherComment(condition, tempF);
+
+  const COND_LABELS = {
+    clear: 'SUNNY', cloudy: 'CLOUDY', foggy: 'FOGGY',
+    rainy: 'RAINY', snowy: 'SNOWY', stormy: 'STORMY',
+    windy: 'WINDY'
+  };
+  const condLabel = COND_LABELS[condition] || 'CLEAR';
+
+  // Tomorrow's high
+  const tomorrowHigh = daily && daily.temperature_2m_max && daily.temperature_2m_max[1]
+    ? cToF(daily.temperature_2m_max[1]) : null;
+  const dayAfterHigh = daily && daily.temperature_2m_max && daily.temperature_2m_max[2]
+    ? cToF(daily.temperature_2m_max[2]) : null;
+
+  const monNames = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const now = new Date();
+  const tom = new Date(now); tom.setDate(now.getDate() + 1);
+  const da  = new Date(now); da.setDate(now.getDate() + 2);
+
+  const forecastLine = tomorrowHigh && dayAfterHigh
+    ? truncate(monNames[tom.getDay()] + ' HIGH ' + tomorrowHigh + ' · ' + monNames[da.getDay()] + ' HIGH ' + dayAfterHigh, 28)
+    : '';
+
+  // Second comment line
+  const comment2Lines = truncate(comment, 28);
+
+  const lines = [
+    'WEATHER · RIVERDALE CA',
+    '',
+    truncate(condLabel + ' · ' + tempF + '°F', 28),
+    '',
+    comment2Lines,
+    '',
+    forecastLine,
+  ];
+
+  return { lines: lines.slice(0, 7), speed: 18, _isWeatherSlot: true };
+}
+
+async function fetchWeather() {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,precipitation_sum&timezone=America%2FLos_Angeles&forecast_days=3`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) { return null; }
+}
+
+function injectWeatherScreen(screen) {
+  let idx = messages.findIndex(m => m._isWeatherPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isWeatherSlot);
+  if (idx < 0) return;
+  messages[idx] = screen
+    ? { ...screen, _isWeatherSlot: true }
+    : {
+        lines: ['WEATHER · RIVERDALE CA','','DATA UNAVAILABLE','','CHECK BACK SOON','','GO COWBOYS'],
+        speed: 15, _isWeatherSlot: true
+      };
+  buildDots();
+}
+
+async function refreshWeather() {
+  const hasSlot = messages.some(m => m._isWeatherPlaceholder || m._isWeatherSlot);
+  if (!hasSlot) return;
+  const data   = await fetchWeather();
+  const screen = buildWeatherScreen(data);
+  injectWeatherScreen(screen);
+}
+
+/* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
    1. RHS Events calendar keywords
@@ -2412,6 +2608,7 @@ setInterval(refreshSchedule, 60 * 1000);
 setInterval(refreshCountdowns, 10 * 60 * 1000);
 setInterval(refreshQuickMsg, 30 * 1000);
 setInterval(refreshPassable, 30 * 1000);
+setInterval(refreshWeather, 30 * 60 * 1000);
 
 /* ════════════════════════════════════════
    INIT
