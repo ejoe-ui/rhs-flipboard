@@ -133,6 +133,31 @@
     text-align: right;
   }
 
+  .h-period-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 2px;
+  }
+  .h-period-label {
+    font-size: clamp(8px, 0.7vw, 12px);
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-transform: uppercase;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .h-period-time {
+    font-size: clamp(10px, 0.9vw, 15px);
+    letter-spacing: 0.1em;
+    color: var(--tan);
+    white-space: nowrap;
+    font-weight: 700;
+  }
+  .h-period-time.warning { color: #ff9900; }
+  .h-period-time.ending  { color: #cc4444; animation: blink 1s infinite; }
+
   /* ══════════════════════════════
      BOARD — ROWS 2–8
   ══════════════════════════════ */
@@ -406,6 +431,12 @@
     <span class="sync-label" id="syncLabel">Not connected</span>
   </div>
   <div class="h-divider" style="max-width:2vw"></div>
+  <div class="h-divider" style="max-width:1.5vw"></div>
+  <div class="h-period-timer" id="periodTimer" style="display:none">
+    <div class="h-period-label" id="periodLabel"></div>
+    <div class="h-period-time" id="periodTime"></div>
+  </div>
+  <div class="h-divider" style="max-width:1vw"></div>
   <div class="h-clock" id="clock">--:-- --</div>
 </div>
 
@@ -2012,6 +2043,59 @@ async function refreshPassable() {
   injectPassableScreen(passes && passes.length ? buildStudentsOutScreen(passes) : null);
 }
 
+
+/* ════════════════════════════════════════
+   PERIOD TIMER
+════════════════════════════════════════ */
+function updatePeriodTimer() {
+  const timerEl = document.getElementById('periodTimer');
+  const labelEl = document.getElementById('periodLabel');
+  const timeEl  = document.getElementById('periodTime');
+  if (!timerEl || !labelEl || !timeEl) return;
+
+  const schedKey = detectScheduleType(window._lastCalEvents || []);
+  if (!schedKey) { timerEl.style.display = 'none'; return; }
+
+  const schedule = SCHEDULES[schedKey];
+  if (!schedule) { timerEl.style.display = 'none'; return; }
+
+  const now     = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const nowSecs = now.getSeconds();
+
+  for (const p of schedule.periods) {
+    const start = timeToMinutes(p.start);
+    const end   = timeToMinutes(p.end);
+    if (nowMins >= start && nowMins < end) {
+      const remaining = (end - nowMins) * 60 - nowSecs;
+      const remMins   = Math.floor(remaining / 60);
+      const remSecs   = remaining % 60;
+      const timeStr   = remMins > 0
+        ? remMins + ' MIN' + (remSecs > 0 ? ' ' + remSecs + 'S' : '')
+        : remSecs + 'S';
+      labelEl.textContent = p.name + ' · ENDS ' + p.end;
+      timeEl.textContent  = timeStr + ' LEFT';
+      timeEl.className    = 'h-period-time' +
+        (remMins < 1 ? ' ending' : remMins < 5 ? ' warning' : '');
+      timerEl.style.display = 'flex';
+      return;
+    }
+  }
+
+  // Between periods — show next
+  for (const p of schedule.periods) {
+    const start = timeToMinutes(p.start);
+    if (nowMins < start) {
+      labelEl.textContent = 'NEXT: ' + p.name;
+      timeEl.textContent  = 'IN ' + (start - nowMins) + ' MIN';
+      timeEl.className    = 'h-period-time';
+      timerEl.style.display = 'flex';
+      return;
+    }
+  }
+  timerEl.style.display = 'none';
+}
+
 /* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
@@ -2337,6 +2421,8 @@ setInterval(refreshPassable, 30 * 1000);
 buildBoard();
 updateClock();
 setInterval(updateClock, 10000);
+setInterval(updatePeriodTimer, 1000);
+updatePeriodTimer();
 // TV version — force hide setup overlay immediately
 const _overlay = document.getElementById('setup-overlay');
 if (_overlay) _overlay.style.display = 'none';

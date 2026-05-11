@@ -701,6 +701,65 @@
     text-transform: uppercase;
   }
 
+  /* ── PERIOD TIMER CARD ── */
+  .period-timer-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--green);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .period-timer-card.warning { border-left-color: #ff9900; }
+  .period-timer-card.ending  { border-left-color: #cc4444; }
+
+  .pt-left { flex: 1; }
+
+  .pt-period {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .pt-period.warning { color: #ff9900; }
+  .pt-period.ending  { color: #cc4444; }
+
+  .pt-ends {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pt-time {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    text-align: right;
+  }
+
+  .pt-time.warning { color: #ff9900; }
+  .pt-time.ending  { color: #cc4444; }
+
+  .pt-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: right;
+  }
+
   /* ── NO SCHOOL ── */
   .no-school {
     font-family: var(--mono);
@@ -767,7 +826,7 @@
 const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
 const SHEET_ID    = '1xkHmsc-7LgDWaQ0Oblb2hgSqOuABi56Zu2EeDcsJ_v4';
 const SUPABASE_URL = 'https://lgsfrhibzxjwcudjvfzx.supabase.co';
-const SUPABASE_KEY = 'PASTE_YOUR_ANON_KEY_HERE'; // paste anon key here
+// SUPABASE_KEY loaded from config.js
 
 /* ════ SCHEDULES ════ */
 const SCHEDULES = {
@@ -979,6 +1038,12 @@ function render(calEvents, quickMsg, passData) {
     if (passCard) sections.push(passCard);
   }
 
+  /* ── PERIOD TIMER ── */
+  // Store cal events for period timer access
+  window._mobileCalEvents = calEvents || [];
+  const timerCard = buildPeriodTimerCard();
+  if (timerCard) sections.push(timerCard);
+
   /* ── SCHEDULE ── */
   const schedCard = document.createElement('div');
   schedCard.className = 'card tappable';
@@ -1165,6 +1230,68 @@ function render(calEvents, quickMsg, passData) {
   const content = document.getElementById('content');
   content.innerHTML = '';
   sections.forEach(s => content.appendChild(s));
+}
+
+/* ════ PERIOD TIMER ════ */
+function buildPeriodTimerCard() {
+  const schedKey = detectSchedule(window._mobileCalEvents || []);
+  if (!schedKey || schedKey === 'FOGGY') return null;
+
+  const schedule = SCHEDULES[schedKey];
+  if (!schedule) return null;
+
+  const now     = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const nowSecs = now.getSeconds();
+
+  // Find current period
+  for (const p of schedule.periods) {
+    const start = timeToMins(p.start);
+    const end   = timeToMins(p.end);
+    if (nowMins >= start && nowMins < end) {
+      const remaining = (end - nowMins) * 60 - nowSecs;
+      const remMins   = Math.floor(remaining / 60);
+      const remSecs   = remaining % 60;
+      const cls       = remMins < 1 ? 'ending' : remMins < 5 ? 'warning' : '';
+      const timeStr   = remMins > 0
+        ? remMins + ':' + String(remSecs).padStart(2,'0')
+        : '0:' + String(remSecs).padStart(2,'0');
+
+      const card = document.createElement('div');
+      card.className = `period-timer-card ${cls}`;
+      card.innerHTML = `
+        <div class="pt-left">
+          <div class="pt-period ${cls}">${p.break ? p.name : p.name} · ${schedule.label}</div>
+          <div class="pt-ends">Ends at ${p.end}</div>
+        </div>
+        <div>
+          <div class="pt-time ${cls}">${timeStr}</div>
+          <div class="pt-label">remaining</div>
+        </div>`;
+      return card;
+    }
+  }
+
+  // Between periods — show next
+  for (const p of schedule.periods) {
+    const start = timeToMins(p.start);
+    if (nowMins < start) {
+      const minsUntil = start - nowMins;
+      const card = document.createElement('div');
+      card.className = 'period-timer-card';
+      card.innerHTML = `
+        <div class="pt-left">
+          <div class="pt-period">Next: ${p.name}</div>
+          <div class="pt-ends">Starts at ${p.start}</div>
+        </div>
+        <div>
+          <div class="pt-time">${minsUntil}</div>
+          <div class="pt-label">min away</div>
+        </div>`;
+      return card;
+    }
+  }
+  return null;
 }
 
 function getNextSchoolDay() {
@@ -1458,6 +1585,15 @@ updateClock();
 setInterval(updateClock, 10000);
 loadData();
 setInterval(loadData, 60000);
+// Update period timer every 5 seconds without full reload
+setInterval(() => {
+  const existing = document.querySelector('.period-timer-card');
+  if (existing) {
+    const newCard = buildPeriodTimerCard();
+    if (newCard) existing.replaceWith(newCard);
+  }
+}, 5000);
 </script>
+<script src="config.js"></script>
 </body>
 </html>
