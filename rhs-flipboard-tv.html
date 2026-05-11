@@ -445,18 +445,20 @@
 
 <!-- BOTTOM ACCENT -->
 <div id="bottom-accent"></div>
-<div id="sound-prompt" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,105,56,0.85);color:#fff;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 18px;border-radius:4px;cursor:pointer;z-index:200;transition:opacity 0.5s" onclick="enableSound(this)">▶ Click anywhere to enable flip sound</div>
+<div id="sound-prompt" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,105,56,0.85);color:#fff;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 18px;border-radius:4px;cursor:pointer;z-index:200;transition:opacity 0.5s" onclick="if(typeof enableSound==='function')enableSound(this)">▶ Click anywhere to enable flip sound</div>
 <script>
-// TV version — auto-dismiss sound prompt and enable on any click
-document.addEventListener('click', function() {
-  const sp = document.getElementById('sound-prompt');
-  if (sp) enableSound(sp);
-}, { once: true });
-// Also auto-hide prompt after 8 seconds even without click
+// TV version — auto-dismiss sound prompt after 8 seconds
 setTimeout(() => {
   const sp = document.getElementById('sound-prompt');
   if (sp) { sp.style.opacity='0'; setTimeout(()=>sp.remove(),600); }
 }, 8000);
+// Enable sound on first click anywhere (after main script loads)
+window.addEventListener('click', function() {
+  if(typeof enableSound==='function') {
+    const sp = document.getElementById('sound-prompt');
+    if (sp) enableSound(sp);
+  }
+}, { once: true });
 </script>
 
 <!-- INDICATORS -->
@@ -2167,7 +2169,7 @@ const WEATHER_COMMENTS = {
     'RAIN TODAY · WATCH YOUR STEP',
     'UMBRELLAS WELCOME IN THE HALLS',
     'RAINY DAY GOOD FOR LEARNING',
-    'DON'T FORGET YOUR UMBRELLA',
+    'DONT FORGET YOUR UMBRELLA',
     'WET OUT THERE · STAY DRY COWBOYS',
   ],
   windy: [
