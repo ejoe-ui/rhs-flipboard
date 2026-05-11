@@ -2744,10 +2744,10 @@ setInterval(initHonorRollTicker,30*60*1000);
 
 /* ════ CODE BEHAVIOR SCREENS ════ */
 const CODE_SCREENS=[
-  {letter:'C',lines:['C.O.D.E · COURTEOUS','','THANK YOU FOR LISTENING','WHEN OTHERS SPEAK','GOOD JOB KEEPING','COMMUNICATION OPEN',"IT'S GREAT TO SEE YOU"]},
-  {letter:'O',lines:['C.O.D.E · ON TASK','','THANK YOU FOR ARRIVING','READY AND ON TIME','GOOD JOB STAYING FOCUSED','ON YOUR LEARNING',"IT'S GREAT TO SEE YOU"]},
-  {letter:'D',lines:['C.O.D.E · DETERMINED','','GOOD JOB PUSHING THROUGH','WHEN IT GETS TOUGH',"IT'S GREAT TO SEE YOU",'ASKING QUESTIONS','THANK YOU FOR ALWAYS']},
-  {letter:'E',lines:['C.O.D.E · EXCELLENCE','','THANK YOU FOR YOUR','HONEST EFFORT TODAY','GOOD JOB SPEAKING UP','FOR YOURSELF',"IT'S GREAT TO SEE YOU"]}
+  {letter:'C',lines:['C.O.D.E · COURTEOUS','','THANK YOU FOR LISTENING','WHEN OTHERS ARE SPEAKING','','','']},
+  {letter:'O',lines:['C.O.D.E · ON TASK','','GOOD JOB ARRIVING READY','AND ON TIME EVERY DAY','','','']},
+  {letter:'D',lines:['C.O.D.E · DETERMINED','','IT\'S GREAT TO SEE YOU','PUSH THROUGH THE TOUGH STUFF','','','']},
+  {letter:'E',lines:['C.O.D.E · EXCELLENCE','','THANK YOU FOR DOING','YOUR HONEST BEST TODAY','','','']}
 ];
 let codeScreenIdx=0;
 function buildCodeScreen(){const s=CODE_SCREENS[codeScreenIdx%CODE_SCREENS.length];codeScreenIdx++;return{lines:s.lines,speed:10,_isCodeSlot:true};}
