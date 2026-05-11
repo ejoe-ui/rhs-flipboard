@@ -598,6 +598,77 @@
 
   .post-btn:active { background: var(--green-dark); transform: scale(0.98); }
 
+  /* ── PASS STATUS CARD ── */
+  .pass-status-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border-left: 4px solid var(--green);
+  }
+
+  .pass-status-card.warning {
+    border-left-color: #ff9900;
+  }
+
+  .pass-out-time {
+    font-family: var(--mono);
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .pass-out-time.warning { color: #ff9900; }
+
+  .pass-status-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin-bottom: 12px;
+  }
+
+  .pass-stats {
+    display: flex;
+    gap: 16px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  .pass-stat {
+    flex: 1;
+    text-align: center;
+  }
+
+  .pass-stat-num {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+  }
+
+  .pass-stat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .pass-checked-in {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--green);
+    text-transform: uppercase;
+  }
+
   /* ── LOADING STATE ── */
   .loading-card {
     background: var(--surface);
@@ -695,6 +766,8 @@
 <script>
 const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
 const SHEET_ID    = '1xkHmsc-7LgDWaQ0Oblb2hgSqOuABi56Zu2EeDcsJ_v4';
+const SUPABASE_URL = 'https://lgsfrhibzxjwcudjvfzx.supabase.co';
+const SUPABASE_KEY = 'PASTE_YOUR_ANON_KEY_HERE'; // paste anon key here
 
 /* ════ SCHEDULES ════ */
 const SCHEDULES = {
@@ -890,7 +963,7 @@ function setSyncStatus(state, label) {
 }
 
 /* ════ RENDER ════ */
-function render(calEvents, quickMsg) {
+function render(calEvents, quickMsg, passData) {
   const now      = new Date();
   const nm       = nowMins();
   const monNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -899,6 +972,12 @@ function render(calEvents, quickMsg) {
   const schedule = schedKey ? SCHEDULES[schedKey] : null;
 
   const sections = [];
+
+  /* ── PASS STATUS (if student identified via URL) ── */
+  if (passData) {
+    const passCard = renderPassCard(passData);
+    if (passCard) sections.push(passCard);
+  }
 
   /* ── SCHEDULE ── */
   const schedCard = document.createElement('div');
@@ -1107,22 +1186,34 @@ function getNextSchoolDay() {
 /* ════ DATA FETCH ════ */
 async function loadData() {
   setSyncStatus('', 'Loading...');
+
+  // Check for PassAble UID/student in URL params
+  const params    = new URLSearchParams(window.location.search);
+  const uid       = params.get('uid');
+  const studentId = params.get('student');
+
   try {
-    // Fetch calendar + quick message in parallel
-    const [calRes, qmRes] = await Promise.allSettled([
-      fetch(`${SCRIPT_URL}?action=quickmsg`).then(r=>r.json()),
-      fetch(`${SCRIPT_URL}`).then(r=>r.json()),
-    ]);
+    // Fetch all data in parallel
+    const fetches = [
+      fetch(`${SCRIPT_URL}?action=quickmsg`).then(r=>r.json()).catch(()=>null),
+      fetch(`${SCRIPT_URL}`).then(r=>r.json()).catch(()=>null),
+    ];
 
-    const quickMsg  = calRes.status==='fulfilled' && calRes.value.status==='ok' ? calRes.value.message : null;
-    const calEvents = qmRes.status==='fulfilled'  && qmRes.value.status==='ok'  ? qmRes.value.events  : [];
+    // Also fetch pass status if we have a UID or student ID
+    if (uid || studentId) {
+      fetches.push(fetchPassStatus(uid, studentId));
+    }
 
-    render(calEvents, quickMsg);
+    const results   = await Promise.allSettled(fetches);
+    const quickMsg  = results[0].value?.status==='ok' ? results[0].value.message : null;
+    const calEvents = results[1].value?.status==='ok' ? results[1].value.events  : [];
+    const passData  = (uid || studentId) ? results[2]?.value : null;
+
+    render(calEvents, quickMsg, passData);
     setSyncStatus('live', 'Live');
 
   } catch(e) {
-    // Still render with local data only
-    render([], null);
+    render([], null, null);
     setSyncStatus('error', 'Offline');
   }
 }
@@ -1253,6 +1344,113 @@ function tapBday(name) {
     const icons = ['🎉','🎂','🎁','🪅','🎈','🥳','🎊'];
     icon.textContent = icons[Math.floor(Math.random() * icons.length)];
   }
+}
+
+/* ════ PASSABLE ════ */
+async function fetchPassStatus(uid, studentId) {
+  try {
+    // Fetch current active pass for this student
+    let query = `${SUPABASE_URL}/rest/v1/passes?select=*&time_in=is.null&order=time_out.desc&limit=1`;
+    if (studentId) query += `&student_id=eq.${studentId}`;
+
+    const passRes = await fetch(query, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+
+    // Fetch student info
+    let student = null;
+    if (uid || studentId) {
+      let sQuery = `${SUPABASE_URL}/rest/v1/students?select=*&limit=1`;
+      if (uid) sQuery += `&nfc_uid=eq.${uid}`;
+      else if (studentId) sQuery += `&id=eq.${studentId}`;
+
+      const sRes = await fetch(sQuery, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      const sData = await sRes.json();
+      student = sData[0] || null;
+    }
+
+    // Fetch weekly stats
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0,0,0,0);
+
+    let statsQuery = `${SUPABASE_URL}/rest/v1/passes?select=duration_minutes&time_out=gte.${weekStart.toISOString()}`;
+    if (student) statsQuery += `&student_id=eq.${student.id}`;
+
+    const statsRes = await fetch(statsQuery, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+
+    const passes     = await passRes.json();
+    const weekPasses = await statsRes.json();
+    const activePass = passes[0] || null;
+    const weekCount  = weekPasses.length;
+    const weekMins   = weekPasses.reduce((sum, p) => sum + (p.duration_minutes || 0), 0);
+
+    return { student, activePass, weekCount, weekMins };
+  } catch(e) {
+    return null;
+  }
+}
+
+function minsOut(timeOut) {
+  return Math.floor((new Date() - new Date(timeOut)) / 60000);
+}
+
+function renderPassCard(data) {
+  if (!data) return null;
+  const { student, activePass, weekCount, weekMins } = data;
+  const name = student ? student.full_name : 'Student';
+
+  const card = document.createElement('div');
+
+  if (activePass) {
+    const mins    = minsOut(activePass.time_out);
+    const warning = mins > 10;
+    card.className = `pass-status-card${warning ? ' warning' : ''}`;
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-label${warning ? '' : ' green'}">${warning ? '⚠ Pass Active' : '✓ Pass Active'}</span>
+        <span class="card-tag">${name}</span>
+      </div>
+      <div class="card-body">
+        <div class="pass-out-time${warning ? ' warning'  : ''}">${mins} MIN</div>
+        <div class="pass-status-label">Currently out · ${activePass.reason || 'Hall pass'}</div>
+        <div class="pass-stats">
+          <div class="pass-stat">
+            <span class="pass-stat-num">${weekCount}</span>
+            <span class="pass-stat-label">Passes this week</span>
+          </div>
+          <div class="pass-stat">
+            <span class="pass-stat-num">${weekMins}</span>
+            <span class="pass-stat-label">Total minutes</span>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    card.className = 'pass-status-card';
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-label green">Pass Status</span>
+        <span class="card-tag">${name}</span>
+      </div>
+      <div class="card-body">
+        <div class="pass-checked-in">✓ Checked In</div>
+        <div class="pass-stats" style="margin-top:10px">
+          <div class="pass-stat">
+            <span class="pass-stat-num">${weekCount}</span>
+            <span class="pass-stat-label">Passes this week</span>
+          </div>
+          <div class="pass-stat">
+            <span class="pass-stat-num">${weekMins}</span>
+            <span class="pass-stat-label">Total minutes</span>
+          </div>
+        </div>
+      </div>`;
+  }
+  return card;
 }
 
 /* ════ INIT ════ */
