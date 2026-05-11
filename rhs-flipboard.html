@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="viewport" content="width=1920">
 <title>Cowboy Wire · Riverdale Pony Express</title>
 <style>
@@ -1147,19 +1149,18 @@ function startBoard(data, live) {
 
   // Inject all live slots before showing the board
   setTimeout(async () => {
-    // Run all slot injections in parallel where possible
+    const timeout = p => Promise.race([p, new Promise(r => setTimeout(r, 5000))]);
     await Promise.all([
-      refreshCalendar(),
-      refreshBirthdays(),
-      refreshQuickMsg(),
-      refreshFacts(),
-      refreshPassable(),
-      refreshWeather(),
+      timeout(refreshCalendar()),
+      timeout(refreshBirthdays()),
+      timeout(refreshQuickMsg()),
+      timeout(refreshFacts()),
+      timeout(refreshPassable()),
+      timeout(refreshWeather()),
     ]);
     refreshSchedule();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
     refreshCountdowns();
-    // Now show the first message — all slots are populated
     prevLines = Array.from({length: ROWS}, () => '\x00'.repeat(COLS));
     showMessage(0);
   }, 400);
