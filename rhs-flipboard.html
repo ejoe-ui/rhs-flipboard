@@ -432,6 +432,29 @@
   body:hover #reconnect-btn { opacity: 1; }
   #reconnect-btn:hover { background: #1a1a1a; color: #777; border-color: #444; }
 
+
+  /* HONOR ROLL TICKER */
+  #honor-ticker-wrap {
+    position: fixed; bottom: 4px; left: 0; right: 0; height: 28px;
+    background: rgba(0,0,0,0.82); border-top: 1px solid var(--green-dim);
+    z-index: 9; overflow: hidden; display: flex; align-items: center;
+  }
+  #honor-ticker-label {
+    background: var(--green); color: #fff; font-family: 'Courier New', monospace;
+    font-size: 10px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 0 12px; height: 100%; display: flex; align-items: center;
+    white-space: nowrap; flex-shrink: 0; z-index: 2;
+  }
+  #honor-ticker-track { flex:1; overflow:hidden; position:relative; height:100%; }
+  #honor-ticker-inner {
+    display: inline-flex; align-items: center; height: 100%; white-space: nowrap;
+    animation: tickerScroll 120s linear infinite; will-change: transform;
+  }
+  @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+  .ticker-name  { font-family:'Courier New',monospace; font-size:11px; font-weight:700; color:var(--tan); letter-spacing:0.1em; text-transform:uppercase; padding:0 6px; }
+  .ticker-sep   { color:var(--green); font-size:10px; padding:0 4px; opacity:0.7; }
+  .ticker-grade { font-family:'Courier New',monospace; font-size:9px; color:#555; letter-spacing:0.12em; text-transform:uppercase; padding:0 2px 0 0; }
+
 </style>
 </head>
 <body>
@@ -502,6 +525,12 @@
 <div id="board-wrap"></div>
 
 <!-- BOTTOM ACCENT -->
+<!-- HONOR ROLL TICKER -->
+<div id="honor-ticker-wrap" style="display:none">
+  <div id="honor-ticker-label">&#127891; Q3 Honor Roll</div>
+  <div id="honor-ticker-track"><div id="honor-ticker-inner"></div></div>
+</div>
+
 <div id="bottom-accent"></div>
 <div id="sound-prompt" style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,105,56,0.85);color:#fff;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 18px;border-radius:4px;cursor:pointer;z-index:200;transition:opacity 0.5s" onclick="enableSound(this)">▶ Click to enable flip sound</div>
 
@@ -2785,6 +2814,15 @@ updatePeriodTimer(); // run immediately
 
 // Calendar is initialized inside startBoard() after messages load
 </script>
+
+/* HONOR ROLL TICKER */
+function flipName(s){const c=s.indexOf(',');if(c<0)return s;return s.substring(c+1).trim()+' '+s.substring(0,c).trim();}
+function buildTickerHTML(hr){if(!hr||!hr.length)return '';const grades=['Freshman','Sophomore','Junior','Senior'];const byG={};for(const i of hr){const g=i.grade||'Other';if(!byG[g])byG[g]=[];byG[g].push(flipName(i.name));}const seg=[];for(const g of grades){if(!byG[g]||!byG[g].length)continue;seg.push('<span class="ticker-sep">&#9670;</span><span class="ticker-grade">'+g.toUpperCase()+'S</span><span class="ticker-sep">&#183;</span>');for(const n of byG[g])seg.push('<span class="ticker-name">'+n+'</span><span class="ticker-sep">&#183;</span>');}const h=seg.join('');return h+h;}
+async function fetchHonorRoll(){try{const r=await fetch(CAL_SCRIPT_URL+'?action=honorroll',{cache:'no-store'});if(!r.ok)return null;const d=await r.json();return(d.status==='ok'&&d.honorRoll)?d.honorRoll:null;}catch(e){return null;}}
+async function initHonorRollTicker(){const wrap=document.getElementById('honor-ticker-wrap');const inner=document.getElementById('honor-ticker-inner');if(!wrap||!inner)return;const hr=await fetchHonorRoll();if(!hr||!hr.length)return;inner.innerHTML=buildTickerHTML(hr);wrap.style.display='flex';const bw=document.getElementById('board-wrap');if(bw){const c=parseInt(getComputedStyle(bw).paddingBottom)||0;bw.style.paddingBottom=(c+32)+'px';}}
+setTimeout(initHonorRollTicker,2000);
+setInterval(initHonorRollTicker,30*60*1000);
+
 <script src="config.js"></script>
 </body>
 </html>
