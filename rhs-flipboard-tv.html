@@ -2135,17 +2135,17 @@ const WEATHER_COMMENTS = {
     'DRINK WATER NOT ENERGY DRINKS',
     'SUNSCREEN IS NOT OPTIONAL',
     'FIND SOME SHADE OUT THERE',
-    'HOT OUT · DRINK PLENTY OF WATER',
+    'HOT OUT DRINK PLENTY OF WATER',
   ],
   hot: [
-    'WARM ONE TODAY STAY HYDRATED',
+    'STAY HYDRATED TODAY',
     'PERFECT WEATHER FOR STAYING FOCUSED',
     'DRINK WATER BETWEEN CLASSES',
-    'CENTRAL VALLEY DOING ITS THING',
+    'CLASSIC CENTRAL VALLEY DAY',
   ],
   warm: [
-    'NICE DAY OUT THERE COWBOYS',
-    'PERFECT WEATHER FOR A GREAT DAY',
+    'NICE DAY OUT THERE',
+    'PERFECT DAY OUT THERE',
     'ENJOY THE SUNSHINE TODAY',
     'GOOD VIBES AND GOOD WEATHER',
   ],
@@ -2162,29 +2162,29 @@ const WEATHER_COMMENTS = {
     'GRAB A HOODIE BEFORE YOU HEAD OUT',
   ],
   cold: [
-    'BUNDLE UP OUT THERE COWBOYS',
-    'COLD ONE TODAY · DRESS WARM',
-    'JACKET WEATHER FOR SURE TODAY',
-    'STAY WARM AND STAY FOCUSED',
+    'BUNDLE UP OUT THERE',
+    'COLD ONE TODAY DRESS WARM',
+    'JACKET WEATHER TODAY',
+    'STAY WARM AND FOCUSED',
   ],
   rainy: [
     'RAIN TODAY · WATCH YOUR STEP',
-    'UMBRELLAS WELCOME IN THE HALLS',
+    'UMBRELLAS WELCOME TODAY',
     'RAINY DAY GOOD FOR LEARNING',
     'DONT FORGET YOUR UMBRELLA',
-    'WET OUT THERE · STAY DRY COWBOYS',
+    'WET OUT THERE STAY DRY',
   ],
   windy: [
-    'WINDY OUT THERE HOLD YOUR PAPERS',
+    'HOLD YOUR PAPERS ITS WINDY',
     'BREEZY DAY IN RIVERDALE',
     'GUSTY WINDS TODAY HEADS UP',
-    'WIND IS GIVING TODAY · STAY SAFE',
+    'WIND IS GIVING STAY SAFE',
   ],
   foggy: [
     'FOGGY MORNING IN THE VALLEY',
-    'TULE FOG OUT THERE DRIVE SAFE',
-    'VISIBILITY LOW · WALK CAREFULLY',
-    'CLASSIC CENTRAL VALLEY MORNING',
+    'TULE FOG DRIVE SAFE TODAY',
+    'VISIBILITY LOW WALK CAREFULLY',
+    'CLASSIC VALLEY MORNING',
   ],
 };
 
@@ -2253,13 +2253,25 @@ function buildWeatherScreen(data) {
   // Second comment line
   const comment2Lines = truncate(comment, 28);
 
+  // Split comment across two lines if needed
+  const words = comment.split(' ');
+  let commentL1 = '', commentL2 = '';
+  for (const w of words) {
+    if ((commentL1 + ' ' + w).trim().length <= 28) {
+      commentL1 = (commentL1 + ' ' + w).trim();
+    } else {
+      commentL2 = (commentL2 + ' ' + w).trim();
+    }
+  }
+  commentL2 = truncate(commentL2, 28);
+
   const lines = [
     'WEATHER · RIVERDALE CA',
     '',
     truncate(condLabel + ' · ' + tempF + '°F', 28),
     '',
-    comment2Lines,
-    '',
+    commentL1,
+    commentL2 || '',
     forecastLine,
   ];
 
