@@ -876,8 +876,15 @@ function parseCSV(csv) {
         _isWeatherPlaceholder: true
       };
     }
+    if (firstLine === '[CODE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 10,
+        _isCodePlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1044,8 +1051,15 @@ function parseGviz(data) {
         _isWeatherPlaceholder: true
       };
     }
+    if (firstLine === '[CODE]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 10,
+        _isCodePlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1126,6 +1140,9 @@ function mergeWithLiveSlots(freshData) {
       result.push(existing || item);
     } else if (item._isWeatherPlaceholder) {
       const existing = messages.find(m => m._isWeatherSlot || m._isWeatherPlaceholder);
+      result.push(existing || item);
+    } else if (item._isCodePlaceholder) {
+      const existing = messages.find(m => m._isCodeSlot || m._isCodePlaceholder);
       result.push(existing || item);
     } else {
       result.push(item);
