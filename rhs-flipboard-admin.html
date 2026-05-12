@@ -32,6 +32,110 @@
   }
 
   html { font-size: 15px; }
+
+  /* ══ PASSWORD GATE ══ */
+  #pw-gate {
+    position: fixed; inset: 0;
+    background: #0d0d0d;
+    z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #pw-gate.hidden { display: none; }
+  .pw-box {
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-top: 3px solid var(--green);
+    border-radius: 10px;
+    padding: 36px 40px;
+    width: 100%; max-width: 380px;
+    text-align: center;
+  }
+  .pw-title {
+    font-family: var(--mono);
+    font-size: 13px; font-weight: 900;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: #f0ebe0; margin-bottom: 4px;
+  }
+  .pw-sub {
+    font-family: var(--mono);
+    font-size: 9px; letter-spacing: 0.15em;
+    text-transform: uppercase; color: #444;
+    margin-bottom: 24px;
+  }
+  .pw-input {
+    width: 100%; background: #0a0a0a;
+    border: 1px solid #333; border-radius: 5px;
+    padding: 11px 14px; font-family: var(--mono);
+    font-size: 14px; color: #f0ebe0;
+    text-align: center; letter-spacing: 0.15em;
+    outline: none; margin-bottom: 10px;
+    transition: border-color 0.15s;
+  }
+  .pw-input:focus { border-color: var(--green); }
+  .pw-btn {
+    width: 100%; background: var(--green); color: #fff;
+    border: none; border-radius: 5px; padding: 11px;
+    font-family: var(--mono); font-size: 11px;
+    font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .pw-btn:hover { background: var(--green-dark); }
+  .pw-error {
+    font-family: var(--mono); font-size: 10px;
+    color: #c0392b; letter-spacing: 0.1em;
+    margin-top: 8px; min-height: 16px;
+    text-transform: uppercase;
+  }
+
+  /* ══ APPROVAL PANEL ══ */
+  .approval-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .approval-sender {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 4px;
+  }
+  .approval-text {
+    font-family: var(--mono); font-size: 12px;
+    font-weight: 700; color: var(--text);
+    line-height: 1.6; margin-bottom: 8px;
+  }
+  .approval-actions { display: flex; gap: 6px; }
+  .approve-btn {
+    flex: 1; background: var(--green); color: #fff;
+    border: none; border-radius: 5px; padding: 6px;
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .approve-btn:hover { background: var(--green-dark); }
+  .reject-btn {
+    flex: 1; background: var(--red-light); color: var(--red);
+    border: 1px solid #f0b8b0; border-radius: 5px; padding: 6px;
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reject-btn:hover { background: #f9d8d4; }
+  .approval-empty {
+    text-align: center; padding: 20px;
+    font-size: 12px; color: var(--text-muted);
+    font-style: italic;
+  }
+  .approval-time {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--text-muted); letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
@@ -598,6 +702,19 @@
 </head>
 <body>
 
+<!-- PASSWORD GATE -->
+<div id="pw-gate">
+  <div class="pw-box">
+    <div class="pw-title">FlipBoard · Admin</div>
+    <div class="pw-sub">Room 27 · Teacher Access Only</div>
+    <input class="pw-input" id="pwInput" type="password"
+      placeholder="Enter password"
+      onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="pw-btn" onclick="checkPw()">▶ Unlock</button>
+    <div class="pw-error" id="pwError"></div>
+  </div>
+</div>
+
 <!-- TOP NAV -->
 <div id="topnav">
   <div class="nav-logo">
@@ -788,6 +905,17 @@
             Screen · Line · Text · Speed
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- MESSAGE APPROVAL -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Message Approval</span>
+        <button onclick="loadApprovals()" style="background:none;border:none;font-size:11px;color:var(--text-muted);cursor:pointer;letter-spacing:0.08em;font-family:var(--mono)">↺ Refresh</button>
+      </div>
+      <div class="card-body" style="padding:14px">
+        <div id="approval-list"><div class="approval-empty">Loading messages...</div></div>
       </div>
     </div>
 
@@ -1513,9 +1641,102 @@ function showToast(msg) {
 }
 
 /* ════════════════════════════════
+   PASSWORD GATE
+════════════════════════════════ */
+const ADMIN_PW = 'cowboys27';
+
+function checkPw() {
+  const val = document.getElementById('pwInput').value;
+  if (val === ADMIN_PW) {
+    document.getElementById('pw-gate').classList.add('hidden');
+    try { sessionStorage.setItem('rhs-admin-auth', '1'); } catch(e) {}
+    loadApprovals();
+  } else {
+    const err = document.getElementById('pwError');
+    err.textContent = 'Incorrect password';
+    document.getElementById('pwInput').value = '';
+    setTimeout(() => err.textContent = '', 2500);
+  }
+}
+
+// Auto-unlock if already authenticated this session
+(function() {
+  try {
+    if (sessionStorage.getItem('rhs-admin-auth') === '1') {
+      document.getElementById('pw-gate').classList.add('hidden');
+    }
+  } catch(e) {}
+})();
+
+/* ════════════════════════════════
+   MESSAGE APPROVAL
+════════════════════════════════ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdoA4UVuCyq8RU7hP6dBrRWAMVcMqq-0DNmZE09j6oVst1iPa7KzWq7raoCT3i0SL_/exec';
+
+async function loadApprovals() {
+  const list = document.getElementById('approval-list');
+  list.innerHTML = '<div class="approval-empty">Loading...</div>';
+  try {
+    const res  = await fetch(SCRIPT_URL + '?action=getpending', { cache: 'no-store' });
+    const data = await res.json();
+    if (data.status !== 'ok' || !data.messages || !data.messages.length) {
+      list.innerHTML = '<div class="approval-empty">No pending messages</div>';
+      return;
+    }
+    list.innerHTML = '';
+    data.messages.forEach((msg, i) => {
+      const posted = new Date(msg.timestamp);
+      const timeStr = posted.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const lines = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim()).join('<br>');
+      const div = document.createElement('div');
+      div.className = 'approval-item';
+      div.id = 'approval-' + i;
+      div.innerHTML = `
+        <div class="approval-sender">From: ${msg.sender || 'Anonymous'}</div>
+        <div class="approval-time">${timeStr}</div>
+        <div class="approval-text">${lines}</div>
+        <div class="approval-actions">
+          <button class="approve-btn" onclick="approveMsg(${i}, ${JSON.stringify(msg).replace(/"/g,'&quot;')})">✓ Approve</button>
+          <button class="reject-btn" onclick="rejectMsg(${i})">✕ Reject</button>
+        </div>`;
+      list.appendChild(div);
+    });
+  } catch(e) {
+    list.innerHTML = '<div class="approval-empty">Could not load messages</div>';
+  }
+}
+
+async function approveMsg(idx, msg) {
+  try {
+    const res  = await fetch(SCRIPT_URL + '?action=approvemsg&timestamp=' + encodeURIComponent(msg.timestamp));
+    const data = await res.json();
+    if (data.status === 'ok') {
+      document.getElementById('approval-' + idx)?.remove();
+      showToast('Message approved — now live on board');
+      if (!document.querySelector('.approval-item')) {
+        document.getElementById('approval-list').innerHTML = '<div class="approval-empty">No pending messages</div>';
+      }
+    } else {
+      showToast('Approval failed — try again');
+    }
+  } catch(e) {
+    showToast('Network error');
+  }
+}
+
+async function rejectMsg(idx) {
+  document.getElementById('approval-' + idx)?.remove();
+  showToast('Message rejected');
+  if (!document.querySelector('.approval-item')) {
+    document.getElementById('approval-list').innerHTML = '<div class="approval-empty">No pending messages</div>';
+  }
+}
+
+/* ════════════════════════════════
    START
 ════════════════════════════════ */
 init();
+setInterval(loadApprovals, 30000);
 </script>
 </body>
 </html>
