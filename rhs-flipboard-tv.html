@@ -1439,79 +1439,191 @@ async function refreshCalendar() {
 
 
 /* ════════════════════════════════════════
-   FLIP SOUND ENGINE
-   Synthesized mechanical tile sound
-   using Web Audio API — no file needed
+   SOUND ENGINE — 3 PROFILES + TOGGLE
+   OFF · CLASSIC · KEYBOARD · FUTURISTIC
 ════════════════════════════════════════ */
+const SOUND_PROFILES = ['OFF', 'CLASSIC', 'KEYBOARD', 'FUTURISTIC'];
+let soundProfileIdx = 0;
 let audioCtx = null;
+
+// Load saved preference
+try {
+  const saved = localStorage.getItem('rhs-sound-profile');
+  if (saved && SOUND_PROFILES.includes(saved)) {
+    soundProfileIdx = SOUND_PROFILES.indexOf(saved);
+  }
+} catch(e) {}
 
 function getAudioCtx() {
   if (!audioCtx) {
-    try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    } catch(e) { return null; }
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
   }
-  // Don't attempt to use a suspended context — just return null silently
   if (audioCtx && audioCtx.state === 'suspended') return null;
   return audioCtx;
 }
 
-function playFlipClick(time, vol) {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  // Longer buffer for a more mechanical thunk feel
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function cycleSoundProfile() {
+  resumeAudio();
+  soundProfileIdx = (soundProfileIdx + 1) % SOUND_PROFILES.length;
+  try { localStorage.setItem('rhs-sound-profile', SOUND_PROFILES[soundProfileIdx]); } catch(e) {}
+  updateSoundBtn();
+  // Play a preview click so user hears the new profile
+  if (SOUND_PROFILES[soundProfileIdx] !== 'OFF') playFlipSound(8);
+}
+
+function updateSoundBtn() {
+  const btn = document.getElementById('soundToggleBtn');
+  if (!btn) return;
+  const profile = SOUND_PROFILES[soundProfileIdx];
+  const icons = { OFF: '🔇', CLASSIC: '🔊', KEYBOARD: '⌨️', FUTURISTIC: '🔮' };
+  btn.textContent = icons[profile] + ' ' + profile;
+  btn.style.opacity = profile === 'OFF' ? '0.5' : '1';
+  btn.style.borderColor = profile === 'OFF' ? '#333' : 'var(--green)';
+  btn.style.color = profile === 'OFF' ? '#555' : 'var(--green)';
+}
+
+function enableSound(el) {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }
+  // Start on CLASSIC if currently OFF
+  if (soundProfileIdx === 0) {
+    soundProfileIdx = 1;
+    try { localStorage.setItem('rhs-sound-profile', 'CLASSIC'); } catch(e) {}
+    updateSoundBtn();
+  }
+  playFlipSound(5);
+}
+
+/* ── CLASSIC: airport departure board ── */
+function playClassicClick(ctx, time, vol) {
   const bufLen = Math.floor(ctx.sampleRate * 0.07);
-  const buf    = ctx.createBuffer(1, bufLen, ctx.sampleRate);
-  const data   = buf.getChannelData(0);
+  const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const data = buf.getChannelData(0);
   for (let i = 0; i < bufLen; i++) {
-    // Attack + pitched decay — like plastic hitting a stop
-    const t     = i / bufLen;
+    const t = i / bufLen;
     const noise = Math.random() * 2 - 1;
-    const tone  = Math.sin(2 * Math.PI * 180 * t * bufLen / ctx.sampleRate);
+    const tone = Math.sin(2 * Math.PI * 180 * t * bufLen / ctx.sampleRate);
     data[i] = (noise * 0.7 + tone * 0.3) * Math.pow(1 - t, 2.2);
   }
-  const src    = ctx.createBufferSource();
-  src.buffer   = buf;
-  // Low-mid bandpass — airport board has a woody, resonant click
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
   const filter = ctx.createBiquadFilter();
-  filter.type  = 'bandpass';
+  filter.type = 'bandpass';
   filter.frequency.value = 900;
   filter.Q.value = 1.4;
-  const gain   = ctx.createGain();
-  gain.gain.value = vol || 0.22;
-  src.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
+  const gain = ctx.createGain();
+  gain.gain.value = vol || 0.18;
+  src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
   src.start(time);
 }
 
-function playFlipSound(tileCount) {
-  const ctx = getAudioCtx();
-  if (!ctx) return;
-  if (ctx.state === 'suspended') ctx.resume();
-  const now    = ctx.currentTime;
-  // Total ~2.8 seconds — slow, satisfying departures board feel
-  const clicks = Math.min(Math.floor(tileCount * 1.8), 64);
-
-  // Phase 1: slow ramp-up (0 - 0.6s) — board waking up, sparse clicks
+function playClassicSound(tileCount) {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const clicks = Math.min(Math.floor(tileCount * 1.2), 48); // fewer clicks than before
   for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
-    const t   = now + (i / (clicks * 0.25)) * 0.6;
-    const vol = 0.05 + (i / (clicks * 0.25)) * 0.1;
-    playFlipClick(t, vol);
+    playClassicClick(ctx, now + (i / (clicks * 0.25)) * 0.5, 0.05 + (i / (clicks * 0.25)) * 0.09);
   }
-  // Phase 2: main cascade (0.6 - 1.8s) — steady tile flipping
   for (let i = 0; i < Math.floor(clicks * 0.5); i++) {
-    const t   = now + 0.6 + (i / (clicks * 0.5)) * 1.2;
-    const vol = 0.16 + Math.sin(i / (clicks * 0.5) * Math.PI) * 0.1;
-    playFlipClick(t, vol);
+    playClassicClick(ctx, now + 0.5 + (i / (clicks * 0.5)) * 1.0, 0.14 + Math.sin(i / (clicks * 0.5) * Math.PI) * 0.08);
   }
-  // Phase 3: slow settling (1.8 - 2.8s) — last tiles locking in, fading out
   for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
-    const t   = now + 1.8 + (i / (clicks * 0.25)) * 1.0;
-    const vol = 0.13 - (i / (clicks * 0.25)) * 0.11;
-    playFlipClick(t, vol);
+    playClassicClick(ctx, now + 1.5 + (i / (clicks * 0.25)) * 0.8, 0.1 - (i / (clicks * 0.25)) * 0.09);
   }
 }
+
+/* ── KEYBOARD: smooth mechanical typewriter ── */
+function playKeyboardClick(ctx, time, vol, pitch) {
+  const bufLen = Math.floor(ctx.sampleRate * 0.045);
+  const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufLen; i++) {
+    const t = i / bufLen;
+    const attack = Math.min(t * 60, 1);
+    const decay = Math.pow(1 - t, 3.5);
+    const tone1 = Math.sin(2 * Math.PI * (pitch || 320) * i / ctx.sampleRate);
+    const tone2 = Math.sin(2 * Math.PI * (pitch || 320) * 2.1 * i / ctx.sampleRate) * 0.3;
+    const noise = (Math.random() * 2 - 1) * 0.15;
+    data[i] = (tone1 + tone2 + noise) * attack * decay;
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const lpf = ctx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.value = 2800;
+  const gain = ctx.createGain();
+  gain.gain.value = vol || 0.2;
+  src.connect(lpf); lpf.connect(gain); gain.connect(ctx.destination);
+  src.start(time);
+}
+
+function playKeyboardSound(tileCount) {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const clicks = Math.min(Math.floor(tileCount * 1.5), 56);
+  const pitches = [280, 320, 360, 310, 295, 340];
+  for (let i = 0; i < clicks; i++) {
+    const t = now + (i / clicks) * 1.8;
+    const vol = 0.08 + Math.sin(i / clicks * Math.PI) * 0.14;
+    const pitch = pitches[i % pitches.length];
+    playKeyboardClick(ctx, t, vol, pitch);
+  }
+}
+
+/* ── FUTURISTIC: digital synthesizer pulse ── */
+function playFuturisticClick(ctx, time, vol, freq) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = freq || 800;
+  filter.Q.value = 8;
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(freq || 800, time);
+  osc.frequency.exponentialRampToValueAtTime((freq || 800) * 0.4, time + 0.06);
+  gain.gain.setValueAtTime(vol || 0.15, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  osc.start(time); osc.stop(time + 0.1);
+}
+
+function playFuturisticSound(tileCount) {
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now = ctx.currentTime;
+  const clicks = Math.min(Math.floor(tileCount * 1.4), 52);
+  const freqs = [600, 750, 900, 1100, 680, 820, 960, 1050];
+  // Sweep up then down — sci-fi cascade feel
+  for (let i = 0; i < Math.floor(clicks * 0.6); i++) {
+    const t = now + (i / (clicks * 0.6)) * 1.2;
+    const freq = freqs[i % freqs.length] * (1 + i / clicks * 0.5);
+    playFuturisticClick(ctx, t, 0.1 + (i / clicks) * 0.08, freq);
+  }
+  for (let i = 0; i < Math.floor(clicks * 0.4); i++) {
+    const t = now + 1.2 + (i / (clicks * 0.4)) * 0.8;
+    const freq = freqs[i % freqs.length] * (1.4 - i / clicks * 0.4);
+    playFuturisticClick(ctx, t, 0.14 - (i / (clicks * 0.4)) * 0.12, freq);
+  }
+}
+
+/* ── DISPATCHER ── */
+function playFlipSound(tileCount) {
+  const profile = SOUND_PROFILES[soundProfileIdx];
+  if (profile === 'OFF') return;
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') { ctx.resume(); return; }
+  if (profile === 'CLASSIC')    playClassicSound(tileCount);
+  if (profile === 'KEYBOARD')   playKeyboardSound(tileCount);
+  if (profile === 'FUTURISTIC') playFuturisticSound(tileCount);
+}
+
 
 /* ════════════════════════════════════════
    BIRTHDAY SYSTEM
