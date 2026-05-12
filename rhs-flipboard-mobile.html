@@ -1126,7 +1126,7 @@ function buildWeatherCard(wx) {
   if (!wx) {
     card.innerHTML = `
       <div class="card-header">
-        <span class="card-label">Weather · Reedley</span>
+        <span class="card-label">Weather · Riverdale, CA</span>
       </div>
       <div class="card-body"><div class="error-state">Unable to load weather</div></div>`;
     return card;
@@ -1139,7 +1139,7 @@ function buildWeatherCard(wx) {
 
   card.innerHTML = `
     <div class="card-header">
-      <span class="card-label">Weather · Reedley</span>
+      <span class="card-label">Weather · Riverdale, CA</span>
       <span class="card-tag">${new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>
     </div>
     <div class="card-body">
@@ -1361,6 +1361,27 @@ function render(calEvents, quickMsg, passData, weatherData) {
     <div class="card-header"><span class="card-label tan">Did You Know?</span></div>
     <div class="card-body"><div class="fact-text">${fact}</div></div>`;
   sections.push(factCard);
+
+
+  /* ── CODE SCREEN ── */
+  const codeData = [
+    { letter: 'C', msg1: 'THANK YOU FOR LISTENING', msg2: 'WHEN OTHERS ARE SPEAKING' },
+    { letter: 'O', msg1: 'GOOD JOB ARRIVING READY', msg2: 'AND ON TIME EVERY DAY' },
+    { letter: 'D', msg1: "IT'S GREAT TO SEE YOU", msg2: 'PUSH THROUGH THE TOUGH STUFF' },
+    { letter: 'E', msg1: 'THANK YOU FOR DOING', msg2: 'YOUR HONEST BEST TODAY' },
+  ];
+  const codeIdx = Math.floor(Date.now() / 10000) % 4; // cycles every 10s
+  const code = codeData[codeIdx];
+  const codeCard = document.createElement('div');
+  codeCard.className = 'card';
+  codeCard.innerHTML = `
+    <div class="card-header">
+      <span class="card-label green">C.O.D.E · ${['COURTEOUS','ON TASK','DETERMINED','EXCELLENCE'][codeIdx]}</span>
+    </div>
+    <div class="card-body">
+      <div class="fact-text">${code.msg1}<br>${code.msg2}</div>
+    </div>`;
+  sections.push(codeCard);
 
   /* ── RENDER ── */
   const content = document.getElementById('content');
