@@ -1346,8 +1346,14 @@ function buildCalScreen(events) {
     // Lines 2-6: today's events (up to 5)
     todayEvts.slice(0,5).forEach(e => {
       const time = e.allDay ? '' : fmtTime(e.dtstart, false);
-      const name = truncate(e.summary, time ? 28 - time.length - 2 : 28);
-      lines.push(time ? truncate(name + '  ' + time, 28) : name);
+      if (!time) {
+        lines.push(truncate(e.summary, 28));
+      } else {
+        // Left-align name, right-align time
+        const name = truncate(e.summary, 28 - time.length - 1);
+        const gap  = 28 - name.length - time.length;
+        lines.push(name + ' '.repeat(Math.max(1, gap)) + time);
+      }
     });
     // pad to 6 lines total if fewer events
     while (lines.length < 6) lines.push('');
@@ -2160,7 +2166,9 @@ function updatePeriodTimer() {
       const timeStr   = remMins > 0
         ? remMins + ' MIN' + (remSecs > 0 ? ' ' + remSecs + 'S' : '')
         : remSecs + 'S';
-      labelEl.textContent = p.name + ' · ENDS ' + p.end;
+      // Zero-pad end time for display
+      const endDisplay = p.end.indexOf(':') === 1 ? '0' + p.end : p.end;
+      labelEl.textContent = p.name + ' · ENDS ' + endDisplay;
       timeEl.textContent  = timeStr + ' LEFT';
       timeEl.className    = 'h-period-time' +
         (remMins < 1 ? ' ending' : remMins < 5 ? ' warning' : '');
@@ -2577,8 +2585,11 @@ function getNextSchoolDay() {
 
 function timeToMinutes(timeStr) {
   // Converts "8:10" or "1:27" to minutes since midnight
+  // School day runs 8am-4pm. Times < 8 are assumed PM (after noon).
   const [h, m] = timeStr.split(':').map(Number);
-  return h * 60 + m;
+  // If hour is 1-7, it must be PM (1:00 PM = 13:00, etc.)
+  const hour24 = (h >= 1 && h <= 7) ? h + 12 : h;
+  return hour24 * 60 + m;
 }
 
 function getCurrentPeriodIdx(periods) {
