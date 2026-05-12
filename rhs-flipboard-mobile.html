@@ -1032,7 +1032,12 @@ const FACT_BANK = [
 function localDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-function timeToMins(t) { const [h,m] = t.split(':').map(Number); return h*60+m; }
+function timeToMins(t) {
+  // School day 8am-4pm. Hours 1-7 must be PM (1:27 = 13:27 etc.)
+  const [h,m] = t.split(':').map(Number);
+  const hour24 = (h >= 1 && h <= 7) ? h + 12 : h;
+  return hour24*60+m;
+}
 function nowMins() { const n = new Date(); return n.getHours()*60 + n.getMinutes(); }
 function fmtTime12(isoStr) {
   if (!isoStr) return '';
