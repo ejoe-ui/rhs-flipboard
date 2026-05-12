@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room 27 · Command Center</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #006938;
+    --green-dark: #004d28;
+    --green-dim: #003d20;
+    --green-glow: rgba(0,105,56,0.15);
+    --tan: #C4BEB5;
+    --tan-dim: #8a8680;
+    --bg: #080808;
+    --surface: #0f0f0f;
+    --surface2: #161616;
+    --border: #1e1e1e;
+    --border2: #2a2a2a;
+    --text: #f0ebe0;
+    --text-mid: #777770;
+    --text-dim: #3a3a38;
+    --mono: 'DM Mono', 'Courier New', monospace;
+    --display: 'Bebas Neue', sans-serif;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCANLINES ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border2);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
+  }
+
+  .header-left { display: flex; flex-direction: column; gap: 4px; }
+
+  .header-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  .header-title {
+    font-family: var(--display);
+    font-size: clamp(36px, 5vw, 64px);
+    letter-spacing: 0.04em;
+    color: var(--text);
+    line-height: 0.9;
+  }
+
+  .header-title span { color: var(--green); }
+
+  .header-sub {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin-top: 6px;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .live-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  #header-clock {
+    font-family: var(--display);
+    font-size: 28px;
+    letter-spacing: 0.06em;
+    color: var(--text);
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    padding: 32px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── GRID ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  /* ── LINK CARD ── */
+  .link-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .link-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--card-accent, var(--green));
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .link-card:hover {
+    border-color: var(--card-accent, var(--green));
+    background: var(--surface2);
+    transform: translateY(-1px);
+  }
+
+  .link-card:hover::before { opacity: 1; }
+
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .card-icon {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .card-badge {
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: var(--badge-bg, rgba(0,105,56,0.15));
+    color: var(--badge-color, var(--green));
+    border: 1px solid var(--badge-border, rgba(0,105,56,0.3));
+    white-space: nowrap;
+  }
+
+  .card-name {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  .card-desc {
+    font-size: 10px;
+    color: var(--text-mid);
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+  }
+
+  .card-url {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+    word-break: break-all;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-url-copy {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .card-url-copy:hover { border-color: var(--green); color: var(--green); }
+  .card-url-copy.copied { border-color: var(--green); color: var(--green); }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* ── QR PANEL ── */
+  .qr-toggle {
+    background: none;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 3px 8px;
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .qr-toggle:hover { border-color: var(--tan-dim); color: var(--tan); }
+
+  .qr-panel {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .qr-panel.open { display: flex; }
+
+  .qr-panel canvas {
+    border-radius: 4px;
+    background: #fff;
+    padding: 8px;
+  }
+
+  .qr-label {
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ── OPEN ARROW ── */
+  .open-arrow {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: color 0.15s;
+  }
+  .link-card:hover .open-arrow { color: var(--card-accent, var(--green)); }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .footer-text {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .footer-text span { color: var(--green); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    header { padding: 20px; flex-direction: column; align-items: flex-start; }
+    main { padding: 20px; }
+    footer { padding: 16px 20px; flex-direction: column; align-items: flex-start; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-eyebrow">Riverdale High School</div>
+    <div class="header-title">ROOM <span>27</span></div>
+    <div class="header-sub">Mr. Joe · Command Center · CTE / ROP</div>
+  </div>
+  <div class="header-right">
+    <div class="live-pill"><div class="live-dot"></div> Live System</div>
+    <div id="header-clock">--:-- --</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- COWBOY WIRE -->
+  <div>
+    <div class="section-label">Cowboy Wire · Display System</div>
+    <div class="card-grid" id="cowboy-grid"></div>
+  </div>
+
+  <!-- PASSABLE -->
+  <div>
+    <div class="section-label">PassAble · Hall Pass System</div>
+    <div class="card-grid" id="passable-grid"></div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-text">Room 27 · <span>Riverdale High School</span> · Mr. Joe</div>
+  <div class="footer-text">Click any card to open · QR button for sharing</div>
+</footer>
+
+<!-- QR lib -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+
+/* ════ DATA ════ */
+const COWBOY_PAGES = [
+  {
+    icon: '📺',
+    name: 'TV Display',
+    desc: 'Main flip board for classroom TV. Auto-connects to your Google Sheet on load.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-tv.html',
+    badge: 'TV · Auto-Launch',
+    accent: '#006938',
+  },
+  {
+    icon: '🖥',
+    name: 'Main Display',
+    desc: 'Full flip board with setup screen. Paste your Sheet URL to connect.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard.html',
+    badge: 'Display',
+    accent: '#006938',
+  },
+  {
+    icon: '📱',
+    name: 'Mobile Page',
+    desc: 'Student-facing mobile view. Weather, schedule, countdown, pass status, CODE.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-mobile.html',
+    badge: 'Student · Mobile',
+    accent: '#1a8a5a',
+  },
+  {
+    icon: '⚙️',
+    name: 'Admin Panel',
+    desc: 'Content manager for building and exporting message queues. Password protected.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-admin.html',
+    badge: 'Teacher Only',
+    accent: '#8a6a00',
+    badgeBg: 'rgba(138,106,0,0.15)',
+    badgeColor: '#b8a020',
+    badgeBorder: 'rgba(138,106,0,0.3)',
+  },
+  {
+    icon: '✍️',
+    name: 'Post a Message',
+    desc: 'Student submission page. Messages go to approval queue before appearing on board.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-post.html',
+    badge: 'Student Submit',
+    accent: '#1a5a8a',
+    badgeBg: 'rgba(26,90,138,0.15)',
+    badgeColor: '#4a9aca',
+    badgeBorder: 'rgba(26,90,138,0.3)',
+  },
+  {
+    icon: '✅',
+    name: 'Message Approval',
+    desc: 'Review and approve student-submitted board messages before they go live.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-approve.html',
+    badge: 'Teacher Only',
+    accent: '#8a6a00',
+    badgeBg: 'rgba(138,106,0,0.15)',
+    badgeColor: '#b8a020',
+    badgeBorder: 'rgba(138,106,0,0.3)',
+  },
+];
+
+const PASSABLE_PAGES = [
+  {
+    icon: '🎓',
+    name: 'Teacher Dashboard',
+    desc: 'Issue passes, view students out, return passes, manage your class.',
+    url: 'https://hall-pass-lime.vercel.app/teacher',
+    badge: 'Teacher',
+    accent: '#006938',
+  },
+  {
+    icon: '🪪',
+    name: 'Student Kiosk',
+    desc: 'Self-checkout kiosk mode for students to scan and check themselves out.',
+    url: 'https://hall-pass-lime.vercel.app/kiosk',
+    badge: 'Kiosk · Student',
+    accent: '#1a8a5a',
+  },
+  {
+    icon: '📊',
+    name: 'Analytics',
+    desc: 'Pass usage data, time-out trends, frequent flyers, and period breakdowns.',
+    url: 'https://hall-pass-lime.vercel.app/analytics',
+    badge: 'Teacher',
+    accent: '#8a3a1a',
+    badgeBg: 'rgba(138,58,26,0.15)',
+    badgeColor: '#ca6a40',
+    badgeBorder: 'rgba(138,58,26,0.3)',
+  },
+  {
+    icon: '👥',
+    name: 'Manage Students',
+    desc: 'Add, edit, import roster, print QR badges, upload photos.',
+    url: 'https://hall-pass-lime.vercel.app/teacher#manage',
+    badge: 'Teacher',
+    accent: '#4a3a8a',
+    badgeBg: 'rgba(74,58,138,0.15)',
+    badgeColor: '#8a78ca',
+    badgeBorder: 'rgba(74,58,138,0.3)',
+  },
+  {
+    icon: '📋',
+    name: 'Pass Log',
+    desc: 'Full history of all passes — filter by student, date, period, or reason.',
+    url: 'https://hall-pass-lime.vercel.app/teacher#log',
+    badge: 'Teacher',
+    accent: '#1a4a6a',
+    badgeBg: 'rgba(26,74,106,0.15)',
+    badgeColor: '#4a8aba',
+    badgeBorder: 'rgba(26,74,106,0.3)',
+  },
+];
+
+/* ════ QR COUNTER ════ */
+let qrCount = 0;
+
+/* ════ BUILD CARDS ════ */
+function buildCard(page) {
+  const card = document.createElement('a');
+  card.href   = page.url;
+  card.target = '_blank';
+  card.rel    = 'noopener noreferrer';
+  card.className = 'link-card';
+  card.style.setProperty('--card-accent', page.accent || 'var(--green)');
+
+  const qrId = 'qr-' + (++qrCount);
+
+  const badgeBg     = page.badgeBg     || 'rgba(0,105,56,0.15)';
+  const badgeColor  = page.badgeColor  || 'var(--green)';
+  const badgeBorder = page.badgeBorder || 'rgba(0,105,56,0.3)';
+
+  card.innerHTML = `
+    <div class="card-top">
+      <div class="card-icon">${page.icon}</div>
+      <span class="card-badge" style="background:${badgeBg};color:${badgeColor};border-color:${badgeBorder}">${page.badge}</span>
+    </div>
+    <div>
+      <div class="card-name">${page.name} <span class="open-arrow">↗</span></div>
+      <div class="card-desc">${page.desc}</div>
+    </div>
+    <div class="card-footer">
+      <div class="card-url">
+        <span>${page.url.replace('https://','')}</span>
+        <button class="card-url-copy" onclick="copyUrl(event, this, '${page.url}')">Copy</button>
+      </div>
+    </div>
+    <div class="card-footer" style="justify-content:flex-end">
+      <button class="qr-toggle" onclick="toggleQR(event, '${qrId}', '${page.url}')">QR Code</button>
+    </div>
+    <div class="qr-panel" id="${qrId}">
+      <div id="${qrId}-canvas"></div>
+      <div class="qr-label">Scan to open · tap to share</div>
+    </div>
+  `;
+  return card;
+}
+
+function toggleQR(e, id, url) {
+  e.preventDefault();
+  e.stopPropagation();
+  const panel  = document.getElementById(id);
+  const canvas = document.getElementById(id + '-canvas');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (!isOpen && canvas && !canvas.hasChildNodes()) {
+    new QRCode(canvas, {
+      text: url,
+      width: 160,
+      height: 160,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  }
+}
+
+function copyUrl(e, btn, url) {
+  e.preventDefault();
+  e.stopPropagation();
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+/* ════ RENDER ════ */
+document.getElementById('cowboy-grid').append(...COWBOY_PAGES.map(buildCard));
+document.getElementById('passable-grid').append(...PASSABLE_PAGES.map(buildCard));
+
+/* ════ CLOCK ════ */
+function tick() {
+  const now = new Date();
+  let h = now.getHours();
+  const m  = now.getMinutes().toString().padStart(2,'0');
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('header-clock').textContent = `${h}:${m} ${ap}`;
+}
+tick();
+setInterval(tick, 10000);
+
+</script>
+</body>
+</html>
