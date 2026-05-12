@@ -2644,11 +2644,12 @@ function buildScheduleScreen(calEvents) {
     const marker    = isCurrent ? '▶ ' : '  ';
     const timeRange = p.start + '-' + p.end;
     const nowTag    = isCurrent ? ' NOW' : '';
-    // Format: "▶ P1   8:10-8:56 NOW" — name padded to 7 chars
+    // Cluster content to ~22 chars wide, centered on 28-tile board
     const nameStr   = (marker + p.name).padEnd(7);
     const rightStr  = timeRange + nowTag;
-    const gap       = 28 - nameStr.length - rightStr.length;
-    const line      = nameStr + ' '.repeat(Math.max(2, gap)) + rightStr;
+    const inner     = nameStr + '  ' + rightStr; // fixed 2-space gap
+    const pad       = Math.floor((28 - inner.length) / 2);
+    const line      = ' '.repeat(Math.max(0, pad)) + inner;
     lines.push(line.substring(0, 28));
   }
 
