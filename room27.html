@@ -159,7 +159,6 @@
   <div class="footer-text">Click any card to open · QR to share</div>
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const COWBOY = [
   { icon:'📺', name:'TV Display', desc:'Main flip board for the classroom TV. Auto-connects to your Google Sheet on load.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-tv.html', badge:'TV · Auto-Launch', bg:'#e8f3ed', fg:'#006938', br:'#b8dfc8', accent:'#006938' },
@@ -213,7 +212,11 @@ function toggleQR(e, id, url) {
   const canvas = document.getElementById(id + '-c');
   panel.classList.toggle('open');
   if (panel.classList.contains('open') && canvas && !canvas.hasChildNodes()) {
-    new QRCode(canvas, { text: url, width: 160, height: 160, colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.M });
+    const img = document.createElement('img');
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
+    img.width = 160; img.height = 160;
+    img.style.borderRadius = '4px';
+    canvas.appendChild(img);
   }
 }
 
