@@ -2641,15 +2641,19 @@ function buildScheduleScreen(calEvents) {
 
   for (const p of visible) {
     const isCurrent = periods.indexOf(p) === currentIdx;
-    const marker    = isCurrent ? '▶ ' : '  ';
-    const timeRange = p.start + '-' + p.end;
-    const nowTag    = isCurrent ? ' NOW' : '';
-    // Cluster content to ~22 chars wide, centered on 28-tile board
-    const nameStr   = (marker + p.name).padEnd(7);
-    const rightStr  = timeRange + nowTag;
-    const inner     = nameStr + '  ' + rightStr; // fixed 2-space gap
-    const pad       = Math.floor((28 - inner.length) / 2);
-    const line      = ' '.repeat(Math.max(0, pad)) + inner;
+
+    // Zero-pad single-digit hours: "8:10" -> "08:10"
+    function zeroPad(t) {
+      return t.includes(':') && t.indexOf(':') === 1 ? '0' + t : t;
+    }
+
+    // Col 1-2: blank(2) Col 3: marker(1) Col 4: blank(1) Col 5-11: name padded to 7
+    // Col 12-13: blank(2) Col 14-24: time(11) Col 25: blank(1) Col 26-28: NOW or spaces
+    const marker   = isCurrent ? '▶' : ' ';
+    const name     = p.name.substring(0, 7).padEnd(7);
+    const timeStr  = (zeroPad(p.start) + '-' + zeroPad(p.end)).padEnd(11);
+    const nowStr   = isCurrent ? 'NOW' : '   ';
+    const line     = '  ' + marker + ' ' + name + '  ' + timeStr + ' ' + nowStr;
     lines.push(line.substring(0, 28));
   }
 
