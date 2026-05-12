@@ -1804,9 +1804,10 @@ function getUpcomingCountdowns() {
 
 function formatCountdownLine(c) {
   const days = c.days;
-  if (days === 0) return truncate(c.label + '  TODAY!', 28);
-  if (days === 1) return truncate(c.label + '  TOMORROW', 28);
-  return truncate(c.label + '  ' + days + ' DAYS', 28);
+  const dayStr = days === 0 ? 'TODAY!' : days === 1 ? 'TOMORROW' : days + ' DAYS';
+  const label  = truncate(c.label, 28 - dayStr.length - 1);
+  const gap    = 28 - label.length - dayStr.length;
+  return label + ' '.repeat(Math.max(1, gap)) + dayStr;
 }
 
 function buildCountdownScreen() {
@@ -2743,13 +2744,15 @@ function buildScheduleScreen(calEvents) {
 
   for (const p of visible) {
     const isCurrent = periods.indexOf(p) === currentIdx;
-    const prefix    = isCurrent ? '▶ ' : '  ';
+    const marker    = isCurrent ? '▶' : ' ';
+    const timeRange = p.start + '-' + p.end;
     const suffix    = isCurrent ? ' NOW' : '';
-    const timeRange = `${p.start}-${p.end}`;
-    // Format: "▶ P3  10:15-11:05 NOW" or "  LUNCH  11:59-12:33"
-    const nameField = (prefix + p.name).padEnd(9);
-    const line      = truncate(nameField + timeRange + suffix, 28);
-    lines.push(line);
+    // Two-column: name left, time right, padded to fill 28 chars
+    const nameStr   = (marker + ' ' + p.name).substring(0, 9);
+    const rightStr  = timeRange + suffix;
+    const gap       = 28 - nameStr.length - rightStr.length;
+    const line      = nameStr + ' '.repeat(Math.max(1, gap)) + rightStr;
+    lines.push(line.substring(0, 28));
   }
 
   // Pad to 7 lines
