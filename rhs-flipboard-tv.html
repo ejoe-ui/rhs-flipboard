@@ -2067,13 +2067,29 @@ async function _refreshFacts() {
 
 async function fetchStudentsOut() {
   try {
-    if (typeof SUPABASE_KEY === 'undefined' || SUPABASE_KEY === 'PASTE_YOUR_ANON_KEY_HERE') return null;
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/passes?select=*,students(full_name)&time_in=is.null&order=time_out.asc`,
+    if (typeof SUPABASE_KEY === 'undefined' || !SUPABASE_KEY) return null;
+    // Step 1: get open passes
+    const passRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/passes?select=student_id,time_out,reason&time_in=is.null&order=time_out.asc`,
       { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
     );
-    if (!res.ok) return null;
-    return await res.json();
+    if (!passRes.ok) return null;
+    const passes = await passRes.json();
+    if (!passes.length) return [];
+    // Step 2: get student names for those IDs
+    const ids = passes.map(p => p.student_id).join(',');
+    const stuRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/students?select=id,full_name&id=in.(${ids})`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const students = stuRes.ok ? await stuRes.json() : [];
+    const nameMap = {};
+    students.forEach(s => nameMap[s.id] = s.full_name);
+    // Merge
+    return passes.map(p => ({
+      ...p,
+      students: { full_name: nameMap[p.student_id] || 'STUDENT' }
+    }));
   } catch(e) { return null; }
 }
 
