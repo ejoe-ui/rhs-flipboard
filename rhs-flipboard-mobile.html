@@ -1690,6 +1690,8 @@ function renderPassCard(data) {
 
     // Start the live timer after DOM inserts
     setTimeout(() => startPassTimer(activePass.time_out), 50);
+    // Start polling for check-in every 15 seconds
+    if (student) setTimeout(() => startPassPolling(student.id), 1000);
 
   } else {
     card.innerHTML = `
@@ -1716,6 +1718,39 @@ function renderPassCard(data) {
 }
 
 let passTimerInterval = null;
+let passPollingInterval = null;
+
+function stopPassPolling() {
+  if (passPollingInterval) { clearInterval(passPollingInterval); passPollingInterval = null; }
+}
+
+async function pollPassStatus(studentId) {
+  try {
+    // Check if the active pass has been checked in
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/passes?select=time_in&student_id=eq.${studentId}&time_in=is.null&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    if (!res.ok) return;
+    const passes = await res.json();
+    if (passes.length === 0) {
+      // Pass is gone — student checked in
+      stopPassPolling();
+      if (passTimerInterval) { clearInterval(passTimerInterval); passTimerInterval = null; }
+      // Reload pass data to show "In Class" state
+      const params = new URLSearchParams(window.location.search);
+      const uid = params.get('uid');
+      const studentId2 = params.get('student');
+      const freshData = await fetchPassStatus(uid, studentId2);
+      const content = document.getElementById('content');
+      const oldCard = content.querySelector('.pass-status-card');
+      if (oldCard && freshData) {
+        const newCard = renderPassCard(freshData);
+        if (newCard) oldCard.replaceWith(newCard);
+      }
+    }
+  } catch(e) {}
+}
 
 function startPassTimer(timeOutISO) {
   if (passTimerInterval) clearInterval(passTimerInterval);
@@ -1765,6 +1800,12 @@ function startPassTimer(timeOutISO) {
 
   tick();
   passTimerInterval = setInterval(tick, 1000);
+}
+
+function startPassPolling(studentId) {
+  stopPassPolling();
+  if (!studentId) return;
+  passPollingInterval = setInterval(() => pollPassStatus(studentId), 15000);
 }
 
 /* ════ INIT ════ */
