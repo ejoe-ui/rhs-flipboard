@@ -2641,14 +2641,14 @@ function buildScheduleScreen(calEvents) {
 
   for (const p of visible) {
     const isCurrent = periods.indexOf(p) === currentIdx;
-    const marker    = isCurrent ? '▶' : ' ';
+    const marker    = isCurrent ? '▶ ' : '  ';
     const timeRange = p.start + '-' + p.end;
-    const suffix    = isCurrent ? ' NOW' : '';
-    // Two-column: name left, time right, padded to fill 28 chars
-    const nameStr   = (marker + ' ' + p.name).substring(0, 9);
-    const rightStr  = timeRange + suffix;
+    const nowTag    = isCurrent ? ' NOW' : '';
+    // Format: "▶ P1   8:10-8:56 NOW" — name padded to 7 chars
+    const nameStr   = (marker + p.name).padEnd(7);
+    const rightStr  = timeRange + nowTag;
     const gap       = 28 - nameStr.length - rightStr.length;
-    const line      = nameStr + ' '.repeat(Math.max(1, gap)) + rightStr;
+    const line      = nameStr + ' '.repeat(Math.max(2, gap)) + rightStr;
     lines.push(line.substring(0, 28));
   }
 
