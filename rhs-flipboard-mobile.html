@@ -272,6 +272,46 @@
   .countdown-days.soon  { color: #ff9900; }
   .countdown-days.today { color: var(--green); }
 
+  /* ── MENU CARD ── */
+  .menu-main {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--text);
+    padding: 4px 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+  .menu-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+  }
+  .menu-row:last-child { border-bottom: none; }
+  .menu-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+  .menu-no-data {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    text-align: center;
+    padding: 10px 0;
+  }
+
   /* ── BIRTHDAY CARD ── */
   .bday-today {
     font-family: var(--mono);
@@ -962,6 +1002,83 @@ const NO_SCHOOL = new Set([
   '2026-05-25',
 ]);
 
+/* ════ MENU ════ */
+const DAILY_MENU = {
+  '2026-04-27': ['GARDEN BURGER','VEGGIE PATTY','PARSLEY THYME RANCH','PICKLE SLICES','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-04-28': ['SW QUESO CHICKEN','TORTILLA CHIPS','RANCHABOOM SAUCE','SOUR CREAM','REFRIED BEANS','ASSORTED FRUIT'],
+  '2026-04-29': ['SLOPPY JOE MAC','SLOPPY JOE MEAT','MACARONI PASTA','MARGARINES','COLESLAW','ASSORTED FRUIT'],
+  '2026-04-30': ['CHICKEN POTATO PILAF','DINNER ROLL','PARSLEY THYME RANCH','CARROT','ASSORTED FRUIT','ORANGE'],
+  '2026-05-01': ['RANCH MOZZ BURGER','RANCH BURGER','SHREDDED MOZZARELLA','GARLIC RANCH','CUCUMBER','ASSORTED FRUIT'],
+  '2026-05-04': ['FIESTA CHICKEN WRAP','GRILLED CHICKEN','DELI FIESTA SAUCE','BLACK BEANS','CABBAGE','ASSORTED FRUIT'],
+  '2026-05-05': ['TAJ MAHAL MEATBALLS','CHIPS','DINNER ROLL','MASHED POTATOES','SUGAR SNAP PEAS','ASSORTED FRUIT'],
+  '2026-05-06': ['BOSCO STICKS','BREADED CHEESE STICKS','RANCH DRESSING','CARROT','ROMAINE','ASSORTED FRUIT'],
+  '2026-05-07': ['ASIAN CHICKEN BOWL','GRILLED CHICKEN','CHIPS','DELI ASIAN SAUCE','SUGAR SNAP PEAS','ASSORTED FRUIT'],
+  '2026-05-08': ['PEPPERONI PIZZA','PARSLEY THYME RANCH','CUCUMBER','ICEBERG LETTUCE','APPLESAUCE','ASSORTED FRUIT'],
+  '2026-05-11': ['RAISIN CHICKEN WRAP','GRILLED CHICKEN','RAISIN SAUCE','BLACK BEANS','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-05-12': ['MONGOLIAN MEATBALLS','CILANTRO BROWN RICE','SESAME DRESSING','BROCCOLI','CAULIFLOWER','ASSORTED FRUIT'],
+  '2026-05-13': ['ZESTY BEEF STEAK','ZESTY SALISBURY STEAK','CHIPS','DINNER ROLL','BASIL RANCH','ASSORTED FRUIT'],
+  '2026-05-14': ['PESTO CHICKEN SANDWICH','GRILLED CHICKEN','BAGEL','PESTO SAUCE','TOMATO','ASSORTED FRUIT'],
+  '2026-05-15': ['MINI CORN DOGS','CHIPS','GARLIC RANCH','KETCHUP','CARROT','ASSORTED FRUIT'],
+  '2026-05-18': ['SOFT PRETZEL WITH CHEESE','CHEESE SAUCE','CHIPS','PRETZEL','CORN','APPLE'],
+  '2026-05-19': ['HOT HAM & CHEESE SANDWICH','HOT HAM & CHEESE','HAMBURGER BUN','BLACK BEANS','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-05-20': ['FRENCH TOAST STICKS','YOGURT','CHIPS','FRENCH TOAST','SALSA RANCH','CARROT'],
+  '2026-05-21': ['MEATBALL SUB','MARINARA MEATBALLS','SHREDDED MOZZARELLA','CHIPS','HOTDOG BUN','CARROT'],
+  '2026-05-22': ['PEPPERONI PIZZA','CHIPS','GARLIC RANCH','CUCUMBER','ROMAINE','APPLESAUCE'],
+  '2026-05-26': ['WALKING BEEF TACO','BEEF TACO MEAT','SHREDDED CHEDDAR','TORTILLA CHIPS','TACO SAUCE','ASSORTED FRUIT'],
+  '2026-05-27': ['ITALIAN CHICKEN PASTA','ITALIAN CHICKEN','SHREDDED MOZZARELLA','PENNE PASTA','BASIL RANCH','ASSORTED FRUIT'],
+  '2026-05-28': ['CORN DOG','CHIPS','KETCHUP','MUSTARD','COLESLAW','ASSORTED FRUIT'],
+  '2026-05-29': ['CHICKEN TACO','CHICKEN TACO MEAT','SHREDDED CHEDDAR','CHIPS','RANCHABOOM SAUCE','ASSORTED FRUIT'],
+  '2026-06-01': ['CHICKEN PATTY SANDWICH','CHICKEN PATTY','CHIPS','HAMBURGER BUN','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-06-02': ['POLLO VERDE','CHICKEN VERDE','GARLIC BROWN RICE','CHIPS','DILL RANCH','ASSORTED FRUIT'],
+  '2026-06-03': ['BEEF & POTATO WRAP','BEEF PAPAS','SHREDDED CHEDDAR','WW TORTILLA','BAKED BEANS','ASSORTED FRUIT'],
+  '2026-06-04': ['SESAME POPCORN CHICKEN','POPCORN CHICKEN','DINNER ROLL','PARSLEY THYME RANCH','BROCCOLI','ASSORTED FRUIT'],
+  '2026-06-05': ['CHEESY SPAGHETTI','SHREDDED MOZZARELLA','DINNER ROLL','SPAGHETTI','BASIL RANCH','ASSORTED FRUIT'],
+  '2026-06-08': ['BBQ CHICKEN SANDWICH','BBQ CHICKEN BREAST','HAMBURGER BUN','RED BELL PEPPER','CORN','ASSORTED FRUIT'],
+  '2026-06-09': ['CHICKEN ENCHILADA NACHOS','CHICKEN ENCHILADA','CHIPS','TORTILLA CHIPS','SALSA RANCH','ASSORTED FRUIT'],
+  '2026-06-10': ['BEEF HOT DOG','HOTDOG','CHIPS','HOTDOG BUN','BAKED BEANS','ASSORTED FRUIT'],
+  '2026-06-11': ['GOLD COAST CHICKEN','GOLD COAST CHICKEN','YOGURT','GARLIC BROWN RICE','DILL RANCH','ASSORTED FRUIT'],
+  '2026-06-12': ['ALBONDIGAS MEXICANAS','MEXICAN MEATBALLS','CHIPS','DINNER ROLL','BROCCOLI','ASSORTED FRUIT'],
+};
+
+function buildMenuCard() {
+  const d = new Date();
+  const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const items = DAILY_MENU[key];
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const dayTag = dayNames[d.getDay()];
+
+  if (!items) {
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-label green">Brunch &amp; Lunch</span>
+        <span class="card-tag">${dayTag}</span>
+      </div>
+      <div class="card-body">
+        <div class="menu-no-data">No menu available · Check cafeteria</div>
+      </div>`;
+    return card;
+  }
+
+  const [main, ...sides] = items;
+  const sideRows = sides.map(s =>
+    `<div class="menu-row"><span class="menu-dot"></span>${s.charAt(0) + s.slice(1).toLowerCase()}</div>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-label green">Brunch &amp; Lunch</span>
+      <span class="card-tag">${dayTag}</span>
+    </div>
+    <div class="card-body">
+      <div class="menu-main">${main.charAt(0) + main.slice(1).toLowerCase()}</div>
+      ${sideRows}
+    </div>`;
+  return card;
+}
+
 const COUNTDOWNS = [
   { label: 'GRADUATION',        date: '2026-06-12' },
   { label: 'END OF SCHOOL',     date: '2026-06-12' },
@@ -1194,6 +1311,9 @@ function render(calEvents, quickMsg, passData, weatherData) {
 
   /* ── WEATHER ── */
   sections.push(buildWeatherCard(weatherData));
+
+  /* ── MENU ── */
+  sections.push(buildMenuCard());
 
   /* ── SCHEDULE ── */
   const schedCard = document.createElement('div');

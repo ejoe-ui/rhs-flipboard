@@ -918,8 +918,15 @@ function parseCSV(csv) {
         _isCodePlaceholder: true
       };
     }
+    if (firstLine === '[MENU]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isMenuPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s._isMenuPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1093,8 +1100,15 @@ function parseGviz(data) {
         _isCodePlaceholder: true
       };
     }
+    if (firstLine === '[MENU]') {
+      return {
+        lines: Array(7).fill(''),
+        speed: s.speed || 15,
+        _isMenuPlaceholder: true
+      };
+    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s._isMenuPlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1177,6 +1191,9 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isCodePlaceholder) {
       const existing = messages.find(m => m._isCodeSlot || m._isCodePlaceholder);
       result.push(existing || item);
+    } else if (item._isMenuPlaceholder) {
+      const existing = messages.find(m => m._isMenuSlot || m._isMenuPlaceholder);
+      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1204,6 +1221,7 @@ function startBoard(data, live) {
       timeout(refreshFacts()),
       timeout(refreshPassable()),
       timeout(refreshWeather()),
+      timeout(refreshMenu()),
     ]);
     refreshSchedule();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
@@ -1553,47 +1571,61 @@ function playClassicSound(tileCount) {
   const now = ctx.currentTime;
   const clicks = Math.min(Math.max(Math.floor(tileCount * 0.5), 4), 20);
   for (let i = 0; i < clicks; i++) {
-    const t = now + (i / clicks) * 3.2;
+    const t = now + (i / clicks) * 2.8;
     const vol = 0.08 + Math.sin(i / clicks * Math.PI) * 0.14;
     playClassicClick(ctx, t, vol);
   }
 }
 
-/* ── CLACK: sharp mechanical key switch ── */
-function playClackClick(ctx, time, vol, pitch) {
-  const bufLen = Math.floor(ctx.sampleRate * 0.05);
+/* ── CLACK: popcorn in a microwave ── */
+function playPop(ctx, time, vol) {
+  // Each pop: sharp noise burst with fast decay — like a kernel popping
+  const bufLen = Math.floor(ctx.sampleRate * 0.04);
   const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < bufLen; i++) {
     const t = i / bufLen;
-    const attack = t < 0.05 ? t / 0.05 : 1;
-    const decay = Math.pow(1 - t, 5);
-    const click = Math.sin(2 * Math.PI * (pitch || 300) * i / ctx.sampleRate);
-    const snap  = Math.sin(2 * Math.PI * (pitch || 300) * 1.8 * i / ctx.sampleRate) * 0.4;
-    const noise = (Math.random() * 2 - 1) * 0.1;
-    data[i] = (click + snap + noise) * attack * decay;
+    // Instant attack, exponential decay — classic pop shape
+    const env = Math.pow(1 - t, 4);
+    // Bandlimited noise — not too hissy, not too thumpy
+    data[i] = (Math.random() * 2 - 1) * env;
   }
   const src = ctx.createBufferSource();
   src.buffer = buf;
-  const hpf = ctx.createBiquadFilter();
-  hpf.type = 'highpass'; hpf.frequency.value = 400;
-  const gain = ctx.createGain(); gain.gain.value = vol || 0.22;
-  src.connect(hpf); hpf.connect(gain); gain.connect(ctx.destination);
+  // Bandpass centered around 800Hz — gives that satisfying pop timbre
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = 700 + Math.random() * 300; bp.Q.value = 0.8;
+  const gain = ctx.createGain(); gain.gain.value = vol || 0.25;
+  src.connect(bp); bp.connect(gain); gain.connect(ctx.destination);
   src.start(time);
 }
 
 function playClackSound(tileCount) {
   const ctx = getAudioCtx(); if (!ctx) return;
   const now = ctx.currentTime;
-  const clicks = Math.min(Math.max(Math.floor(tileCount * 0.45), 4), 18);
-  const pitches = [290, 310, 270, 325, 285, 315, 295, 305];
-  for (let i = 0; i < clicks; i++) {
-    const jitter = (Math.random() - 0.5) * 0.12;
-    const t = now + (i / clicks) * 3.0 + jitter;
-    const pitch = pitches[i % pitches.length];
-    const vol = 0.12 + Math.sin(i / clicks * Math.PI) * 0.1;
-    playClackClick(ctx, Math.max(now, t), vol, pitch);
+  const total = 2.8;
+  // Popcorn density curve: sparse → rapid burst → slow finish
+  // Generate random pop times weighted toward the middle
+  const popCount = Math.min(Math.max(Math.floor(tileCount * 0.6), 6), 28);
+  const times = [];
+  for (let i = 0; i < popCount; i++) {
+    // Beta-like distribution: more pops in middle third
+    const u = Math.random();
+    const v = Math.random();
+    // Box-Muller gives normal dist, clamp to 0-1, bias toward 0.4-0.7
+    let t = (u + v) / 2; // average of two uniforms → triangle distribution
+    t = 0.1 + t * 0.8;   // map to 0.1-0.9 of total duration
+    times.push(t);
   }
+  times.sort((a, b) => a - b);
+  times.forEach((t, i) => {
+    const jitter = (Math.random() - 0.5) * 0.06;
+    const when = now + Math.max(0, t * total + jitter);
+    // Volume peaks in the middle burst
+    const distFromCenter = Math.abs(t - 0.55);
+    const vol = 0.15 + (0.2 - distFromCenter * 0.3);
+    playPop(ctx, when, Math.max(0.08, vol));
+  });
 }
 
 /* ── DIGITAL: clean 80s terminal beep ── */
@@ -2571,6 +2603,88 @@ async function refreshWeather() {
 }
 
 /* ════════════════════════════════════════
+   MENU SCREEN SYSTEM
+   Hardcoded monthly menu — update when new
+   menu PDF is released. Keyed by YYYY-MM-DD.
+════════════════════════════════════════ */
+const DAILY_MENU = {
+  '2026-04-27': ['GARDEN BURGER','VEGGIE PATTY','PARSLEY THYME RANCH','PICKLE SLICES','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-04-28': ['SW QUESO CHICKEN','TORTILLA CHIPS','RANCHABOOM SAUCE','SOUR CREAM','REFRIED BEANS','ASSORTED FRUIT'],
+  '2026-04-29': ['SLOPPY JOE MAC','SLOPPY JOE MEAT','MACARONI PASTA','MARGARINES','COLESLAW','ASSORTED FRUIT'],
+  '2026-04-30': ['CHICKEN POTATO PILAF','DINNER ROLL','PARSLEY THYME RANCH','CARROT','ASSORTED FRUIT','ORANGE'],
+  '2026-05-01': ['RANCH MOZZ BURGER','RANCH BURGER','SHREDDED MOZZARELLA','GARLIC RANCH','CUCUMBER','ASSORTED FRUIT'],
+  '2026-05-04': ['FIESTA CHICKEN WRAP','GRILLED CHICKEN','DELI FIESTA SAUCE','BLACK BEANS','CABBAGE','ASSORTED FRUIT'],
+  '2026-05-05': ['TAJ MAHAL MEATBALLS','CHIPS','DINNER ROLL','MASHED POTATOES','SUGAR SNAP PEAS','ASSORTED FRUIT'],
+  '2026-05-06': ['BOSCO STICKS','BREADED CHEESE STICKS','RANCH DRESSING','CARROT','ROMAINE','ASSORTED FRUIT'],
+  '2026-05-07': ['ASIAN CHICKEN BOWL','GRILLED CHICKEN','CHIPS','DELI ASIAN SAUCE','SUGAR SNAP PEAS','ASSORTED FRUIT'],
+  '2026-05-08': ['PEPPERONI PIZZA','PARSLEY THYME RANCH','CUCUMBER','ICEBERG LETTUCE','APPLESAUCE','ASSORTED FRUIT'],
+  '2026-05-11': ['RAISIN CHICKEN WRAP','GRILLED CHICKEN','RAISIN SAUCE','BLACK BEANS','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-05-12': ['MONGOLIAN MEATBALLS','CILANTRO BROWN RICE','SESAME DRESSING','BROCCOLI','CAULIFLOWER','ASSORTED FRUIT'],
+  '2026-05-13': ['ZESTY BEEF STEAK','ZESTY SALISBURY STEAK','CHIPS','DINNER ROLL','BASIL RANCH','ASSORTED FRUIT'],
+  '2026-05-14': ['PESTO CHICKEN SANDWICH','GRILLED CHICKEN','BAGEL','PESTO SAUCE','TOMATO','ASSORTED FRUIT'],
+  '2026-05-15': ['MINI CORN DOGS','CHIPS','GARLIC RANCH','KETCHUP','CARROT','ASSORTED FRUIT'],
+  '2026-05-18': ['SOFT PRETZEL WITH CHEESE','CHEESE SAUCE','CHIPS','PRETZEL','CORN','APPLE'],
+  '2026-05-19': ['HOT HAM & CHEESE SANDWICH','HOT HAM & CHEESE','HAMBURGER BUN','BLACK BEANS','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-05-20': ['FRENCH TOAST STICKS','YOGURT','CHIPS','FRENCH TOAST','SALSA RANCH','CARROT'],
+  '2026-05-21': ['MEATBALL SUB','MARINARA MEATBALLS','SHREDDED MOZZARELLA','CHIPS','HOTDOG BUN','CARROT'],
+  '2026-05-22': ['PEPPERONI PIZZA','CHIPS','GARLIC RANCH','CUCUMBER','ROMAINE','APPLESAUCE'],
+  '2026-05-26': ['WALKING BEEF TACO','BEEF TACO MEAT','SHREDDED CHEDDAR','TORTILLA CHIPS','TACO SAUCE','ASSORTED FRUIT'],
+  '2026-05-27': ['ITALIAN CHICKEN PASTA','ITALIAN CHICKEN','SHREDDED MOZZARELLA','PENNE PASTA','BASIL RANCH','ASSORTED FRUIT'],
+  '2026-05-28': ['CORN DOG','CHIPS','KETCHUP','MUSTARD','COLESLAW','ASSORTED FRUIT'],
+  '2026-05-29': ['CHICKEN TACO','CHICKEN TACO MEAT','SHREDDED CHEDDAR','CHIPS','RANCHABOOM SAUCE','ASSORTED FRUIT'],
+  '2026-06-01': ['CHICKEN PATTY SANDWICH','CHICKEN PATTY','CHIPS','HAMBURGER BUN','ICEBERG LETTUCE','ASSORTED FRUIT'],
+  '2026-06-02': ['POLLO VERDE','CHICKEN VERDE','GARLIC BROWN RICE','CHIPS','DILL RANCH','ASSORTED FRUIT'],
+  '2026-06-03': ['BEEF & POTATO WRAP','BEEF PAPAS','SHREDDED CHEDDAR','WW TORTILLA','BAKED BEANS','ASSORTED FRUIT'],
+  '2026-06-04': ['SESAME POPCORN CHICKEN','POPCORN CHICKEN','DINNER ROLL','PARSLEY THYME RANCH','BROCCOLI','ASSORTED FRUIT'],
+  '2026-06-05': ['CHEESY SPAGHETTI','SHREDDED MOZZARELLA','DINNER ROLL','SPAGHETTI','BASIL RANCH','ASSORTED FRUIT'],
+  '2026-06-08': ['BBQ CHICKEN SANDWICH','BBQ CHICKEN BREAST','HAMBURGER BUN','RED BELL PEPPER','CORN','ASSORTED FRUIT'],
+  '2026-06-09': ['CHICKEN ENCHILADA NACHOS','CHICKEN ENCHILADA','CHIPS','TORTILLA CHIPS','SALSA RANCH','ASSORTED FRUIT'],
+  '2026-06-10': ['BEEF HOT DOG','HOTDOG','CHIPS','HOTDOG BUN','BAKED BEANS','ASSORTED FRUIT'],
+  '2026-06-11': ['GOLD COAST CHICKEN','GOLD COAST CHICKEN','YOGURT','GARLIC BROWN RICE','DILL RANCH','ASSORTED FRUIT'],
+  '2026-06-12': ['ALBONDIGAS MEXICANAS','MEXICAN MEATBALLS','CHIPS','DINNER ROLL','BROCCOLI','ASSORTED FRUIT'],
+};
+
+function getTodayMenuKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function buildMenuScreen() {
+  const key = getTodayMenuKey();
+  const items = DAILY_MENU[key];
+  const dayNames = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+  const dayName = dayNames[new Date().getDay()];
+  if (!items) {
+    return {
+      lines: ['BRUNCH + LUNCH MENU', dayName, '', 'NO MENU FOR TODAY', '', 'CHECK CAFETERIA', 'GO COWBOYS'],
+      speed: 15, _isMenuSlot: true
+    };
+  }
+  const lines = ['BRUNCH + LUNCH MENU', dayName, ...items.slice(0, 5)];
+  while (lines.length < 7) lines.push('');
+  return { lines: lines.slice(0, 7).map(l => l.substring(0, 28)), speed: 15, _isMenuSlot: true };
+}
+
+function injectMenuScreen(screen) {
+  let idx = messages.findIndex(m => m._isMenuPlaceholder);
+  if (idx < 0) idx = messages.findIndex(m => m._isMenuSlot);
+  if (idx < 0) return;
+  messages[idx] = screen
+    ? { ...screen, _isMenuSlot: true }
+    : { lines: ['BRUNCH + LUNCH MENU','','MENU NOT AVAILABLE','','CHECK CAFETERIA','','GO COWBOYS'], speed: 15, _isMenuSlot: true };
+  buildDots();
+}
+
+async function refreshMenu() {
+  const hasSlot = messages.some(m => m._isMenuPlaceholder || m._isMenuSlot);
+  if (!hasSlot) return;
+  injectMenuScreen(buildMenuScreen());
+}
+
+/* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
    1. RHS Events calendar keywords
@@ -2609,22 +2723,22 @@ const SCHEDULES = {
   BLOCK_WED: {
     label: 'BLOCK DAY · 1-3-5-7',
     periods: [
-      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
+      { name: 'P1/P2',  start: '8:10',  end: '9:57'  },
       { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
-      { name: 'P3+P4',  start: '10:16', end: '11:59' },
+      { name: 'P3/P4',  start: '10:16', end: '11:59' },
       { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
-      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
+      { name: 'P5/P6',  start: '12:37', end: '2:20'  },
       { name: 'P7',     start: '2:24',  end: '3:15'  },
     ]
   },
   BLOCK_THU: {
     label: 'BLOCK DAY · 2-4-6-7',
     periods: [
-      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
+      { name: 'P1/P2',  start: '8:10',  end: '9:57'  },
       { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
-      { name: 'P3+P4',  start: '10:16', end: '11:59' },
+      { name: 'P3/P4',  start: '10:16', end: '11:59' },
       { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
-      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
+      { name: 'P5/P6',  start: '12:37', end: '2:20'  },
       { name: 'P7',     start: '2:24',  end: '3:15'  },
     ]
   },
