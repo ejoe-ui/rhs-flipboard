@@ -1442,11 +1442,10 @@ async function refreshCalendar() {
    SOUND ENGINE — 3 PROFILES + TOGGLE
    OFF · CLASSIC · KEYBOARD · FUTURISTIC
 ════════════════════════════════════════ */
-const SOUND_PROFILES = ['OFF', 'CLASSIC', 'KEYBOARD', 'FUTURISTIC'];
+const SOUND_PROFILES = ['OFF', 'CLASSIC', 'CLACK', 'DIGITAL'];
 let soundProfileIdx = 0;
 let audioCtx = null;
 
-// Load saved preference
 try {
   const saved = localStorage.getItem('rhs-sound-profile');
   if (saved && SOUND_PROFILES.includes(saved)) {
@@ -1462,26 +1461,21 @@ function getAudioCtx() {
   return audioCtx;
 }
 
-function resumeAudio() {
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-}
-
 function cycleSoundProfile() {
-  resumeAudio();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   soundProfileIdx = (soundProfileIdx + 1) % SOUND_PROFILES.length;
   try { localStorage.setItem('rhs-sound-profile', SOUND_PROFILES[soundProfileIdx]); } catch(e) {}
   updateSoundBtn();
-  // Play a preview click so user hears the new profile
-  if (SOUND_PROFILES[soundProfileIdx] !== 'OFF') playFlipSound(8);
+  if (SOUND_PROFILES[soundProfileIdx] !== 'OFF') playFlipSound(6);
 }
 
 function updateSoundBtn() {
   const btn = document.getElementById('soundToggleBtn');
   if (!btn) return;
   const profile = SOUND_PROFILES[soundProfileIdx];
-  const icons = { OFF: '🔇', CLASSIC: '🔊', KEYBOARD: '⌨️', FUTURISTIC: '🔮' };
-  btn.textContent = icons[profile] + ' ' + profile;
-  btn.style.opacity = profile === 'OFF' ? '0.5' : '1';
+  const labels = { OFF: '🔇 OFF', CLASSIC: '🔊 CLASSIC', CLACK: '⌨️ CLACK', DIGITAL: '💾 DIGITAL' };
+  btn.textContent = labels[profile];
+  btn.style.opacity = profile === 'OFF' ? '0.4' : '0.8';
   btn.style.borderColor = profile === 'OFF' ? '#333' : 'var(--green)';
   btn.style.color = profile === 'OFF' ? '#555' : 'var(--green)';
 }
@@ -1492,34 +1486,30 @@ function enableSound(el) {
   }
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
   if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 600); }
-  // Start on CLASSIC if currently OFF
   if (soundProfileIdx === 0) {
     soundProfileIdx = 1;
     try { localStorage.setItem('rhs-sound-profile', 'CLASSIC'); } catch(e) {}
     updateSoundBtn();
   }
-  playFlipSound(5);
+  playFlipSound(4);
 }
 
-/* ── CLASSIC: airport departure board ── */
+/* ── CLASSIC: slow airport departure board ── */
 function playClassicClick(ctx, time, vol) {
-  const bufLen = Math.floor(ctx.sampleRate * 0.07);
+  const bufLen = Math.floor(ctx.sampleRate * 0.09);
   const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < bufLen; i++) {
     const t = i / bufLen;
     const noise = Math.random() * 2 - 1;
-    const tone = Math.sin(2 * Math.PI * 180 * t * bufLen / ctx.sampleRate);
-    data[i] = (noise * 0.7 + tone * 0.3) * Math.pow(1 - t, 2.2);
+    const tone = Math.sin(2 * Math.PI * 160 * i / ctx.sampleRate);
+    data[i] = (noise * 0.65 + tone * 0.35) * Math.pow(1 - t, 2.8);
   }
   const src = ctx.createBufferSource();
   src.buffer = buf;
   const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.value = 900;
-  filter.Q.value = 1.4;
-  const gain = ctx.createGain();
-  gain.gain.value = vol || 0.18;
+  filter.type = 'bandpass'; filter.frequency.value = 800; filter.Q.value = 1.2;
+  const gain = ctx.createGain(); gain.gain.value = vol || 0.18;
   src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
   src.start(time);
 }
@@ -1527,88 +1517,77 @@ function playClassicClick(ctx, time, vol) {
 function playClassicSound(tileCount) {
   const ctx = getAudioCtx(); if (!ctx) return;
   const now = ctx.currentTime;
-  const clicks = Math.min(Math.floor(tileCount * 1.2), 48); // fewer clicks than before
-  for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
-    playClassicClick(ctx, now + (i / (clicks * 0.25)) * 0.5, 0.05 + (i / (clicks * 0.25)) * 0.09);
-  }
-  for (let i = 0; i < Math.floor(clicks * 0.5); i++) {
-    playClassicClick(ctx, now + 0.5 + (i / (clicks * 0.5)) * 1.0, 0.14 + Math.sin(i / (clicks * 0.5) * Math.PI) * 0.08);
-  }
-  for (let i = 0; i < Math.floor(clicks * 0.25); i++) {
-    playClassicClick(ctx, now + 1.5 + (i / (clicks * 0.25)) * 0.8, 0.1 - (i / (clicks * 0.25)) * 0.09);
+  const clicks = Math.min(Math.max(Math.floor(tileCount * 0.5), 4), 20);
+  for (let i = 0; i < clicks; i++) {
+    const t = now + (i / clicks) * 2.5;
+    const vol = 0.08 + Math.sin(i / clicks * Math.PI) * 0.14;
+    playClassicClick(ctx, t, vol);
   }
 }
 
-/* ── KEYBOARD: smooth mechanical typewriter ── */
-function playKeyboardClick(ctx, time, vol, pitch) {
-  const bufLen = Math.floor(ctx.sampleRate * 0.045);
+/* ── CLACK: sharp mechanical key switch ── */
+function playClackClick(ctx, time, vol, pitch) {
+  const bufLen = Math.floor(ctx.sampleRate * 0.05);
   const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < bufLen; i++) {
     const t = i / bufLen;
-    const attack = Math.min(t * 60, 1);
-    const decay = Math.pow(1 - t, 3.5);
-    const tone1 = Math.sin(2 * Math.PI * (pitch || 320) * i / ctx.sampleRate);
-    const tone2 = Math.sin(2 * Math.PI * (pitch || 320) * 2.1 * i / ctx.sampleRate) * 0.3;
-    const noise = (Math.random() * 2 - 1) * 0.15;
-    data[i] = (tone1 + tone2 + noise) * attack * decay;
+    const attack = t < 0.05 ? t / 0.05 : 1;
+    const decay = Math.pow(1 - t, 5);
+    const click = Math.sin(2 * Math.PI * (pitch || 300) * i / ctx.sampleRate);
+    const snap  = Math.sin(2 * Math.PI * (pitch || 300) * 1.8 * i / ctx.sampleRate) * 0.4;
+    const noise = (Math.random() * 2 - 1) * 0.1;
+    data[i] = (click + snap + noise) * attack * decay;
   }
   const src = ctx.createBufferSource();
   src.buffer = buf;
-  const lpf = ctx.createBiquadFilter();
-  lpf.type = 'lowpass';
-  lpf.frequency.value = 2800;
-  const gain = ctx.createGain();
-  gain.gain.value = vol || 0.2;
-  src.connect(lpf); lpf.connect(gain); gain.connect(ctx.destination);
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = 'highpass'; hpf.frequency.value = 400;
+  const gain = ctx.createGain(); gain.gain.value = vol || 0.22;
+  src.connect(hpf); hpf.connect(gain); gain.connect(ctx.destination);
   src.start(time);
 }
 
-function playKeyboardSound(tileCount) {
+function playClackSound(tileCount) {
   const ctx = getAudioCtx(); if (!ctx) return;
   const now = ctx.currentTime;
-  const clicks = Math.min(Math.floor(tileCount * 1.5), 56);
-  const pitches = [280, 320, 360, 310, 295, 340];
+  const clicks = Math.min(Math.max(Math.floor(tileCount * 0.45), 4), 18);
+  const pitches = [290, 310, 270, 325, 285, 315, 295, 305];
   for (let i = 0; i < clicks; i++) {
-    const t = now + (i / clicks) * 1.8;
-    const vol = 0.08 + Math.sin(i / clicks * Math.PI) * 0.14;
+    const jitter = (Math.random() - 0.5) * 0.12;
+    const t = now + (i / clicks) * 2.2 + jitter;
     const pitch = pitches[i % pitches.length];
-    playKeyboardClick(ctx, t, vol, pitch);
+    const vol = 0.12 + Math.sin(i / clicks * Math.PI) * 0.1;
+    playClackClick(ctx, Math.max(now, t), vol, pitch);
   }
 }
 
-/* ── FUTURISTIC: digital synthesizer pulse ── */
-function playFuturisticClick(ctx, time, vol, freq) {
+/* ── DIGITAL: clean 80s terminal beep ── */
+function playDigitalBeep(ctx, time, vol, freq) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = freq || 880;
+  gain.gain.setValueAtTime(0, time);
+  gain.gain.linearRampToValueAtTime(vol || 0.12, time + 0.004);
+  gain.gain.setValueAtTime(vol || 0.12, time + 0.028);
+  gain.gain.linearRampToValueAtTime(0, time + 0.034);
   const filter = ctx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.value = freq || 800;
-  filter.Q.value = 8;
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(freq || 800, time);
-  osc.frequency.exponentialRampToValueAtTime((freq || 800) * 0.4, time + 0.06);
-  gain.gain.setValueAtTime(vol || 0.15, time);
-  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+  filter.type = 'bandpass'; filter.frequency.value = freq || 880; filter.Q.value = 3;
   osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-  osc.start(time); osc.stop(time + 0.1);
+  osc.start(time); osc.stop(time + 0.05);
 }
 
-function playFuturisticSound(tileCount) {
+function playDigitalSound(tileCount) {
   const ctx = getAudioCtx(); if (!ctx) return;
   const now = ctx.currentTime;
-  const clicks = Math.min(Math.floor(tileCount * 1.4), 52);
-  const freqs = [600, 750, 900, 1100, 680, 820, 960, 1050];
-  // Sweep up then down — sci-fi cascade feel
-  for (let i = 0; i < Math.floor(clicks * 0.6); i++) {
-    const t = now + (i / (clicks * 0.6)) * 1.2;
-    const freq = freqs[i % freqs.length] * (1 + i / clicks * 0.5);
-    playFuturisticClick(ctx, t, 0.1 + (i / clicks) * 0.08, freq);
-  }
-  for (let i = 0; i < Math.floor(clicks * 0.4); i++) {
-    const t = now + 1.2 + (i / (clicks * 0.4)) * 0.8;
-    const freq = freqs[i % freqs.length] * (1.4 - i / clicks * 0.4);
-    playFuturisticClick(ctx, t, 0.14 - (i / (clicks * 0.4)) * 0.12, freq);
+  const beeps = Math.min(Math.max(Math.floor(tileCount * 0.4), 3), 16);
+  const freqs = [1100, 990, 880, 770, 990, 1100, 880, 770];
+  for (let i = 0; i < beeps; i++) {
+    const t = now + (i / beeps) * 2.0;
+    const freq = freqs[i % freqs.length];
+    const vol = 0.08 + Math.sin(i / beeps * Math.PI) * 0.07;
+    playDigitalBeep(ctx, t, vol, freq);
   }
 }
 
@@ -1619,9 +1598,9 @@ function playFlipSound(tileCount) {
   const ctx = getAudioCtx();
   if (!ctx) return;
   if (ctx.state === 'suspended') { ctx.resume(); return; }
-  if (profile === 'CLASSIC')    playClassicSound(tileCount);
-  if (profile === 'KEYBOARD')   playKeyboardSound(tileCount);
-  if (profile === 'FUTURISTIC') playFuturisticSound(tileCount);
+  if (profile === 'CLASSIC') playClassicSound(tileCount);
+  if (profile === 'CLACK')   playClackSound(tileCount);
+  if (profile === 'DIGITAL') playDigitalSound(tileCount);
 }
 
 
