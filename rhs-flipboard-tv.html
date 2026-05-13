@@ -1519,7 +1519,7 @@ function playClassicSound(tileCount) {
   const now = ctx.currentTime;
   const clicks = Math.min(Math.max(Math.floor(tileCount * 0.5), 4), 20);
   for (let i = 0; i < clicks; i++) {
-    const t = now + (i / clicks) * 2.5;
+    const t = now + (i / clicks) * 3.2;
     const vol = 0.08 + Math.sin(i / clicks * Math.PI) * 0.14;
     playClassicClick(ctx, t, vol);
   }
@@ -1555,7 +1555,7 @@ function playClackSound(tileCount) {
   const pitches = [290, 310, 270, 325, 285, 315, 295, 305];
   for (let i = 0; i < clicks; i++) {
     const jitter = (Math.random() - 0.5) * 0.12;
-    const t = now + (i / clicks) * 2.2 + jitter;
+    const t = now + (i / clicks) * 3.0 + jitter;
     const pitch = pitches[i % pitches.length];
     const vol = 0.12 + Math.sin(i / clicks * Math.PI) * 0.1;
     playClackClick(ctx, Math.max(now, t), vol, pitch);
@@ -1584,7 +1584,7 @@ function playDigitalSound(tileCount) {
   const beeps = Math.min(Math.max(Math.floor(tileCount * 0.4), 3), 16);
   const freqs = [1100, 990, 880, 770, 990, 1100, 880, 770];
   for (let i = 0; i < beeps; i++) {
-    const t = now + (i / beeps) * 2.0;
+    const t = now + (i / beeps) * 2.8;
     const freq = freqs[i % freqs.length];
     const vol = 0.08 + Math.sin(i / beeps * Math.PI) * 0.07;
     playDigitalBeep(ctx, t, vol, freq);
