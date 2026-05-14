@@ -1054,20 +1054,40 @@ function daysUntil(dateStr) {
   return Math.ceil(diff / 86400000);
 }
 function detectSchedule(calEvents) {
-  const now = new Date();
-  const dow = now.getDay();
+  const now     = new Date();
+  const dow     = now.getDay();
   const dateStr = localDateStr(now);
+
   if (dow === 0 || dow === 6 || NO_SCHOOL.has(dateStr)) return null;
-  if (calEvents) {
+
+  // 1. Check calendar events for schedule keywords
+  if (calEvents && calEvents.length) {
     for (const e of calEvents) {
-      const t = (e.title||'').toLowerCase();
+      const t = (e.title || '').toLowerCase();
       if (t.includes('foggy') || t.includes('late arrival')) return 'FOGGY';
-      if (t.includes('minimum')) return 'MINIMUM';
-      if (t.includes('early release')) return 'EARLY_RELEASE';
-      if (t.includes('block')) return dow === 4 ? 'BLOCK_THU' : 'BLOCK_WED';
+      if (t.includes('minimum'))                              return 'MINIMUM';
+      if (t.includes('early release'))                        return 'EARLY_RELEASE';
+      if (t.includes('block'))                                return dow === 4 ? 'BLOCK_THU' : 'BLOCK_WED';
     }
   }
-  if (dow === 1) return 'EARLY_RELEASE';
+
+  // 2. Short week override — if ≤4 school days this week, use Regular
+  function getWeekSchoolDays() {
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+    let count = 0;
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const ds = localDateStr(d);
+      if (!NO_SCHOOL.has(ds)) count++;
+    }
+    return count;
+  }
+  if (getWeekSchoolDays() <= 4) return 'REGULAR';
+
+  // 3. Default weekly pattern
+  if (dow === 1) return 'EARLY_RELEASE'; // Monday only if full week
   if (dow === 3) return 'BLOCK_WED';
   if (dow === 4) return 'BLOCK_THU';
   return 'REGULAR';
