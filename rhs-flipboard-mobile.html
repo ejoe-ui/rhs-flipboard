@@ -1062,7 +1062,12 @@ function detectSchedule(calEvents) {
 
   // 1. Check calendar events for schedule keywords
   if (calEvents && calEvents.length) {
-    for (const e of calEvents) {
+    const todayStr = localDateStr(now);
+    const todayEvents = calEvents.filter(e => {
+      if (!e.start) return false;
+      return e.start.slice(0, 10) === todayStr;
+    });
+    for (const e of todayEvents) {
       const t = (e.title || '').toLowerCase();
       if (t.includes('foggy') || t.includes('late arrival')) return 'FOGGY';
       if (t.includes('minimum'))                              return 'MINIMUM';
