@@ -1745,23 +1745,39 @@ function buildBirthdayScreen() {
   const monNames = ['JAN','FEB','MAR','APR','MAY','JUN',
                     'JUL','AUG','SEP','OCT','NOV','DEC'];
 
-  if (!todayBdays.length && !weekBdays.length) return null;
+  // If nothing this week, look ahead up to 60 days for upcoming birthdays
+  if (!todayBdays.length && !weekBdays.length) {
+    const now = new Date();
+    const upcoming = [];
+    for (let offset = 1; offset <= 60; offset++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + offset);
+      const m = d.getMonth() + 1, day = d.getDate();
+      const found = allBirthdays.filter(b => b.month === m && b.day === day);
+      found.forEach(b => upcoming.push({ ...b, offset }));
+      if (upcoming.length >= 4) break;
+    }
+    if (!upcoming.length) return null;
+    const lines = ['COMING UP · BIRTHDAYS'];
+    upcoming.slice(0, 5).forEach(b => {
+      const dateStr = monNames[b.month-1] + ' ' + b.day;
+      const label = b.offset === 1 ? 'TOMORROW' : 'IN ' + b.offset + ' DAYS';
+      lines.push(truncate(b.name, 28));
+      if (lines.length < 7) lines.push(dateStr + '  ' + label);
+    });
+    while (lines.length < 7) lines.push('');
+    return { lines: lines.slice(0, 7), speed: 12, _isBirthday: true };
+  }
 
   const lines = [];
 
   if (todayBdays.length) {
     lines.push('HAPPY BIRTHDAY!');
-    // Up to 3 today birthdays
-    todayBdays.slice(0, 3).forEach(b => {
-      lines.push(truncate(b.name, 28));
-    });
-    if (todayBdays.length > 3) {
-      lines.push('AND ' + (todayBdays.length - 3) + ' MORE TODAY');
-    }
-    // Fill remaining with this week
+    todayBdays.slice(0, 3).forEach(b => lines.push(truncate(b.name, 28)));
+    if (todayBdays.length > 3) lines.push('AND ' + (todayBdays.length - 3) + ' MORE TODAY');
     const remaining = 6 - lines.length;
     if (remaining > 0 && weekBdays.length) {
-      lines.push(lines.length === 4 ? '' : '');
+      lines.push('');
       const upNext = weekBdays.slice(0, remaining - 1);
       if (upNext.length) {
         lines.push('ALSO THIS WEEK:');
@@ -1772,19 +1788,15 @@ function buildBirthdayScreen() {
       }
     }
   } else {
-    // No birthdays today — show week birthdays
     lines.push('BIRTHDAYS THIS WEEK');
     weekBdays.slice(0, 5).forEach(b => {
       const dateStr = monNames[b.month-1] + ' ' + b.day;
       lines.push(truncate(b.name + '  ' + dateStr, 28));
     });
-    if (weekBdays.length > 5) {
-      lines.push('+ ' + (weekBdays.length - 5) + ' MORE THIS WEEK');
-    }
+    if (weekBdays.length > 5) lines.push('+ ' + (weekBdays.length - 5) + ' MORE THIS WEEK');
   }
 
   while (lines.length < 7) lines.push('');
-
   return { lines: lines.slice(0, 7), speed: 12, _isBirthday: true };
 }
 

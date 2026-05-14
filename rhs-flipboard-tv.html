@@ -884,15 +884,8 @@ function parseCSV(csv) {
         _isCodePlaceholder: true
       };
     }
-    if (firstLine === '[MENU]') {
-      return {
-        lines: Array(7).fill(''),
-        speed: s.speed || 15,
-        _isMenuPlaceholder: true
-      };
-    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s._isMenuPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1066,15 +1059,8 @@ function parseGviz(data) {
         _isCodePlaceholder: true
       };
     }
-    if (firstLine === '[MENU]') {
-      return {
-        lines: Array(7).fill(''),
-        speed: s.speed || 15,
-        _isMenuPlaceholder: true
-      };
-    }
     return s;
-  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s._isMenuPlaceholder || s.lines[0]);
+  }).filter(s => s._isCalendarPlaceholder || s._isSchedulePlaceholder || s._isBirthdayPlaceholder || s._isCountdownPlaceholder || s._isQuickMsgPlaceholder || s._isFactsPlaceholder || s._isPassablePlaceholder || s._isWeatherPlaceholder || s._isCodePlaceholder || s.lines[0]);
   return parsed.length ? parsed : null;
 }
 
@@ -1159,9 +1145,6 @@ function mergeWithLiveSlots(freshData) {
     } else if (item._isCodePlaceholder) {
       const existing = messages.find(m => m._isCodeSlot || m._isCodePlaceholder);
       result.push(existing || item);
-    } else if (item._isMenuPlaceholder) {
-      const existing = messages.find(m => m._isMenuSlot || m._isMenuPlaceholder);
-      result.push(existing || item);
     } else {
       result.push(item);
     }
@@ -1189,7 +1172,6 @@ function startBoard(data, live) {
       timeout(refreshFacts()),
       timeout(refreshPassable()),
       timeout(refreshWeather()),
-      timeout(refreshMenu()),
     ]);
     refreshSchedule();
     if (sheetUrl) await fetchSheetCountdowns(sheetUrl);
@@ -1711,23 +1693,39 @@ function buildBirthdayScreen() {
   const monNames = ['JAN','FEB','MAR','APR','MAY','JUN',
                     'JUL','AUG','SEP','OCT','NOV','DEC'];
 
-  if (!todayBdays.length && !weekBdays.length) return null;
+  // If nothing this week, look ahead up to 60 days for upcoming birthdays
+  if (!todayBdays.length && !weekBdays.length) {
+    const now = new Date();
+    const upcoming = [];
+    for (let offset = 1; offset <= 60; offset++) {
+      const d = new Date(now);
+      d.setDate(now.getDate() + offset);
+      const m = d.getMonth() + 1, day = d.getDate();
+      const found = allBirthdays.filter(b => b.month === m && b.day === day);
+      found.forEach(b => upcoming.push({ ...b, offset }));
+      if (upcoming.length >= 4) break;
+    }
+    if (!upcoming.length) return null;
+    const lines = ['COMING UP · BIRTHDAYS'];
+    upcoming.slice(0, 5).forEach(b => {
+      const dateStr = monNames[b.month-1] + ' ' + b.day;
+      const label = b.offset === 1 ? 'TOMORROW' : 'IN ' + b.offset + ' DAYS';
+      lines.push(truncate(b.name, 28));
+      if (lines.length < 7) lines.push(dateStr + '  ' + label);
+    });
+    while (lines.length < 7) lines.push('');
+    return { lines: lines.slice(0, 7), speed: 12, _isBirthday: true };
+  }
 
   const lines = [];
 
   if (todayBdays.length) {
     lines.push('HAPPY BIRTHDAY!');
-    // Up to 3 today birthdays
-    todayBdays.slice(0, 3).forEach(b => {
-      lines.push(truncate(b.name, 28));
-    });
-    if (todayBdays.length > 3) {
-      lines.push('AND ' + (todayBdays.length - 3) + ' MORE TODAY');
-    }
-    // Fill remaining with this week
+    todayBdays.slice(0, 3).forEach(b => lines.push(truncate(b.name, 28)));
+    if (todayBdays.length > 3) lines.push('AND ' + (todayBdays.length - 3) + ' MORE TODAY');
     const remaining = 6 - lines.length;
     if (remaining > 0 && weekBdays.length) {
-      lines.push(lines.length === 4 ? '' : '');
+      lines.push('');
       const upNext = weekBdays.slice(0, remaining - 1);
       if (upNext.length) {
         lines.push('ALSO THIS WEEK:');
@@ -1738,19 +1736,15 @@ function buildBirthdayScreen() {
       }
     }
   } else {
-    // No birthdays today — show week birthdays
     lines.push('BIRTHDAYS THIS WEEK');
     weekBdays.slice(0, 5).forEach(b => {
       const dateStr = monNames[b.month-1] + ' ' + b.day;
       lines.push(truncate(b.name + '  ' + dateStr, 28));
     });
-    if (weekBdays.length > 5) {
-      lines.push('+ ' + (weekBdays.length - 5) + ' MORE THIS WEEK');
-    }
+    if (weekBdays.length > 5) lines.push('+ ' + (weekBdays.length - 5) + ' MORE THIS WEEK');
   }
 
   while (lines.length < 7) lines.push('');
-
   return { lines: lines.slice(0, 7), speed: 12, _isBirthday: true };
 }
 
@@ -2504,115 +2498,6 @@ async function refreshWeather() {
 }
 
 /* ════════════════════════════════════════
-   MENU SCREEN SYSTEM
-   Hardcoded monthly menu — update when new
-   menu PDF is released. Keyed by YYYY-MM-DD.
-   Each entry: [main, side1, side2, ...]
-   Up to 6 items shown (lines 2-7).
-════════════════════════════════════════ */
-const DAILY_MENU = {
-  // ── MAY 2026 ──
-  // ── APRIL 27–30 (end of April week on May menu) ──
-  '2026-04-27': ['GARDEN BURGER','VEGGIE PATTY','PARSLEY THYME RANCH','PICKLE SLICES','ICEBERG LETTUCE','ASSORTED FRUIT'],
-  '2026-04-28': ['SW QUESO CHICKEN','TORTILLA CHIPS','RANCHABOOM SAUCE','SOUR CREAM','REFRIED BEANS','ASSORTED FRUIT'],
-  '2026-04-29': ['SLOPPY JOE MAC','SLOPPY JOE MEAT','MACARONI PASTA','MARGARINES','COLESLAW','ASSORTED FRUIT'],
-  '2026-04-30': ['CHICKEN POTATO PILAF','DINNER ROLL','PARSLEY THYME RANCH','CARROT','ASSORTED FRUIT','ORANGE'],
-  '2026-05-01': ['RANCH MOZZ BURGER','RANCH BURGER','SHREDDED MOZZARELLA','GARLIC RANCH','CUCUMBER','ASSORTED FRUIT'],
-  '2026-05-04': ['FIESTA CHICKEN WRAP','GRILLED CHICKEN','DELI FIESTA SAUCE','BLACK BEANS','CABBAGE','ASSORTED FRUIT'],
-  '2026-05-05': ['TAJ MAHAL MEATBALLS','CHIPS','DINNER ROLL','MASHED POTATOES','SUGAR SNAP PEAS','ASSORTED FRUIT'],
-  '2026-05-06': ['BOSCO STICKS','BREADED CHEESE STICKS','RANCH DRESSING','CARROT','ROMAINE','ASSORTED FRUIT'],
-  '2026-05-07': ['ASIAN CHICKEN BOWL','GRILLED CHICKEN','CHIPS','DELI ASIAN SAUCE','SUGAR SNAP PEAS','ASSORTED FRUIT'],
-  '2026-05-08': ['PEPPERONI PIZZA','PARSLEY THYME RANCH','CUCUMBER','ICEBERG LETTUCE','APPLESAUCE','ASSORTED FRUIT'],
-  '2026-05-11': ['RAISIN CHICKEN WRAP','GRILLED CHICKEN','RAISIN SAUCE','BLACK BEANS','ICEBERG LETTUCE','ASSORTED FRUIT'],
-  '2026-05-12': ['MONGOLIAN MEATBALLS','CILANTRO BROWN RICE','SESAME DRESSING','BROCCOLI','CAULIFLOWER','ASSORTED FRUIT'],
-  '2026-05-13': ['ZESTY BEEF STEAK','ZESTY SALISBURY STEAK','CHIPS','DINNER ROLL','BASIL RANCH','ASSORTED FRUIT'],
-  '2026-05-14': ['PESTO CHICKEN SANDWICH','GRILLED CHICKEN','BAGEL','PESTO SAUCE','TOMATO','ASSORTED FRUIT'],
-  '2026-05-15': ['MINI CORN DOGS','CHIPS','GARLIC RANCH','KETCHUP','CARROT','ASSORTED FRUIT'],
-  '2026-05-18': ['SOFT PRETZEL WITH CHEESE','CHEESE SAUCE','CHIPS','PRETZEL','CORN','APPLE'],
-  '2026-05-19': ['HOT HAM & CHEESE SANDWICH','HOT HAM & CHEESE','HAMBURGER BUN','BLACK BEANS','ICEBERG LETTUCE','ASSORTED FRUIT'],
-  '2026-05-20': ['FRENCH TOAST STICKS','YOGURT','CHIPS','FRENCH TOAST','SALSA RANCH','CARROT'],
-  '2026-05-21': ['MEATBALL SUB','MARINARA MEATBALLS','SHREDDED MOZZARELLA','CHIPS','HOTDOG BUN','CARROT'],
-  '2026-05-22': ['PEPPERONI PIZZA','CHIPS','GARLIC RANCH','CUCUMBER','ROMAINE','APPLESAUCE'],
-  '2026-05-26': ['WALKING BEEF TACO','BEEF TACO MEAT','SHREDDED CHEDDAR','TORTILLA CHIPS','TACO SAUCE','ASSORTED FRUIT'],
-  '2026-05-27': ['ITALIAN CHICKEN PASTA','ITALIAN CHICKEN','SHREDDED MOZZARELLA','PENNE PASTA','BASIL RANCH','ASSORTED FRUIT'],
-  '2026-05-28': ['CORN DOG','CHIPS','KETCHUP','MUSTARD','COLESLAW','ASSORTED FRUIT'],
-  '2026-05-29': ['CHICKEN TACO','CHICKEN TACO MEAT','SHREDDED CHEDDAR','CHIPS','RANCHABOOM SAUCE','ASSORTED FRUIT'],
-  // ── JUNE 2026 ──
-  '2026-06-01': ['CHICKEN PATTY SANDWICH','CHICKEN PATTY','CHIPS','HAMBURGER BUN','ICEBERG LETTUCE','ASSORTED FRUIT'],
-  '2026-06-02': ['POLLO VERDE','CHICKEN VERDE','GARLIC BROWN RICE','CHIPS','DILL RANCH','ASSORTED FRUIT'],
-  '2026-06-03': ['BEEF & POTATO WRAP','BEEF PAPAS','SHREDDED CHEDDAR','WW TORTILLA','BAKED BEANS','ASSORTED FRUIT'],
-  '2026-06-04': ['SESAME POPCORN CHICKEN','POPCORN CHICKEN','DINNER ROLL','PARSLEY THYME RANCH','BROCCOLI','ASSORTED FRUIT'],
-  '2026-06-05': ['CHEESY SPAGHETTI','SHREDDED MOZZARELLA','DINNER ROLL','SPAGHETTI','BASIL RANCH','ASSORTED FRUIT'],
-  '2026-06-08': ['BBQ CHICKEN SANDWICH','BBQ CHICKEN BREAST','HAMBURGER BUN','RED BELL PEPPER','CORN','ASSORTED FRUIT'],
-  '2026-06-09': ['CHICKEN ENCHILADA NACHOS','CHICKEN ENCHILADA NACHOS','CHIPS','TORTILLA CHIPS','SALSA RANCH','ASSORTED FRUIT'],
-  '2026-06-10': ['BEEF HOT DOG','HOTDOG','CHIPS','HOTDOG BUN','BAKED BEANS','ASSORTED FRUIT'],
-  '2026-06-11': ['GOLD COAST CHICKEN','GOLD COAST CHICKEN','YOGURT','GARLIC BROWN RICE','DILL RANCH','ASSORTED FRUIT'],
-  '2026-06-12': ['ALBONDIGAS MEXICANAS','MEXICAN MEATBALLS','CHIPS','DINNER ROLL','BROCCOLI','ASSORTED FRUIT'],
-};
-
-function getTodayMenuKey() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-function buildMenuScreen() {
-  const key = getTodayMenuKey();
-  const items = DAILY_MENU[key];
-  const d = new Date();
-  const dayNames = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-  const dayName = dayNames[d.getDay()];
-
-  if (!items) {
-    return {
-      lines: [
-        'BRUNCH + LUNCH MENU',
-        dayName,
-        '',
-        'NO MENU FOR TODAY',
-        '',
-        'CHECK CAFETERIA',
-        'GO COWBOYS'
-      ],
-      speed: 15, _isMenuSlot: true
-    };
-  }
-
-  // Line 1: header, Line 2: day name, Lines 3-7: up to 5 menu items
-  const lines = [
-    'BRUNCH + LUNCH MENU',
-    dayName,
-    ...items.slice(0, 5)
-  ];
-  while (lines.length < 7) lines.push('');
-  return {
-    lines: lines.slice(0, 7).map(l => l.substring(0, 28)),
-    speed: 15, _isMenuSlot: true
-  };
-}
-
-function injectMenuScreen(screen) {
-  let idx = messages.findIndex(m => m._isMenuPlaceholder);
-  if (idx < 0) idx = messages.findIndex(m => m._isMenuSlot);
-  if (idx < 0) return;
-  messages[idx] = screen
-    ? { ...screen, _isMenuSlot: true }
-    : {
-        lines: ['BRUNCH + LUNCH MENU','','MENU NOT AVAILABLE','','CHECK CAFETERIA','','GO COWBOYS'],
-        speed: 15, _isMenuSlot: true
-      };
-  buildDots();
-}
-
-async function refreshMenu() {
-  const hasSlot = messages.some(m => m._isMenuPlaceholder || m._isMenuSlot);
-  if (!hasSlot) return;
-  injectMenuScreen(buildMenuScreen());
-}
-
-/* ════════════════════════════════════════
    BELL SCHEDULE SYSTEM
    Auto-detects schedule type from:
    1. RHS Events calendar keywords
@@ -2651,22 +2536,22 @@ const SCHEDULES = {
   BLOCK_WED: {
     label: 'BLOCK DAY · 1-3-5-7',
     periods: [
-      { name: 'P1/P2',  start: '8:10',  end: '9:57'  },
+      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
       { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
-      { name: 'P3/P4',  start: '10:16', end: '11:59' },
+      { name: 'P3+P4',  start: '10:16', end: '11:59' },
       { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
-      { name: 'P5/P6',  start: '12:37', end: '2:20'  },
+      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
       { name: 'P7',     start: '2:24',  end: '3:15'  },
     ]
   },
   BLOCK_THU: {
     label: 'BLOCK DAY · 2-4-6-7',
     periods: [
-      { name: 'P1/P2',  start: '8:10',  end: '9:57'  },
+      { name: 'P1+P2',  start: '8:10',  end: '9:57'  },
       { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
-      { name: 'P3/P4',  start: '10:16', end: '11:59' },
+      { name: 'P3+P4',  start: '10:16', end: '11:59' },
       { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
-      { name: 'P5/P6',  start: '12:37', end: '2:20'  },
+      { name: 'P5+P6',  start: '12:37', end: '2:20'  },
       { name: 'P7',     start: '2:24',  end: '3:15'  },
     ]
   },
