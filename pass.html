@@ -488,56 +488,63 @@ async function loadPass() {
   }
 
   try {
+    const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
+
     // Step 1: Resolve student
-    let student = null;
     let sQuery = `${SUPABASE_URL}/rest/v1/students?select=id,full_name,period,nfc_uid&limit=1`;
     if (uid) sQuery += `&nfc_uid=eq.${uid}`;
     else sQuery += `&id=eq.${studentId}`;
-    const sRes = await fetch(sQuery, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-    });
+    const sRes = await fetch(sQuery, { headers });
     const sData = await sRes.json();
-    student = sData[0] || null;
+    const student = sData[0] || null;
     if (!student) { renderError('Student not found.'); return; }
 
     // Step 2: Find open pass
     const passRes = await fetch(
       `${SUPABASE_URL}/rest/v1/passes?select=*&student_id=eq.${student.id}&time_in=is.null&order=time_out.desc&limit=1`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      { headers }
     );
     const passes = await passRes.json();
-    const activePass = passes[0] || null;
+    const activePass = Array.isArray(passes) ? passes[0] || null : null;
 
-    // Step 3: Weekly stats
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
-    weekStart.setHours(0,0,0,0);
-    const statsRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/passes?select=duration_minutes&student_id=eq.${student.id}&time_out=gte.${weekStart.toISOString()}`,
-      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-    );
-    const weekPasses = await statsRes.json();
-    const weekCount = weekPasses.length;
-    const weekMins = weekPasses.reduce((sum, p) => sum + (p.duration_minutes || 0), 0);
+    // Step 3: Weekly stats — don't let this block render
+    let weekCount = 0, weekMins = 0;
+    try {
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
+      weekStart.setHours(0,0,0,0);
+      const statsRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/passes?select=duration_minutes&student_id=eq.${student.id}&time_out=gte.${weekStart.toISOString()}`,
+        { headers }
+      );
+      const weekPasses = await statsRes.json();
+      if (Array.isArray(weekPasses)) {
+        weekCount = weekPasses.length;
+        weekMins = weekPasses.reduce((sum, p) => sum + (p.duration_minutes || 0), 0);
+      }
+    } catch(e) { /* stats failed silently — still show pass */ }
 
     render({ student, activePass, weekCount, weekMins });
 
     // Poll for check-in every 15s
     if (activePass) {
       setInterval(async () => {
-        const r = await fetch(
-          `${SUPABASE_URL}/rest/v1/passes?select=time_in&student_id=eq.${student.id}&time_in=is.null&limit=1`,
-          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-        );
-        const p = await r.json();
-        if (p.length === 0) {
-          if (timerInterval) clearInterval(timerInterval);
-          loadPass(); // reload to show "In Class"
-        }
+        try {
+          const r = await fetch(
+            `${SUPABASE_URL}/rest/v1/passes?select=time_in&student_id=eq.${student.id}&time_in=is.null&limit=1`,
+            { headers }
+          );
+          const p = await r.json();
+          if (Array.isArray(p) && p.length === 0) {
+            if (timerInterval) clearInterval(timerInterval);
+            loadPass();
+          }
+        } catch(e) {}
       }, 15000);
     }
 
   } catch(e) {
+    console.error('loadPass error:', e);
     renderError('Could not load pass data.');
   }
 }
