@@ -405,7 +405,7 @@
 </div>
 
 <script src="cowboy-wire-core.js"></script>
-<script src="config.js" onload="init()"></script>
+<script src="config.js"></script>
 <script>
 const PASS_MAX_MINS = 15;
 let timerInterval = null;
@@ -699,11 +699,14 @@ function startTimer(timeOutISO) {
   timerInterval = setInterval(tick, 1000);
 }
 
+// Wait for config.js then start
 function init() {
   updateClock();
   setInterval(updateClock, 10000);
   loadPass();
 }
+// Call init after all scripts load
+window.addEventListener('load', init);
 </script>
 </body>
 </html>
