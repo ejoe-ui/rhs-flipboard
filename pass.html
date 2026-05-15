@@ -405,7 +405,7 @@
 </div>
 
 <script src="cowboy-wire-core.js"></script>
-<script src="config.js"></script>
+<script src="config.js" onload="init()"></script>
 <script>
 const PASS_MAX_MINS = 15;
 let timerInterval = null;
@@ -699,9 +699,11 @@ function startTimer(timeOutISO) {
   timerInterval = setInterval(tick, 1000);
 }
 
-updateClock();
-setInterval(updateClock, 10000);
-loadPass();
+function init() {
+  updateClock();
+  setInterval(updateClock, 10000);
+  loadPass();
+}
 </script>
 </body>
 </html>
