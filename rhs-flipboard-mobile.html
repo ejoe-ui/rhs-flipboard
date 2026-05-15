@@ -885,6 +885,11 @@
 </div>
 
 <!-- POST BUTTON -->
+<div id="pass-link-wrap" style="position:fixed;bottom:76px;right:16px;z-index:101;">
+  <a id="passLinkBtn" href="#" style="display:none;background:var(--surface);border:1px solid var(--green);color:var(--green);font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;padding:6px 12px;border-radius:6px;text-decoration:none;">
+    &#9632; My Pass
+  </a>
+</div>
 <div id="post-btn-wrap">
   <a class="post-btn" href="https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-post.html">
     ▶ Post a Message to the Board
@@ -1518,6 +1523,20 @@ function startPassPolling(studentId) {
 updateClock();
 setInterval(updateClock, 10000);
 loadData();
+
+// Show "My Pass" button if uid or student param present
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid');
+  const studentId = params.get('student');
+  if (uid || studentId) {
+    const btn = document.getElementById('passLinkBtn');
+    if (btn) {
+      btn.href = `pass.html?${params.toString()}`;
+      btn.style.display = 'inline-block';
+    }
+  }
+})();
 setInterval(loadData, 60000);
 setInterval(() => {
   const existing = document.querySelector('.period-timer-card');
