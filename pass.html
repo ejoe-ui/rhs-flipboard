@@ -405,8 +405,10 @@
 </div>
 
 <script src="cowboy-wire-core.js"></script>
-<script src="config.js"></script>
 <script>
+// Supabase credentials — same as config.js
+const SUPABASE_URL = 'https://lgsfrhibzxjwcudjvfzx.supabase.co';
+// SUPABASE_KEY is loaded from config.js below — keep both for safety
 const PASS_MAX_MINS = 15;
 let timerInterval = null;
 
@@ -712,8 +714,16 @@ function init() {
   setInterval(updateClock, 10000);
   loadPass();
 }
-// Call init after all scripts load
-window.addEventListener('load', init);
+// Wait for SUPABASE_KEY from config.js then start
+function waitForConfig() {
+  if (typeof SUPABASE_KEY !== 'undefined') {
+    init();
+  } else {
+    setTimeout(waitForConfig, 50);
+  }
+}
+waitForConfig();
 </script>
+<script src="config.js"></script>
 </body>
 </html>
