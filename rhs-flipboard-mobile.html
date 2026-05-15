@@ -950,6 +950,18 @@ const SCHEDULES = {
     { name: 'P6', start: '11:51', end: '12:24' },
     { name: 'P7', start: '12:28', end: '1:01' },
   ]},
+  CODE_DAY: { label: 'C.O.D.E Day Schedule', periods: [
+    { name: 'P1',       start: '8:10',  end: '8:56'  },
+    { name: 'P2',       start: '9:00',  end: '9:44'  },
+    { name: 'BRUNCH',   start: '9:44',  end: '9:59',  break: true },
+    { name: 'P3',       start: '10:03', end: '10:47' },
+    { name: 'P4',       start: '10:51', end: '11:35' },
+    { name: 'KICKBALL', start: '11:39', end: '12:17', break: true },
+    { name: 'LUNCH',    start: '12:17', end: '12:51', break: true },
+    { name: 'P5',       start: '12:55', end: '1:39'  },
+    { name: 'P6',       start: '1:43',  end: '2:27'  },
+    { name: 'P7',       start: '2:31',  end: '3:15'  },
+  ]},
 };
 
 const NO_SCHOOL = new Set([
@@ -1054,45 +1066,24 @@ function daysUntil(dateStr) {
   return Math.ceil(diff / 86400000);
 }
 function detectSchedule(calEvents) {
-  const now     = new Date();
-  const dow     = now.getDay();
+  const now = new Date();
+  const dow = now.getDay();
   const dateStr = localDateStr(now);
-
   if (dow === 0 || dow === 6 || NO_SCHOOL.has(dateStr)) return null;
 
-  // 1. Check calendar events for schedule keywords
-  if (calEvents && calEvents.length) {
-    const todayStr = localDateStr(now);
-    const todayEvents = calEvents.filter(e => {
-      if (!e.start) return false;
-      return e.start.slice(0, 10) === todayStr;
-    });
-    for (const e of todayEvents) {
-      const t = (e.title || '').toLowerCase();
+  // Special one-day overrides
+  if (dateStr === '2026-05-15') return 'CODE_DAY';
+
+  if (calEvents) {
+    for (const e of calEvents) {
+      const t = (e.title||'').toLowerCase();
       if (t.includes('foggy') || t.includes('late arrival')) return 'FOGGY';
-      if (t.includes('minimum'))                              return 'MINIMUM';
-      if (t.includes('early release'))                        return 'EARLY_RELEASE';
-      if (t.includes('block'))                                return dow === 4 ? 'BLOCK_THU' : 'BLOCK_WED';
+      if (t.includes('minimum')) return 'MINIMUM';
+      if (t.includes('early release')) return 'EARLY_RELEASE';
+      if (t.includes('block')) return dow === 4 ? 'BLOCK_THU' : 'BLOCK_WED';
     }
   }
-
-  // 2. Short week override — if ≤4 school days this week, use Regular
-  function getWeekSchoolDays() {
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
-    let count = 0;
-    for (let i = 0; i < 5; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      const ds = localDateStr(d);
-      if (!NO_SCHOOL.has(ds)) count++;
-    }
-    return count;
-  }
-  if (getWeekSchoolDays() <= 4) return 'REGULAR';
-
-  // 3. Default weekly pattern
-  if (dow === 1) return 'EARLY_RELEASE'; // Monday only if full week
+  if (dow === 1) return 'EARLY_RELEASE';
   if (dow === 3) return 'BLOCK_WED';
   if (dow === 4) return 'BLOCK_THU';
   return 'REGULAR';
@@ -1337,28 +1328,11 @@ function render(calEvents, quickMsg, passData, weatherData) {
   });
   const todayBdays = BIRTHDAYS.filter(b => b.month===today.m && b.day===today.d);
   const weekBdays  = BIRTHDAYS.filter(b => weekDates.some(w=>w.m===b.month&&w.d===b.day) && !(b.month===today.m&&b.day===today.d));
-
-  // If nothing this week, look ahead up to 60 days
-  let upcomingBdays = [];
-  if (!todayBdays.length && !weekBdays.length) {
-    for (let offset = 1; offset <= 60; offset++) {
-      const d = new Date(now);
-      d.setDate(now.getDate() + offset);
-      const m = d.getMonth() + 1, day = d.getDate();
-      const found = BIRTHDAYS.filter(b => b.month === m && b.day === day);
-      found.forEach(b => upcomingBdays.push({ ...b, offset }));
-      if (upcomingBdays.length >= 4) break;
-    }
-  }
-
-  if (todayBdays.length || weekBdays.length || upcomingBdays.length) {
+  if (todayBdays.length || weekBdays.length) {
     const bdCard = document.createElement('div');
     bdCard.className = 'card';
     let bdContent = '';
-    let cardLabel = 'Birthdays This Week';
-
     if (todayBdays.length) {
-      cardLabel = '🎂 Happy Birthday!';
       bdContent += `<div class="bday-today">${todayBdays.map(b=>`
         <div style="cursor:pointer;padding:4px 0;-webkit-tap-highlight-color:transparent" onclick='openBdayModal(${JSON.stringify(b)})'>
           🎉 ${b.name}
@@ -1371,20 +1345,9 @@ function render(calEvents, quickMsg, passData, weatherData) {
           ${monNames[b.month-1]} ${b.day} · ${b.name}
         </div>`).join('')}</div>`;
     }
-    if (upcomingBdays.length) {
-      cardLabel = 'Coming Up · Birthdays';
-      bdContent += `<div class="bday-week">${upcomingBdays.slice(0,4).map(b=>{
-        const inLabel = b.offset === 1 ? 'Tomorrow' : `In ${b.offset} days`;
-        return `<div style="cursor:pointer;padding:3px 0;-webkit-tap-highlight-color:transparent" onclick='openBdayModal(${JSON.stringify(b)})'>
-          ${monNames[b.month-1]} ${b.day} · ${b.name}
-          <span style="font-size:10px;color:var(--text-dim);margin-left:6px;font-family:var(--mono)">${inLabel}</span>
-        </div>`;
-      }).join('')}</div>`;
-    }
-
     bdCard.innerHTML = `
       <div class="card-header">
-        <span class="card-label">${cardLabel}</span>
+        <span class="card-label">${todayBdays.length ? '🎂 Happy Birthday!' : 'Birthdays This Week'}</span>
       </div>
       <div class="card-body">${bdContent}</div>`;
     sections.push(bdCard);
@@ -1513,6 +1476,7 @@ function getNextSchoolDay() {
     const ds = localDateStr(d);
     if (dow===0||dow===6||NO_SCHOOL.has(ds)) continue;
     const schedLabels = {1:'Early Release',3:'Block 1-3-5-7',4:'Block 2-4-6-7',2:'Regular',5:'Regular'};
+    if (ds === '2026-05-15') return { label: `${dayNames[dow]} ${monNames[d.getMonth()]} ${d.getDate()}`, schedLabel: 'C.O.D.E Day' };
     return { label: `${dayNames[dow]} ${monNames[d.getMonth()]} ${d.getDate()}`, schedLabel: schedLabels[dow]||'Regular' };
   }
   return null;
