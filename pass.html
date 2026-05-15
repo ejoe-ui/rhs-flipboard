@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>RHS PassAble · Hall Pass</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green: #006938;
+    --green-dark: #004d28;
+    --green-dim: #003d20;
+    --tan: #C4BEB5;
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #222222;
+    --border2: #2a2a2a;
+    --text: #f0ebe0;
+    --text-mid: #888880;
+    --text-dim: #444440;
+    --mono: 'Courier New', Courier, monospace;
+    --radius: 10px;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  /* ── HEADER ── */
+  #header {
+    background: #0a0a0a;
+    border-bottom: 2px solid var(--green);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .h-badge {
+    background: var(--green);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    padding: 4px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .h-clock {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+  .accent-bar {
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
+  }
+
+  /* ── CONTENT ── */
+  #content {
+    padding: 14px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── PASS CARD ── */
+  .pass-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .pass-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px 7px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pass-status-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+  .pass-status-label.active { color: var(--green); }
+  .pass-status-label.in    { color: var(--text-dim); }
+  .pass-timer-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    border: 1px solid var(--border2);
+    padding: 2px 7px;
+    border-radius: 3px;
+  }
+
+  /* Student name block */
+  .pass-name-block {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pass-student-name {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    margin-bottom: 3px;
+  }
+  .pass-school-line {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Pass details grid */
+  .pass-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .pass-detail-item {
+    background: var(--surface);
+    padding: 10px 14px;
+  }
+  .pass-detail-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .pass-detail-value {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+  .pass-detail-value.over { color: #cc4444; }
+  .pass-detail-value.warn { color: #ff9900; }
+
+  /* Progress bar */
+  .pass-progress-wrap {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pass-progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .pass-progress-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .pass-progress-remaining {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-mid);
+    letter-spacing: 0.06em;
+  }
+  .pass-progress-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: var(--border2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .pass-progress-bar-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 3px;
+    transition: width 1s linear, background 0.5s;
+  }
+
+  /* Stats row */
+  .pass-stats {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .pass-stat {
+    flex: 1;
+    padding: 10px 14px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .pass-stat:last-child { border-right: none; }
+  .pass-stat-num {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    display: block;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+  .pass-stat-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* Footer */
+  .pass-footer {
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pass-scan-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pass-brand {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--green);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* In class card */
+  .in-class-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .in-class-body {
+    padding: 32px 14px 24px;
+    text-align: center;
+  }
+  .in-class-check {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .in-class-label {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .in-class-name {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .in-class-school {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  /* Loading */
+  .loading-wrap {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 40px;
+  }
+  .loading-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: ldot 1.2s infinite ease-in-out;
+  }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes ldot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  /* Error */
+  .error-wrap {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .error-icon { font-size: 40px; margin-bottom: 12px; }
+  .error-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Flipboard link */
+  .flipboard-link-wrap {
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+  .flipboard-link {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-decoration: none;
+    border: 1px solid var(--border2);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    transition: color 0.15s, border-color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .flipboard-link:active { color: var(--green); border-color: var(--green); }
+
+  /* ── MINI SCHEDULE ── */
+  .sched-row, .sched-break {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-bottom: 3px;
+  }
+  .sched-row.now { background: var(--green-dim); border: 1px solid var(--green); }
+  .sched-row.past, .sched-break.past { opacity: 0.4; }
+  .sched-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    min-width: 68px;
+  }
+  .sched-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-mid);
+    flex: 1;
+  }
+  .sched-now {
+    font-family: var(--mono);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .sched-break .sched-name { color: var(--text-dim); font-weight: normal; }
+  .sched-break .sched-time { color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="h-badge">RHS · PassAble</div>
+  <div class="h-clock" id="clock">--:-- --</div>
+</div>
+<div class="accent-bar"></div>
+
+<div id="content">
+  <div class="loading-wrap">
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+  </div>
+</div>
+
+<script src="cowboy-wire-core.js"></script>
+<script src="config.js"></script>
+<script>
+const PASS_MAX_MINS = 15;
+let timerInterval = null;
+
+function renderSchedule() {
+  const section = document.getElementById('scheduleSection');
+  if (!section) return;
+
+  // Build period timer
+  const timerCard = buildPeriodTimerCard([]);
+  if (timerCard) {
+    timerCard.style.marginBottom = '10px';
+    section.appendChild(timerCard);
+  }
+
+  // Build mini schedule card
+  const schedKey = detectSchedule([]);
+  const schedule = schedKey ? SCHEDULES[schedKey] : null;
+  if (!schedule) return;
+
+  const nm = nowMins();
+  let rows = '';
+  for (const p of schedule.periods) {
+    const start = timeToMins(p.start);
+    const end   = timeToMins(p.end);
+    const isNow  = nm >= start && nm < end;
+    const isPast = nm >= end;
+    if (p.break) {
+      rows += `<div class="sched-break${isPast ? ' past' : ''}">
+        <span class="sched-name">${p.name}</span>
+        <span class="sched-time">${p.start} – ${p.end}</span>
+        ${isNow ? '<span class="sched-now">NOW</span>' : ''}
+      </div>`;
+    } else {
+      rows += `<div class="sched-row${isNow ? ' now' : isPast ? ' past' : ''}">
+        <span class="sched-name">${p.name}</span>
+        <span class="sched-time">${p.start} – ${p.end}</span>
+        ${isNow ? '<span class="sched-now">NOW</span>' : ''}
+      </div>`;
+    }
+  }
+
+  const card = document.createElement('div');
+  card.className = 'pass-card';
+  card.style.marginBottom = '10px';
+  card.innerHTML = `
+    <div class="pass-header">
+      <span class="pass-status-label in">Bell Schedule</span>
+      <span class="pass-timer-tag">${schedule.label}</span>
+    </div>
+    <div style="padding: 8px 6px;">${rows}</div>`;
+  section.appendChild(card);
+
+  // Refresh timer every 5s
+  setInterval(() => {
+    const existing = section.querySelector('.period-timer-card');
+    const newCard = buildPeriodTimerCard([]);
+    if (existing && newCard) existing.replaceWith(newCard);
+    else if (newCard) section.insertBefore(newCard, section.firstChild);
+  }, 5000);
+}
+
+function updateClock() {
+  const now = new Date();
+  let h = now.getHours();
+  const m = now.getMinutes().toString().padStart(2,'0');
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock').textContent = `${h}:${m} ${ap}`;
+}
+
+async function loadPass() {
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid');
+  const studentId = params.get('student');
+
+  if (!uid && !studentId) {
+    renderError('No pass ID provided.');
+    return;
+  }
+
+  try {
+    // Step 1: Resolve student
+    let student = null;
+    let sQuery = `${SUPABASE_URL}/rest/v1/students?select=id,full_name,period,nfc_uid&limit=1`;
+    if (uid) sQuery += `&nfc_uid=eq.${uid}`;
+    else sQuery += `&id=eq.${studentId}`;
+    const sRes = await fetch(sQuery, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    });
+    const sData = await sRes.json();
+    student = sData[0] || null;
+    if (!student) { renderError('Student not found.'); return; }
+
+    // Step 2: Find open pass
+    const passRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/passes?select=*&student_id=eq.${student.id}&time_in=is.null&order=time_out.desc&limit=1`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const passes = await passRes.json();
+    const activePass = passes[0] || null;
+
+    // Step 3: Weekly stats
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
+    weekStart.setHours(0,0,0,0);
+    const statsRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/passes?select=duration_minutes&student_id=eq.${student.id}&time_out=gte.${weekStart.toISOString()}`,
+      { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+    );
+    const weekPasses = await statsRes.json();
+    const weekCount = weekPasses.length;
+    const weekMins = weekPasses.reduce((sum, p) => sum + (p.duration_minutes || 0), 0);
+
+    render({ student, activePass, weekCount, weekMins });
+
+    // Poll for check-in every 15s
+    if (activePass) {
+      setInterval(async () => {
+        const r = await fetch(
+          `${SUPABASE_URL}/rest/v1/passes?select=time_in&student_id=eq.${student.id}&time_in=is.null&limit=1`,
+          { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        const p = await r.json();
+        if (p.length === 0) {
+          if (timerInterval) clearInterval(timerInterval);
+          loadPass(); // reload to show "In Class"
+        }
+      }, 15000);
+    }
+
+  } catch(e) {
+    renderError('Could not load pass data.');
+  }
+}
+
+function render({ student, activePass, weekCount, weekMins }) {
+  const content = document.getElementById('content');
+  const params = new URLSearchParams(window.location.search);
+  const flipboardUrl = `rhs-flipboard-mobile.html?${params.toString()}`;
+
+  if (activePass) {
+    const timeOutStr = fmtTime12(activePass.time_out);
+    const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+    const name = student.full_name.toUpperCase();
+
+    content.innerHTML = `
+      <div class="pass-card" id="passCard">
+        <div class="pass-header">
+          <span class="pass-status-label active">&#9632; Hall Pass · Active</span>
+          <span class="pass-timer-tag" id="timerTag">00:00</span>
+        </div>
+        <div class="pass-name-block">
+          <div class="pass-student-name">${name}</div>
+          <div class="pass-school-line">Riverdale High School · Room 27 · Mr. Joe</div>
+        </div>
+        <div class="pass-details">
+          <div class="pass-detail-item">
+            <div class="pass-detail-label">Destination</div>
+            <div class="pass-detail-value" id="destVal">${activePass.reason || 'Hall Pass'}</div>
+          </div>
+          <div class="pass-detail-item">
+            <div class="pass-detail-label">Time Out</div>
+            <div class="pass-detail-value">${timeOutStr}</div>
+          </div>
+          <div class="pass-detail-item">
+            <div class="pass-detail-label">Date</div>
+            <div class="pass-detail-value">${today}</div>
+          </div>
+          <div class="pass-detail-item">
+            <div class="pass-detail-label">Elapsed</div>
+            <div class="pass-detail-value" id="elapsedVal">00:00</div>
+          </div>
+        </div>
+        <div class="pass-progress-wrap">
+          <div class="pass-progress-header">
+            <span class="pass-progress-label">Time Remaining</span>
+            <span class="pass-progress-remaining" id="remainingText"></span>
+          </div>
+          <div class="pass-progress-bar-bg">
+            <div class="pass-progress-bar-fill" id="progressBar" style="width:100%"></div>
+          </div>
+        </div>
+        <div class="pass-stats">
+          <div class="pass-stat">
+            <span class="pass-stat-num">${weekCount}</span>
+            <span class="pass-stat-label">Passes this week</span>
+          </div>
+          <div class="pass-stat">
+            <span class="pass-stat-num">${weekMins}</span>
+            <span class="pass-stat-label">Total minutes</span>
+          </div>
+        </div>
+        <div class="pass-footer">
+          <span class="pass-scan-hint">Scan badge at kiosk to check in</span>
+          <span class="pass-brand">&#9632; RHS PassAble</span>
+        </div>
+      </div>
+      <div id="scheduleSection"></div>
+      <div class="flipboard-link-wrap">
+        <a class="flipboard-link" href="${flipboardUrl}">&#9662; View Cowboy Wire Board</a>
+      </div>`;
+
+    startTimer(activePass.time_out);
+    setTimeout(() => renderSchedule(), 50);
+
+  } else {
+    const name = student.full_name.toUpperCase();
+    content.innerHTML = `
+      <div class="in-class-card">
+        <div class="pass-header">
+          <span class="pass-status-label in">Pass Status</span>
+          <span class="pass-timer-tag">${name.split(' ')[0]}</span>
+        </div>
+        <div class="in-class-body">
+          <span class="in-class-check">✓</span>
+          <div class="in-class-label">In Class</div>
+          <div class="in-class-name">${name}</div>
+          <div class="in-class-school">Riverdale High School · Room 27 · Mr. Joe</div>
+          <div class="pass-stats" style="border:1px solid var(--border2);border-radius:8px;">
+            <div class="pass-stat">
+              <span class="pass-stat-num">${weekCount}</span>
+              <span class="pass-stat-label">Passes this week</span>
+            </div>
+            <div class="pass-stat">
+              <span class="pass-stat-num">${weekMins}</span>
+              <span class="pass-stat-label">Total minutes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="scheduleSection"></div>
+      <div class="flipboard-link-wrap">
+        <a class="flipboard-link" href="${flipboardUrl}">&#9662; View Cowboy Wire Board</a>
+      </div>`;
+
+    // Render schedule for in-class view
+    setTimeout(() => renderSchedule(), 50);
+  }
+}
+
+function renderError(msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="error-wrap">
+      <div class="error-icon">🤔</div>
+      <div class="error-text">${msg}</div>
+    </div>`;
+}
+
+function startTimer(timeOutISO) {
+  if (timerInterval) clearInterval(timerInterval);
+  function tick() {
+    const elapsed = Math.floor((new Date() - new Date(timeOutISO)) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    const display = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+    const isOver = mins >= PASS_MAX_MINS;
+    const isWarn = mins >= PASS_MAX_MINS * 0.75;
+    const cls = isOver ? 'over' : isWarn ? 'warn' : '';
+    const color = isOver ? '#cc4444' : isWarn ? '#ff9900' : 'var(--green)';
+
+    const tag = document.getElementById('timerTag');
+    const el = document.getElementById('elapsedVal');
+    const bar = document.getElementById('progressBar');
+    const rem = document.getElementById('remainingText');
+
+    if (!tag) { clearInterval(timerInterval); return; }
+
+    tag.textContent = display;
+    tag.style.color = color;
+    if (el) { el.textContent = display; el.className = 'pass-detail-value ' + cls; }
+    if (bar) {
+      const pct = Math.max(0, (1 - elapsed / (PASS_MAX_MINS * 60)) * 100);
+      bar.style.width = pct + '%';
+      bar.style.background = color;
+    }
+    if (rem) {
+      const limitSecs = PASS_MAX_MINS * 60;
+      const r = limitSecs - elapsed;
+      if (r > 0) {
+        const rm = Math.floor(r / 60), rs = r % 60;
+        rem.textContent = String(rm).padStart(2,'0') + ':' + String(rs).padStart(2,'0') + ' remaining';
+        rem.style.color = color;
+      } else {
+        rem.textContent = 'Over time limit';
+        rem.style.color = '#cc4444';
+      }
+    }
+  }
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+updateClock();
+setInterval(updateClock, 10000);
+loadPass();
+</script>
+</body>
+</html>
