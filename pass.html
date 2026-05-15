@@ -386,6 +386,64 @@
   }
   .sched-break .sched-name { color: var(--text-dim); font-weight: normal; }
   .sched-break .sched-time { color: var(--text-dim); }
+
+  /* ── PERIOD TIMER CARD ── */
+  .period-timer-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--green);
+    border-radius: var(--radius);
+    overflow: hidden;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .period-timer-card.warn {
+    border-left-color: #ff9900;
+  }
+  .period-timer-card.over {
+    border-left-color: #cc4444;
+  }
+  .period-timer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .period-timer-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .period-timer-ends {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .period-timer-countdown {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--green);
+    line-height: 1;
+  }
+  .period-timer-countdown.warn { color: #ff9900; }
+  .period-timer-countdown.over { color: #cc4444; }
+  .period-timer-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    text-align: right;
+    margin-top: 2px;
+  }
 </style>
 </head>
 <body>
@@ -406,9 +464,7 @@
 
 <script src="cowboy-wire-core.js"></script>
 <script>
-// Supabase credentials — same as config.js
 const SUPABASE_URL = 'https://lgsfrhibzxjwcudjvfzx.supabase.co';
-// SUPABASE_KEY is loaded from config.js below — keep both for safety
 const PASS_MAX_MINS = 15;
 let timerInterval = null;
 
@@ -416,14 +472,12 @@ function renderSchedule() {
   const section = document.getElementById('scheduleSection');
   if (!section) return;
 
-  // Build period timer
   const timerCard = buildPeriodTimerCard([]);
   if (timerCard) {
     timerCard.style.marginBottom = '10px';
     section.appendChild(timerCard);
   }
 
-  // Build mini schedule card
   const schedKey = detectSchedule([]);
   const schedule = schedKey ? SCHEDULES[schedKey] : null;
   if (!schedule) return;
@@ -461,7 +515,6 @@ function renderSchedule() {
     <div style="padding: 8px 6px;">${rows}</div>`;
   section.appendChild(card);
 
-  // Refresh timer every 5s
   setInterval(() => {
     const existing = section.querySelector('.period-timer-card');
     const newCard = buildPeriodTimerCard([]);
@@ -484,10 +537,7 @@ async function loadPass() {
   const uid = params.get('uid');
   const studentId = params.get('student');
 
-  if (!uid && !studentId) {
-    renderError('No pass ID provided.');
-    return;
-  }
+  if (!uid && !studentId) { renderError('No pass ID provided.'); return; }
 
   try {
     const headers = { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` };
@@ -509,26 +559,32 @@ async function loadPass() {
     const passes = await passRes.json();
     const activePass = Array.isArray(passes) ? passes[0] || null : null;
 
-    // Step 3: Weekly stats — don't let this block render
-    let weekCount = 0, weekMins = 0;
-    try {
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
-      weekStart.setHours(0,0,0,0);
-      const statsRes = await fetch(
-        `${SUPABASE_URL}/rest/v1/passes?select=duration_minutes&student_id=eq.${student.id}&time_out=gte.${weekStart.toISOString()}`,
-        { headers }
-      );
-      const weekPasses = await statsRes.json();
-      if (Array.isArray(weekPasses)) {
-        weekCount = weekPasses.length;
-        weekMins = weekPasses.reduce((sum, p) => sum + (p.duration_minutes || 0), 0);
-      }
-    } catch(e) { /* stats failed silently — still show pass */ }
+    // ── RENDER IMMEDIATELY — stats load in background ──
+    render({ student, activePass, weekCount: '…', weekMins: '…' });
 
-    render({ student, activePass, weekCount, weekMins });
+    // Step 3: Weekly stats — fire and forget, update DOM when ready
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - (weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1));
+    weekStart.setHours(0,0,0,0);
+    fetch(
+      `${SUPABASE_URL}/rest/v1/passes?select=duration_minutes&student_id=eq.${student.id}&time_out=gte.${weekStart.toISOString()}`,
+      { headers }
+    ).then(r => r.json()).then(weekPasses => {
+      if (!Array.isArray(weekPasses)) return;
+      const weekCount = weekPasses.length;
+      const weekMins  = weekPasses.reduce((sum, p) => sum + (p.duration_minutes || 0), 0);
+      // Patch stat numbers in-place — no re-render
+      document.querySelectorAll('.pass-stat-num').forEach((el, i) => {
+        if (i === 0) el.textContent = weekCount;
+        if (i === 1) el.textContent = weekMins;
+      });
+    }).catch(() => {
+      document.querySelectorAll('.pass-stat-num').forEach(el => {
+        if (el.textContent === '…') el.textContent = '—';
+      });
+    });
 
-    // Poll for check-in every 15s
+    // Poll for check-in every 15s when pass is active
     if (activePass) {
       setInterval(async () => {
         try {
@@ -618,6 +674,7 @@ function render({ student, activePass, weekCount, weekMins }) {
         <a class="flipboard-link" href="${flipboardUrl}">&#9662; View Cowboy Wire Board</a>
       </div>`;
 
+    // Timer starts immediately on render — no waiting
     startTimer(activePass.time_out);
     setTimeout(() => renderSchedule(), 50);
 
@@ -651,7 +708,6 @@ function render({ student, activePass, weekCount, weekMins }) {
         <a class="flipboard-link" href="${flipboardUrl}">&#9662; View Cowboy Wire Board</a>
       </div>`;
 
-    // Render schedule for in-class view
     setTimeout(() => renderSchedule(), 50);
   }
 }
@@ -673,11 +729,11 @@ function startTimer(timeOutISO) {
     const display = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
     const isOver = mins >= PASS_MAX_MINS;
     const isWarn = mins >= PASS_MAX_MINS * 0.75;
-    const cls = isOver ? 'over' : isWarn ? 'warn' : '';
+    const cls   = isOver ? 'over' : isWarn ? 'warn' : '';
     const color = isOver ? '#cc4444' : isWarn ? '#ff9900' : 'var(--green)';
 
     const tag = document.getElementById('timerTag');
-    const el = document.getElementById('elapsedVal');
+    const el  = document.getElementById('elapsedVal');
     const bar = document.getElementById('progressBar');
     const rem = document.getElementById('remainingText');
 
@@ -708,13 +764,12 @@ function startTimer(timeOutISO) {
   timerInterval = setInterval(tick, 1000);
 }
 
-// Wait for config.js then start
 function init() {
   updateClock();
   setInterval(updateClock, 10000);
   loadPass();
 }
-// Wait for SUPABASE_KEY from config.js then start
+
 function waitForConfig() {
   if (typeof SUPABASE_KEY !== 'undefined') {
     init();
