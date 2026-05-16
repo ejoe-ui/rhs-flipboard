@@ -43,7 +43,7 @@
     --green-dim:  #d0e8e0;
     --tile-bg:    #e8e4dc;
     --tile-border:#c8c3b8;
-    --tile-text:  #1a1a18;
+    --tile-text:  #005640;
     --board-bg:   #f0ede6;
     --header-bg:  #0d0d0d;
     --flip-mid:   #005640;
@@ -77,7 +77,7 @@
     --green-dim:  #d0e8e0;
     --tile-bg:    #ffffff;
     --tile-border:#ddd8d0;
-    --tile-text:  #1a1a18;
+    --tile-text:  #005640;
     --board-bg:   #f4f2ef;
     --header-bg:  #0d0d0d;
     --flip-mid:   #005640;
@@ -269,16 +269,24 @@
   .ind-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a2a2a; transition: background 0.3s; }
   .ind-dot.active { background: var(--green); }
 
-  /* ══ SOUND TOGGLE ══ */
-  #soundToggleBtn {
-    position: fixed; bottom: 44px; right: 20px;
-    background: #111; border: 1px solid #333; color: #555;
-    font-family: var(--font-retro);
-    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 5px 12px; border-radius: 3px; cursor: pointer;
-    z-index: 51; transition: all 0.2s; opacity: 0;
+  /* ══ SOUND TOGGLE (inside dial panel) ══ */
+  .dial-sound-row {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding-top: 10px;
+    border-top: 1px solid #1e1e1e; gap: 8px;
   }
-  #soundToggleBtn:hover { opacity: 1 !important; }
+  .dial-sound-label {
+    font-family: var(--font-retro); font-size: 8px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #444;
+  }
+  #soundToggleBtn {
+    background: #1a1a1a; border: 1px solid #2a2a2a; color: #555;
+    font-family: var(--font-retro);
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 3px; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  #soundToggleBtn:hover { border-color: var(--green); color: var(--green); }
 
   /* ══ SOUND PROMPT ══ */
   #sound-prompt {
@@ -447,9 +455,6 @@
 <!-- ══ SOUND PROMPT ══ -->
 <div id="sound-prompt" onclick="enableSound(this)">▶ Click to enable flip sound</div>
 
-<!-- ══ SOUND TOGGLE ══ -->
-<button id="soundToggleBtn" onclick="cycleSoundProfile()">🔊 CLASSIC</button>
-
 <!-- ══ MODE DIAL ══ -->
 <div id="dial-hint" onclick="toggleDial()">◎ MODE</div>
 <div id="dial-trigger" onclick="toggleDial()"></div>
@@ -464,6 +469,10 @@
     </div>
   </div>
   <div class="dial-positions" id="dialPositions"></div>
+  <div class="dial-sound-row">
+    <span class="dial-sound-label">Sound</span>
+    <button id="soundToggleBtn" onclick="cycleSoundProfile()">🔊 CLASSIC</button>
+  </div>
 </div>
 
 <!-- ══ SCRIPTS ══ -->
