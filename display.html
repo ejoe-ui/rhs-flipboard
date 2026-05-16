@@ -966,7 +966,7 @@ async function initHonorRoll() {
 /* ════════════════════════════════════════════════════════
    SOUND ENGINE
 ════════════════════════════════════════════════════════ */
-const SOUND_PROFILES = ['OFF','CLASSIC','CLACK','DIGITAL'];
+const SOUND_PROFILES = ['OFF','CLASSIC','JADE','DIGITAL'];
 let soundIdx  = 1;
 let audioCtx  = null;
 
@@ -1001,7 +1001,7 @@ function cycleSoundProfile() {
 function updateSoundBtn() {
   const btn = document.getElementById('soundToggleBtn');
   if (!btn) return;
-  const labels = { OFF:'🔇 OFF', CLASSIC:'🔊 CLASSIC', CLACK:'⌨️ CLACK', DIGITAL:'💾 DIGITAL' };
+  const labels = { OFF:'🔇 OFF', CLASSIC:'🔊 CLASSIC', JADE:'⌨️ JADE CRISP', DIGITAL:'💾 DIGITAL' };
   btn.textContent = labels[SOUND_PROFILES[soundIdx]];
   btn.style.opacity = soundIdx === 0 ? '0.4' : '0.8';
   btn.style.borderColor = soundIdx === 0 ? '#333' : 'var(--green)';
@@ -1026,24 +1026,52 @@ function playClassicSound(n) {
   for(let i=0;i<clicks;i++) playClassicClick(ctx, now+(i/clicks)*2.8, 0.08+Math.sin(i/clicks*Math.PI)*0.14);
 }
 
-function playPop(ctx,time,vol) {
-  const buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.04),ctx.sampleRate);
-  const d=buf.getChannelData(0);
-  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,4);
-  const src=ctx.createBufferSource(); src.buffer=buf;
-  const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=700+Math.random()*300; bp.Q.value=0.8;
-  const g=ctx.createGain(); g.gain.value=vol||0.25;
-  src.connect(bp); bp.connect(g); g.connect(ctx.destination); src.start(time);
-}
-function playClackSound(n) {
-  const ctx=getAudioCtx(); if(!ctx)return;
-  const now=ctx.currentTime, total=2.8;
-  const pops=Math.min(Math.max(Math.floor(n*0.6),6),28);
-  const times=Array.from({length:pops},()=>{const u=Math.random(),v=Math.random();return 0.1+((u+v)/2)*0.8;}).sort((a,b)=>a-b);
-  times.forEach(t=>{
-    const d=Math.abs(t-0.55);
-    playPop(ctx, now+Math.max(0,t*total+(Math.random()-0.5)*0.06), Math.max(0.08,0.15+(0.2-d*0.3)));
-  });
+function playJadeCrisp(n) {
+  // Jade Crisp — Kailh Box Jade tuned
+  // Settings: Chirp Freq 1800, Decay 0.015, Cleanliness 2.8, Vol 26%
+  const ctx = getAudioCtx(); if (!ctx) return;
+  const now    = ctx.currentTime;
+  const freq   = 1800;
+  const decay  = 0.015;
+  const clean  = 2.8;
+  const vol    = 0.26;
+  const spread = Math.min(n * 0.008, 1.8);
+  const count  = Math.min(Math.max(Math.floor(n * 0.6), 4), 60);
+
+  for (let i = 0; i < count; i++) {
+    const jitter = (Math.random() - 0.5) * 0.04;
+    const t      = now + (i / count) * spread + Math.max(0, jitter);
+    const v      = vol * (0.75 + Math.random() * 0.25);
+
+    // Primary chirp — instant attack, fast decay
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.45, t + decay);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(v, t + 0.0003);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + decay * 1.5);
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = clean;
+    osc.connect(f); f.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + decay * 2);
+
+    // Reset click — fast and clean
+    const rt   = t + decay * 2.5;
+    const osc2 = ctx.createOscillator();
+    const g2   = ctx.createGain();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(freq * 0.55, rt);
+    osc2.frequency.exponentialRampToValueAtTime(freq * 0.2, rt + decay);
+    g2.gain.setValueAtTime(0, rt);
+    g2.gain.linearRampToValueAtTime(v * 0.45, rt + 0.0003);
+    g2.gain.exponentialRampToValueAtTime(0.001, rt + decay);
+    const f2 = ctx.createBiquadFilter();
+    f2.type = 'bandpass'; f2.frequency.value = freq * 0.55; f2.Q.value = clean * 0.8;
+    osc2.connect(f2); f2.connect(g2); g2.connect(ctx.destination);
+    osc2.start(rt); osc2.stop(rt + decay * 1.5);
+  }
 }
 
 function playDigitalBeep(ctx,time,vol,freq) {
@@ -1070,7 +1098,7 @@ function playFlipSound(n) {
   const ctx=getAudioCtx(); if(!ctx) return;
   if (ctx.state==='suspended') { ctx.resume(); return; }
   if (profile==='CLASSIC') playClassicSound(n);
-  if (profile==='CLACK')   playClackSound(n);
+  if (profile==='JADE')    playJadeCrisp(n);
   if (profile==='DIGITAL') playDigitalSound(n);
 }
 
