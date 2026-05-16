@@ -1,122 +1,230 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Room 27 · Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=League+Spartan:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Bebas+Neue&display=swap');
-
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --green: #006938;
-    --green-dark: #004d28;
-    --green-light: #e8f3ed;
-    --tan: #C4BEB5;
-    --bg: #f4f2ef;
-    --surface: #ffffff;
-    --surface2: #f9f8f6;
-    --border: #e2ddd8;
-    --border-strong: #c8c3bc;
-    --text: #1a1a18;
-    --text-mid: #5a5a55;
-    --text-dim: #9a9890;
-    --mono: 'DM Mono', 'Courier New', monospace;
-    --display: 'Bebas Neue', sans-serif;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body:    'League Spartan', -apple-system, sans-serif;
+    --font-mono:    'DM Mono', 'Courier New', monospace;
   }
 
-  html, body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
+  /* ══ LIGHT MODE ══ */
+  [data-theme="light"] {
+    --green:        #005640;
+    --green-dark:   #003d2e;
+    --green-light:  #e6f0ed;
+    --tan:          #C4BEB5;
+    --bg:           #f4f2ef;
+    --surface:      #ffffff;
+    --surface2:     #f9f8f6;
+    --border:       #e2ddd8;
+    --text:         #1a1a18;
+    --text-mid:     #5a5a55;
+    --text-dim:     #9a9890;
+    --header-bg:    #0d0d0d;
+    --header-text:  #f0ebe0;
+    --shadow:       rgba(0,0,0,0.08);
+    --toggle-bg:    #1a1a1a;
+    --toggle-text:  #f0ebe0;
+  }
 
+  /* ══ DARK MODE ══ */
+  [data-theme="dark"] {
+    --green:        #00a86b;
+    --green-dark:   #007a4d;
+    --green-light:  #002a1a;
+    --tan:          #C4BEB5;
+    --bg:           #0a0a0a;
+    --surface:      #111111;
+    --surface2:     #181818;
+    --border:       #2a2a2a;
+    --text:         #f0ebe0;
+    --text-mid:     #888880;
+    --text-dim:     #444440;
+    --header-bg:    #050505;
+    --header-text:  #f0ebe0;
+    --shadow:       rgba(0,0,0,0.4);
+    --toggle-bg:    #f0ebe0;
+    --toggle-text:  #1a1a18;
+  }
+
+  html { background: var(--bg); min-height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--font-body); min-height: 100vh;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  /* ══ HEADER ══ */
   header {
-    background: #0d0d0d;
-    padding: 24px 40px 22px;
-    display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+    background: var(--header-bg);
+    padding: 20px 40px 18px;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 20px;
     border-bottom: 4px solid var(--green);
+    transition: background 0.2s, border-color 0.2s;
   }
-  .header-left { display: flex; flex-direction: column; gap: 2px; }
-  .header-eyebrow { font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--green); }
-  .header-title { font-family: var(--display); font-size: clamp(40px,5vw,68px); letter-spacing: 0.03em; color: #f0ebe0; line-height: 0.9; }
+  .header-left   { display: flex; flex-direction: column; gap: 2px; }
+  .header-eyebrow {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.35em; text-transform: uppercase; color: var(--green);
+  }
+  .header-title {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: clamp(40px,5vw,68px); letter-spacing: 0.03em;
+    color: var(--header-text); line-height: 0.9;
+  }
   .header-title span { color: var(--green); }
-  .header-sub { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #666; margin-top: 5px; }
-  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .live-pill { display: flex; align-items: center; gap: 6px; background: rgba(0,105,56,0.2); border: 1px solid var(--green); border-radius: 20px; padding: 4px 12px; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #4dbb80; }
+  .header-sub {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: #666; margin-top: 5px;
+  }
+  .header-right  { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .header-info   { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+  #themeToggle {
+    background: var(--toggle-bg); color: var(--toggle-text);
+    border: none; border-radius: 6px;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 7px 13px; cursor: pointer;
+    transition: opacity 0.15s; white-space: nowrap;
+  }
+  #themeToggle:hover { opacity: 0.8; }
+
+  .live-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,86,64,0.2); border: 1px solid var(--green);
+    border-radius: 20px; padding: 4px 12px;
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: #4dbb80;
+  }
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #4dbb80; animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  #header-clock { font-family: var(--display); font-size: 32px; letter-spacing: 0.06em; color: #f0ebe0; }
 
-  main { padding: 32px 40px; display: flex; flex-direction: column; gap: 36px; max-width: 1400px; margin: 0 auto; }
+  #header-clock {
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 32px; letter-spacing: 0.06em; color: var(--header-text);
+  }
 
-  .section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-  .section-pip { width: 12px; height: 12px; border-radius: 2px; background: var(--green); flex-shrink: 0; }
-  .section-pip.dark { background: #1a1a1a; }
-  .section-title { font-family: var(--display); font-size: 30px; letter-spacing: 0.04em; color: var(--text); }
-  .section-sub { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
-  .section-rule { flex: 1; height: 1px; background: var(--border); }
+  .accent-bar {
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
+  }
 
+  /* ══ MAIN ══ */
+  main {
+    padding: 32px 40px;
+    display: flex; flex-direction: column; gap: 36px;
+    max-width: 1400px; margin: 0 auto;
+  }
+
+  /* ══ SECTION ══ */
+  .section-head  { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .section-pip   { width: 12px; height: 12px; border-radius: 2px; background: var(--green); flex-shrink: 0; }
+  .section-pip.muted { background: var(--text-dim); }
+  .section-wrap  { display: flex; flex-direction: column; gap: 1px; }
+  .section-title {
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 28px; letter-spacing: 0.04em;
+    color: var(--text); text-transform: uppercase;
+  }
+  .section-sub   {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .section-rule  { flex: 1; height: 1px; background: var(--border); }
+
+  /* ══ CARDS ══ */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
 
   .link-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px 14px;
     text-decoration: none;
     display: flex; flex-direction: column; gap: 10px;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-    position: relative;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s, background 0.2s;
   }
-  .link-card:hover { border-color: var(--card-accent, var(--green)); box-shadow: 0 4px 20px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .link-card:hover {
+    border-color: var(--card-accent, var(--green));
+    box-shadow: 0 4px 20px var(--shadow);
+    transform: translateY(-2px);
+  }
 
-  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .card-top  { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
   .card-icon { font-size: 22px; line-height: 1; }
 
   .card-badge {
-    font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-family: var(--font-mono); font-size: 8px;
+    letter-spacing: 0.14em; text-transform: uppercase;
     padding: 3px 8px; border-radius: 4px; white-space: nowrap; font-weight: 500;
-    background: var(--badge-bg); color: var(--badge-color); border: 1px solid var(--badge-border);
   }
 
-  .card-name { font-size: 15px; font-weight: 500; letter-spacing: 0.02em; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .card-name {
+    font-family: var(--font-body); font-size: 15px; font-weight: 700;
+    letter-spacing: 0.01em; color: var(--text);
+    display: flex; align-items: center; gap: 6px;
+  }
   .open-arrow { font-size: 12px; color: var(--text-dim); transition: color 0.15s, transform 0.15s; }
   .link-card:hover .open-arrow { color: var(--card-accent, var(--green)); transform: translate(2px,-2px); }
 
-  .card-desc { font-size: 11px; color: var(--text-mid); letter-spacing: 0.02em; line-height: 1.65; }
+  .card-desc {
+    font-family: var(--font-body); font-size: 12px;
+    color: var(--text-mid); line-height: 1.65;
+  }
 
   .card-url-row {
     display: flex; align-items: center; gap: 6px;
     padding-top: 10px; border-top: 1px solid var(--border);
   }
-  .card-url-text { font-size: 9px; color: var(--text-dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-url-text {
+    font-family: var(--font-mono); font-size: 9px; color: var(--text-dim);
+    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
 
   .url-btn {
     flex-shrink: 0;
     background: var(--surface2); border: 1px solid var(--border);
     border-radius: 4px; padding: 4px 10px;
-    font-family: var(--mono); font-size: 9px; font-weight: 500;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
     letter-spacing: 0.1em; color: var(--text-mid);
     cursor: pointer; text-transform: uppercase; transition: all 0.15s;
   }
-  .url-btn:hover { border-color: var(--card-accent, var(--green)); color: var(--card-accent, var(--green)); background: var(--surface); }
+  .url-btn:hover { border-color: var(--card-accent, var(--green)); color: var(--card-accent, var(--green)); }
   .url-btn.copied { border-color: var(--green); color: var(--green); background: var(--green-light); }
 
   .qr-panel { display: none; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
   .qr-panel.open { display: flex; }
-  .qr-label { font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
+  .qr-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
 
+  /* ══ FOOTER ══ */
   footer {
-    background: #0d0d0d; border-top: 3px solid var(--green);
-    padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    background: var(--header-bg); border-top: 3px solid var(--green);
+    padding: 16px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 20px;
+    transition: background 0.2s;
   }
-  .footer-text { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #555; }
+  .footer-text { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #555; }
   .footer-text span { color: var(--green); }
 
-  @media (max-width: 600px) {
-    header { padding: 18px 20px; flex-direction: column; align-items: flex-start; }
-    main { padding: 20px; gap: 28px; }
-    footer { padding: 14px 20px; flex-direction: column; }
+  /* ══ RESPONSIVE ══ */
+  @media (max-width: 700px) {
+    header { padding: 16px; flex-wrap: wrap; }
+    main   { padding: 20px 16px; gap: 28px; }
+    footer { padding: 14px 16px; flex-direction: column; }
     .card-grid { grid-template-columns: 1fr; }
     .section-rule { display: none; }
+    #header-clock { font-size: 24px; }
+    .header-title { font-size: clamp(32px,8vw,52px); }
   }
 </style>
 </head>
@@ -129,16 +237,23 @@
     <div class="header-sub">Mr. Joe · Command Center · CTE / ROP</div>
   </div>
   <div class="header-right">
-    <div class="live-pill"><div class="live-dot"></div> Live System</div>
-    <div id="header-clock">--:-- --</div>
+    <button id="themeToggle" onclick="toggleTheme()">🌙 Dark</button>
+    <div class="header-info">
+      <div class="live-pill"><div class="live-dot"></div> Live System</div>
+      <div id="header-clock">--:-- --</div>
+    </div>
   </div>
 </header>
+<div class="accent-bar"></div>
 
 <main>
   <div>
     <div class="section-head">
       <div class="section-pip"></div>
-      <div><div class="section-title">Cowboy Wire</div><div class="section-sub">Flip Board Display System</div></div>
+      <div class="section-wrap">
+        <div class="section-title">Cowboy Wire</div>
+        <div class="section-sub">Flip Board Display System</div>
+      </div>
       <div class="section-rule"></div>
     </div>
     <div class="card-grid" id="cowboy-grid"></div>
@@ -146,8 +261,11 @@
 
   <div>
     <div class="section-head">
-      <div class="section-pip dark"></div>
-      <div><div class="section-title">PassAble</div><div class="section-sub">Hall Pass System</div></div>
+      <div class="section-pip muted"></div>
+      <div class="section-wrap">
+        <div class="section-title">PassAble</div>
+        <div class="section-sub">Hall Pass System</div>
+      </div>
       <div class="section-rule"></div>
     </div>
     <div class="card-grid" id="passable-grid"></div>
@@ -160,72 +278,121 @@
 </footer>
 
 <script>
+/* ════ THEME ════ */
+(function() {
+  const saved = localStorage.getItem('cw-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateToggleLabel(saved);
+})();
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next    = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('cw-theme', next);
+  updateToggleLabel(next);
+  renderCards();
+}
+
+function updateToggleLabel(theme) {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
+
+/* ════ DATA ════ */
 const COWBOY = [
   {
-    icon: '📺', name: 'TV Display',
-    desc: 'Unified flip board for the classroom TV. Reads screens and live data directly from Supabase — no Google Sheets needed.',
-    url: 'https://ejoe-ui.github.io/rhs-flipboard/display.html',
-    badge: 'TV · Live', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+    icon:'📺', name:'TV Display',
+    desc:'Unified flip board for the classroom TV. Reads screens and live data directly from Supabase — no Google Sheets needed.',
+    url:'https://ejoe-ui.github.io/rhs-flipboard/display.html',
+    badge:'TV · Live',
+    light:{ bg:'#e6f0ed', fg:'#005640', br:'#b8d8ce', ac:'#005640' },
+    dark: { bg:'#002a1a', fg:'#00a86b', br:'#00562a', ac:'#00a86b' },
   },
   {
-    icon: '📱', name: 'Mobile Page',
-    desc: 'Student-facing view. Schedule, weather, menu, countdowns, birthdays, board messages, and PassAble integration.',
-    url: 'https://ejoe-ui.github.io/rhs-flipboard/mobile.html',
-    badge: 'Student · Mobile', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+    icon:'📱', name:'Mobile Page',
+    desc:'Student-facing view. Schedule, weather, menu, countdowns, birthdays, board messages, and PassAble integration.',
+    url:'https://ejoe-ui.github.io/rhs-flipboard/mobile.html',
+    badge:'Student · Mobile',
+    light:{ bg:'#e6f0ed', fg:'#005640', br:'#b8d8ce', ac:'#005640' },
+    dark: { bg:'#002a1a', fg:'#00a86b', br:'#00562a', ac:'#00a86b' },
   },
   {
-    icon: '⚙️', name: 'Admin Panel',
-    desc: 'Teacher dashboard. Approve posts, manage slides, add birthdays, post direct messages, upload honor roll, add countdowns.',
-    url: 'https://ejoe-ui.github.io/rhs-flipboard/admin.html',
-    badge: 'Teacher Only', bg: '#fdf8e8', fg: '#7a5a00', br: '#ddc870', accent: '#7a5a00',
+    icon:'⚙️', name:'Admin Panel',
+    desc:'Teacher dashboard. Approve posts, manage slides, add birthdays, post direct messages, upload honor roll, add countdowns.',
+    url:'https://ejoe-ui.github.io/rhs-flipboard/admin.html',
+    badge:'Teacher Only',
+    light:{ bg:'#fdf8e8', fg:'#7a5a00', br:'#ddc870', ac:'#7a5a00' },
+    dark: { bg:'#1a1400', fg:'#ccaa00', br:'#7a6200', ac:'#ccaa00' },
   },
   {
-    icon: '🪪', name: 'Pass Page',
-    desc: 'Student pass status page. Shows active pass timer, elapsed time, destination, and weekly stats. Opens via NFC badge scan.',
-    url: 'https://ejoe-ui.github.io/rhs-flipboard/pass.html',
-    badge: 'Student · PassAble', bg: '#e8f0f8', fg: '#1a5a8a', br: '#a8c8e0', accent: '#1a5a8a',
+    icon:'🪪', name:'Pass Page',
+    desc:'Student pass status page. Shows active pass timer, elapsed time, destination, and weekly stats. Opens via NFC badge scan.',
+    url:'https://ejoe-ui.github.io/rhs-flipboard/pass.html',
+    badge:'Student · PassAble',
+    light:{ bg:'#e8f0f8', fg:'#1a5a8a', br:'#a8c8e0', ac:'#1a5a8a' },
+    dark: { bg:'#001a2a', fg:'#4da8e0', br:'#1a5a8a', ac:'#4da8e0' },
   },
 ];
 
 const PASSABLE = [
   {
-    icon: '🎓', name: 'Teacher Dashboard',
-    desc: 'Issue passes, view students out, return passes, and manage your class.',
-    url: 'https://hall-pass-lime.vercel.app/teacher',
-    badge: 'Teacher', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+    icon:'🎓', name:'Teacher Dashboard',
+    desc:'Issue passes, view students out, return passes, and manage your class.',
+    url:'https://hall-pass-lime.vercel.app/teacher',
+    badge:'Teacher',
+    light:{ bg:'#e6f0ed', fg:'#005640', br:'#b8d8ce', ac:'#005640' },
+    dark: { bg:'#002a1a', fg:'#00a86b', br:'#00562a', ac:'#00a86b' },
   },
   {
-    icon: '🪪', name: 'Student Kiosk',
-    desc: 'Self-checkout kiosk mode. Students scan their badge to check themselves out.',
-    url: 'https://hall-pass-lime.vercel.app/kiosk',
-    badge: 'Kiosk · Student', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+    icon:'🪪', name:'Student Kiosk',
+    desc:'Self-checkout kiosk mode. Students scan their badge to check themselves out.',
+    url:'https://hall-pass-lime.vercel.app/kiosk',
+    badge:'Kiosk · Student',
+    light:{ bg:'#e6f0ed', fg:'#005640', br:'#b8d8ce', ac:'#005640' },
+    dark: { bg:'#002a1a', fg:'#00a86b', br:'#00562a', ac:'#00a86b' },
   },
   {
-    icon: '⚙️', name: 'Admin Panel',
-    desc: 'Manage teachers, students, conflict groups, pass log, and do-not-let-out list. All admin functions in one place.',
-    url: 'https://hall-pass-lime.vercel.app/admin',
-    badge: 'Teacher Only', bg: '#fdf8e8', fg: '#7a5a00', br: '#ddc870', accent: '#7a5a00',
+    icon:'⚙️', name:'Admin Panel',
+    desc:'Manage teachers, students, conflict groups, pass log, and do-not-let-out list. All admin functions in one place.',
+    url:'https://hall-pass-lime.vercel.app/admin',
+    badge:'Teacher Only',
+    light:{ bg:'#fdf8e8', fg:'#7a5a00', br:'#ddc870', ac:'#7a5a00' },
+    dark: { bg:'#1a1400', fg:'#ccaa00', br:'#7a6200', ac:'#ccaa00' },
   },
   {
-    icon: '📋', name: 'Pass Log',
-    desc: 'Full history of all passes — filter by student, date, period, or reason.',
-    url: 'https://hall-pass-lime.vercel.app/log',
-    badge: 'Teacher', bg: '#e8f0f8', fg: '#1a4a6a', br: '#a8c8de', accent: '#1a4a6a',
+    icon:'📋', name:'Pass Log',
+    desc:'Full history of all passes — filter by student, date, period, or reason.',
+    url:'https://hall-pass-lime.vercel.app/log',
+    badge:'Teacher',
+    light:{ bg:'#e8f0f8', fg:'#1a4a6a', br:'#a8c8de', ac:'#1a4a6a' },
+    dark: { bg:'#001a2a', fg:'#4da8e0', br:'#1a5a8a', ac:'#4da8e0' },
   },
 ];
 
+/* ════ RENDER ════ */
 let qc = 0;
 
-function buildCard(p) {
-  const a = document.createElement('a');
-  a.href = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+function renderCards() {
+  const th = document.documentElement.getAttribute('data-theme') || 'light';
+  const cg = document.getElementById('cowboy-grid');
+  const pg = document.getElementById('passable-grid');
+  cg.innerHTML = ''; pg.innerHTML = '';
+  COWBOY.forEach(p   => cg.appendChild(buildCard(p, th)));
+  PASSABLE.forEach(p => pg.appendChild(buildCard(p, th)));
+}
+
+function buildCard(p, th) {
+  const c  = p[th] || p.light;
+  const a  = document.createElement('a');
+  a.href   = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
   a.className = 'link-card';
-  a.style.setProperty('--card-accent', p.accent);
+  a.style.setProperty('--card-accent', c.ac);
   const id = 'qr-' + (++qc);
   a.innerHTML = `
     <div class="card-top">
       <div class="card-icon">${p.icon}</div>
-      <span class="card-badge" style="background:${p.bg};color:${p.fg};border-color:${p.br}">${p.badge}</span>
+      <span class="card-badge" style="background:${c.bg};color:${c.fg};border:1px solid ${c.br}">${p.badge}</span>
     </div>
     <div>
       <div class="card-name">${p.name} <span class="open-arrow">↗</span></div>
@@ -243,6 +410,7 @@ function buildCard(p) {
   return a;
 }
 
+/* ════ QR + COPY ════ */
 function toggleQR(e, id, url) {
   e.preventDefault(); e.stopPropagation();
   const panel  = document.getElementById(id);
@@ -250,8 +418,8 @@ function toggleQR(e, id, url) {
   panel.classList.toggle('open');
   if (panel.classList.contains('open') && canvas && !canvas.hasChildNodes()) {
     const img = document.createElement('img');
-    img.src    = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
-    img.width  = 160; img.height = 160;
+    img.src   = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
+    img.width = 160; img.height = 160;
     img.style.borderRadius = '4px';
     canvas.appendChild(img);
   }
@@ -265,16 +433,17 @@ function copyUrl(e, btn, url) {
   });
 }
 
-document.getElementById('cowboy-grid').append(...COWBOY.map(buildCard));
-document.getElementById('passable-grid').append(...PASSABLE.map(buildCard));
-
+/* ════ CLOCK ════ */
 function tick() {
   const now = new Date(); let h = now.getHours();
-  const m = now.getMinutes().toString().padStart(2,'0');
-  const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+  const m   = now.getMinutes().toString().padStart(2,'0');
+  const ap  = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
   document.getElementById('header-clock').textContent = `${h}:${m} ${ap}`;
 }
-tick(); setInterval(tick, 10000);
+
+renderCards();
+tick();
+setInterval(tick, 10000);
 </script>
 </body>
 </html>
