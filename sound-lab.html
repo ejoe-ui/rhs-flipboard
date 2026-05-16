@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cowboy Wire · Sound Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --green:   #005640;
+  --green-b: #00a86b;
+  --tan:     #C4BEB5;
+  --bg:      #0a0a0a;
+  --surface: #111;
+  --border:  #1e1e1e;
+  --text:    #f0ebe0;
+  --dim:     #444;
+  --mono:    'DM Mono', monospace;
+  --display: 'Barlow Condensed', sans-serif;
+}
+
+html, body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; }
+
+/* ── HEADER ── */
+header {
+  background: #050505;
+  border-bottom: 3px solid var(--green);
+  padding: 20px 40px 16px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+}
+.h-eyebrow { font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+.h-title   { font-family: var(--display); font-weight: 800; font-size: 42px; letter-spacing: 0.04em; color: var(--text); line-height: 1; }
+.h-title span { color: var(--green); }
+.h-sub     { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; margin-top: 4px; }
+.h-badge   { background: var(--green); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; padding: 5px 12px; border-radius: 3px; }
+
+.accent-bar { height: 2px; background: linear-gradient(90deg, #003d2e, var(--green), var(--tan), var(--green), #003d2e); }
+
+/* ── MAIN LAYOUT ── */
+main { padding: 32px 40px; max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 12px;
+}
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── SWITCH CARDS ── */
+.switch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.switch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.08s;
+  position: relative;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.switch-card:hover   { border-color: #2a2a2a; }
+.switch-card:active  { transform: scale(0.98); }
+.switch-card.active  { border-color: var(--green); }
+.switch-card.firing  { border-color: var(--green-b); }
+
+.switch-name {
+  font-family: var(--display); font-weight: 800;
+  font-size: 22px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text); margin-bottom: 2px;
+}
+.switch-type {
+  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--green); margin-bottom: 10px;
+}
+.switch-desc {
+  font-size: 11px; line-height: 1.7; color: #666;
+  letter-spacing: 0.02em;
+}
+.switch-specs {
+  margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;
+}
+.spec-pill {
+  font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+  background: #1a1a1a; border: 1px solid #222;
+  color: #555; padding: 3px 8px; border-radius: 3px;
+}
+.switch-card.active .spec-pill { border-color: #1e3028; color: var(--green); background: #0a1e16; }
+
+.select-indicator {
+  position: absolute; top: 14px; right: 14px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #1a1a1a; border: 1px solid #2a2a2a;
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.switch-card.active .select-indicator {
+  background: var(--green); border-color: var(--green);
+  box-shadow: 0 0 6px rgba(0,86,64,0.5);
+}
+
+/* ── TEST PANEL ── */
+.test-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.test-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+
+.test-current {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.test-current-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+.test-current-name  { font-family: var(--display); font-weight: 800; font-size: 24px; letter-spacing: 0.06em; color: var(--text); }
+
+/* waveform display */
+.waveform-wrap {
+  flex: 1; height: 48px; background: #0a0a0a;
+  border: 1px solid #1a1a1a; border-radius: 6px;
+  overflow: hidden; position: relative;
+}
+canvas#waveCanvas { width: 100%; height: 100%; display: block; }
+
+/* trigger button */
+.trigger-btn {
+  background: var(--green); color: #fff;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  border: none; border-radius: 6px;
+  padding: 12px 24px; cursor: pointer;
+  transition: background 0.1s, transform 0.06s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.trigger-btn:active { background: #003d2e; transform: scale(0.97); }
+
+/* parameters */
+.params-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+
+.param-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 100px; }
+.param-label {
+  font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.param-label span { color: var(--green); font-size: 10px; }
+.param-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px; background: #1a1a1a;
+  border-radius: 2px; outline: none; cursor: pointer;
+}
+.param-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--green); cursor: pointer;
+  border: 2px solid #111;
+  transition: transform 0.1s;
+}
+.param-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* volume / tile count */
+.vol-row { display: flex; gap: 12px; align-items: center; }
+.vol-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+/* fire buttons row */
+.fire-row { display: flex; gap: 8px; }
+.fire-btn {
+  flex: 1; background: #1a1a1a; border: 1px solid #222;
+  color: #666; font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 9px 0; border-radius: 6px; cursor: pointer;
+  transition: all 0.15s;
+}
+.fire-btn:hover { border-color: var(--green); color: var(--green); }
+.fire-btn:active { transform: scale(0.97); }
+
+/* compare row */
+.compare-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.compare-btn {
+  background: #111; border: 1px solid #1e1e1e;
+  color: #555; font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 4px; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.compare-btn:hover  { border-color: #333; color: #888; }
+.compare-btn:active { transform: scale(0.97); }
+.compare-btn.playing { border-color: var(--green); color: var(--green); }
+
+/* ── COMMIT PANEL ── */
+.commit-panel {
+  background: #0d1a14; border: 1px solid #1a3028;
+  border-radius: 10px; padding: 20px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+}
+.commit-text { font-size: 12px; color: #558870; line-height: 1.6; letter-spacing: 0.02em; }
+.commit-text strong { color: var(--green-b); }
+.commit-btn {
+  background: var(--green); color: #fff;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  border: none; border-radius: 6px; padding: 12px 20px;
+  cursor: pointer; transition: background 0.15s; white-space: nowrap; flex-shrink: 0;
+}
+.commit-btn:hover { background: #003d2e; }
+
+/* ── FOOTER ── */
+footer {
+  background: #050505; border-top: 2px solid var(--green);
+  padding: 14px 40px; text-align: center;
+  font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #333;
+}
+footer span { color: var(--green); }
+
+@media (max-width: 600px) {
+  header { padding: 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+  main { padding: 20px 16px; }
+  .switch-grid { grid-template-columns: 1fr; }
+  .params-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="h-eyebrow">Cowboy Wire</div>
+    <div class="h-title">SOUND <span>LAB</span></div>
+    <div class="h-sub">Mechanical Switch Profiles · Audition Before Commit</div>
+  </div>
+  <div class="h-badge">Test Environment</div>
+</header>
+<div class="accent-bar"></div>
+
+<main>
+
+  <!-- Switch selector -->
+  <div>
+    <div class="section-label">Select Switch Profile</div>
+    <div class="switch-grid" id="switchGrid"></div>
+  </div>
+
+  <!-- Test panel -->
+  <div>
+    <div class="section-label">Audition Panel</div>
+    <div class="test-panel">
+
+      <div class="test-top">
+        <div class="test-current">
+          <div class="test-current-label">Active Profile</div>
+          <div class="test-current-name" id="currentName">—</div>
+        </div>
+        <div class="waveform-wrap">
+          <canvas id="waveCanvas"></canvas>
+        </div>
+        <button class="trigger-btn" onclick="fireCurrent(20)">▶ FIRE</button>
+      </div>
+
+      <!-- Tile count simulation -->
+      <div class="fire-row">
+        <button class="fire-btn" onclick="fireCurrent(1)">1 tile</button>
+        <button class="fire-btn" onclick="fireCurrent(4)">4 tiles</button>
+        <button class="fire-btn" onclick="fireCurrent(12)">12 tiles</button>
+        <button class="fire-btn" onclick="fireCurrent(28)">28 tiles (full row)</button>
+        <button class="fire-btn" onclick="fireCurrent(196)">196 tiles (full board)</button>
+      </div>
+
+      <!-- Parameters -->
+      <div class="params-row" id="paramsRow"></div>
+
+    </div>
+  </div>
+
+  <!-- Quick compare -->
+  <div>
+    <div class="section-label">Quick Compare — All Profiles</div>
+    <div class="compare-row" id="compareRow"></div>
+  </div>
+
+  <!-- Commit -->
+  <div class="commit-panel">
+    <div class="commit-text">
+      Found your sound? Copy the profile name and paste it into the display page.<br>
+      <strong id="commitName">No profile selected</strong>
+    </div>
+    <button class="commit-btn" onclick="copyCommit()">Copy Profile Name</button>
+  </div>
+
+</main>
+
+<footer>Cowboy Wire · <span>Sound Lab</span> · Room 27 · Riverdale High School</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   AUDIO ENGINE
+═══════════════════════════════════════════ */
+let audioCtx = null;
+
+function getCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+/* ── Waveform visualizer ── */
+let waveData = new Float32Array(120).fill(0);
+let waveAnim = null;
+
+function pushWave(amp) {
+  waveData = new Float32Array(120).fill(0);
+  const peak = Math.min(amp * 0.9, 0.95);
+  for (let i = 0; i < 20; i++) {
+    const t = i / 20;
+    waveData[i] = peak * Math.sin(t * Math.PI) * (1 - t * 0.3);
+  }
+  drawWave();
+  setTimeout(() => { waveData = new Float32Array(120).fill(0); drawWave(); }, 300);
+}
+
+function drawWave() {
+  const canvas = document.getElementById('waveCanvas');
+  if (!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  const W = canvas.width = canvas.offsetWidth * devicePixelRatio;
+  const H = canvas.height = canvas.offsetHeight * devicePixelRatio;
+  ctx2.clearRect(0, 0, W, H);
+  ctx2.strokeStyle = '#005640';
+  ctx2.lineWidth = 1.5 * devicePixelRatio;
+  ctx2.beginPath();
+  for (let i = 0; i < waveData.length; i++) {
+    const x = (i / waveData.length) * W;
+    const y = H / 2 - waveData[i] * (H / 2 - 4);
+    i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+  }
+  ctx2.stroke();
+  ctx2.strokeStyle = 'rgba(0,86,64,0.2)';
+  ctx2.beginPath();
+  ctx2.moveTo(0, H/2); ctx2.lineTo(W, H/2);
+  ctx2.stroke();
+}
+
+/* ═══════════════════════════════════════════
+   SWITCH PROFILES
+   Each profile is a function that takes
+   (ctx, time, vol) and plays one click.
+═══════════════════════════════════════════ */
+
+const PROFILES = [
+
+  /* ── 1. CLASSIC (existing) ── */
+  {
+    id: 'CLASSIC',
+    name: 'Classic',
+    type: 'Airport Departure Board',
+    desc: 'The original Cowboy Wire sound. Slow, weighty mechanical flip. Like a 1970s Solari board in a European airport.',
+    specs: ['Weighted', 'Low-mid freq', 'Slow decay'],
+    play(ctx, time, vol) {
+      const bufLen = Math.floor(ctx.sampleRate * 0.09);
+      const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufLen; i++) {
+        const t = i / bufLen;
+        const noise = Math.random() * 2 - 1;
+        const tone  = Math.sin(2 * Math.PI * 160 * i / ctx.sampleRate);
+        data[i] = (noise * 0.65 + tone * 0.35) * Math.pow(1 - t, 2.8);
+      }
+      const src = ctx.createBufferSource(); src.buffer = buf;
+      const f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=800; f.Q.value=1.2;
+      const g = ctx.createGain(); g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(ctx.destination);
+      src.start(time);
+    },
+  },
+
+  /* ── 2. BOX JADE (Kailh Box Jade) ── */
+  {
+    id: 'BOX_JADE',
+    name: 'Box Jade',
+    type: 'Kailh Box Jade · Click Bar',
+    desc: 'Crisp high-pitched chirp with a sharp tactile snap. The click bar produces a distinct two-stage sound — initial click followed by a sharp reset pop.',
+    specs: ['Click bar', 'High-pitched chirp', 'Two-stage', 'Crisp reset'],
+    params: {
+      freq1:  { label: 'Click Freq', min: 800,  max: 4000, value: 2200, step: 50  },
+      freq2:  { label: 'Reset Freq', min: 400,  max: 2000, value: 1100, step: 50  },
+      snap:   { label: 'Snap Speed', min: 0.001,max: 0.02, value: 0.006, step: 0.001 },
+      bright: { label: 'Brightness', min: 0.5,  max: 3,    value: 1.8,  step: 0.1  },
+    },
+    play(ctx, time, vol, p) {
+      const f1 = p?.freq1  ?? 2200;
+      const f2 = p?.freq2  ?? 1100;
+      const sn = p?.snap   ?? 0.006;
+      const br = p?.bright ?? 1.8;
+
+      // Stage 1: initial click chirp
+      const click = ctx.createOscillator();
+      const cGain = ctx.createGain();
+      click.type = 'square';
+      click.frequency.setValueAtTime(f1 * br, time);
+      click.frequency.exponentialRampToValueAtTime(f1 * 0.4, time + sn * 3);
+      cGain.gain.setValueAtTime(0, time);
+      cGain.gain.linearRampToValueAtTime(vol * 0.9, time + 0.0008);
+      cGain.gain.exponentialRampToValueAtTime(0.001, time + sn * 4);
+      const cF = ctx.createBiquadFilter(); cF.type='bandpass'; cF.frequency.value=f1; cF.Q.value=2.5;
+      click.connect(cF); cF.connect(cGain); cGain.connect(ctx.destination);
+      click.start(time); click.stop(time + sn * 5);
+
+      // Stage 2: reset pop (click bar snapping back)
+      const reset = ctx.createOscillator();
+      const rGain = ctx.createGain();
+      const resetTime = time + sn * 6;
+      reset.type = 'sawtooth';
+      reset.frequency.setValueAtTime(f2, resetTime);
+      reset.frequency.exponentialRampToValueAtTime(f2 * 0.3, resetTime + sn * 2);
+      rGain.gain.setValueAtTime(0, resetTime);
+      rGain.gain.linearRampToValueAtTime(vol * 0.55, resetTime + 0.0006);
+      rGain.gain.exponentialRampToValueAtTime(0.001, resetTime + sn * 3);
+      const rF = ctx.createBiquadFilter(); rF.type='bandpass'; rF.frequency.value=f2; rF.Q.value=2;
+      reset.connect(rF); rF.connect(rGain); rGain.connect(ctx.destination);
+      reset.start(resetTime); reset.stop(resetTime + sn * 4);
+
+      // Noise body (tactile thud)
+      const nLen = Math.floor(ctx.sampleRate * 0.018);
+      const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
+      const nd   = nBuf.getChannelData(0);
+      for (let i = 0; i < nLen; i++) {
+        nd[i] = (Math.random() * 2 - 1) * Math.pow(1 - i/nLen, 5);
+      }
+      const nSrc = ctx.createBufferSource(); nSrc.buffer = nBuf;
+      const nF   = ctx.createBiquadFilter(); nF.type='bandpass'; nF.frequency.value=1200; nF.Q.value=0.8;
+      const nG   = ctx.createGain(); nG.gain.value = vol * 0.25;
+      nSrc.connect(nF); nF.connect(nG); nG.connect(ctx.destination);
+      nSrc.start(time);
+    },
+  },
+
+  /* ── 3. BOX NAVY (Kailh Box Navy) ── */
+  {
+    id: 'BOX_NAVY',
+    name: 'Box Navy',
+    type: 'Kailh Box Navy · Click Bar Heavy',
+    desc: 'Heavier, deeper click bar variant. More force required, deeper thud, slower reset. Authoritative and satisfying — a proper clack with weight behind it.',
+    specs: ['Click bar', 'Heavy actuation', 'Deep thud', 'Slower reset'],
+    params: {
+      freq1:  { label: 'Click Freq', min: 600,  max: 3000, value: 1600, step: 50  },
+      freq2:  { label: 'Thud Freq',  min: 100,  max: 800,  value: 320,  step: 20  },
+      snap:   { label: 'Snap Speed', min: 0.002,max: 0.03, value: 0.012, step: 0.001 },
+      weight: { label: 'Weight',     min: 0.5,  max: 2.5,  value: 1.6,  step: 0.1  },
+    },
+    play(ctx, time, vol, p) {
+      const f1 = p?.freq1  ?? 1600;
+      const f2 = p?.freq2  ?? 320;
+      const sn = p?.snap   ?? 0.012;
+      const wt = p?.weight ?? 1.6;
+
+      // Primary click — heavier, slightly lower
+      const click = ctx.createOscillator();
+      const cGain = ctx.createGain();
+      click.type = 'square';
+      click.frequency.setValueAtTime(f1 * wt, time);
+      click.frequency.exponentialRampToValueAtTime(f1 * 0.3, time + sn * 2);
+      cGain.gain.setValueAtTime(0, time);
+      cGain.gain.linearRampToValueAtTime(vol, time + 0.001);
+      cGain.gain.exponentialRampToValueAtTime(0.001, time + sn * 3);
+      const cF = ctx.createBiquadFilter(); cF.type='bandpass'; cF.frequency.value=f1; cF.Q.value=1.8;
+      click.connect(cF); cF.connect(cGain); cGain.connect(ctx.destination);
+      click.start(time); click.stop(time + sn * 4);
+
+      // Deep thud body
+      const tLen = Math.floor(ctx.sampleRate * 0.04);
+      const tBuf = ctx.createBuffer(1, tLen, ctx.sampleRate);
+      const td   = tBuf.getChannelData(0);
+      for (let i = 0; i < tLen; i++) {
+        const t2 = i / tLen;
+        td[i] = (Math.random() * 2 - 1) * Math.pow(1 - t2, 3) * wt;
+      }
+      const tSrc = ctx.createBufferSource(); tSrc.buffer = tBuf;
+      const tF   = ctx.createBiquadFilter(); tF.type='lowpass'; tF.frequency.value=f2;
+      const tG   = ctx.createGain(); tG.gain.value = vol * 0.5;
+      tSrc.connect(tF); tF.connect(tG); tG.connect(ctx.destination);
+      tSrc.start(time);
+
+      // Slower reset click
+      const resetTime = time + sn * 8;
+      const reset = ctx.createOscillator();
+      const rGain = ctx.createGain();
+      reset.type = 'square';
+      reset.frequency.setValueAtTime(f1 * 0.6, resetTime);
+      reset.frequency.exponentialRampToValueAtTime(f1 * 0.2, resetTime + sn);
+      rGain.gain.setValueAtTime(0, resetTime);
+      rGain.gain.linearRampToValueAtTime(vol * 0.4, resetTime + 0.001);
+      rGain.gain.exponentialRampToValueAtTime(0.001, resetTime + sn * 2);
+      reset.connect(rGain); rGain.connect(ctx.destination);
+      reset.start(resetTime); reset.stop(resetTime + sn * 3);
+    },
+  },
+
+  /* ── 4. GATERON MELODIC ── */
+  {
+    id: 'MELODIC',
+    name: 'Melodic',
+    type: 'Gateron Melodic · Click Jacket',
+    desc: 'Premium click-jacket design. Produces a clean, almost musical ping. Consistent pitch, silky actuation, refined high register. Sounds like a tiny bell being struck.',
+    specs: ['Click jacket', 'Musical ping', 'Consistent pitch', 'Silky feel'],
+    params: {
+      pitch:  { label: 'Pitch',      min: 1000, max: 6000, value: 3200, step: 100 },
+      ring:   { label: 'Ring Time',  min: 0.01, max: 0.12, value: 0.045, step: 0.005 },
+      purity: { label: 'Purity',     min: 1,    max: 6,    value: 3.5,  step: 0.5  },
+      soft:   { label: 'Softness',   min: 0,    max: 1,    value: 0.3,  step: 0.05 },
+    },
+    play(ctx, time, vol, p) {
+      const pitch  = p?.pitch  ?? 3200;
+      const ring   = p?.ring   ?? 0.045;
+      const purity = p?.purity ?? 3.5;
+      const soft   = p?.soft   ?? 0.3;
+
+      // Primary bell tone — sine for cleanliness
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = pitch;
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(vol * (1 - soft * 0.3), time + 0.0005);
+      gain.gain.setValueAtTime(vol * (1 - soft * 0.3), time + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.001, time + ring);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(time); osc.stop(time + ring + 0.01);
+
+      // Harmonic overtone (gives it the "jacket" character)
+      const osc2  = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.value = pitch * 1.618; // golden ratio harmonic
+      gain2.gain.setValueAtTime(0, time);
+      gain2.gain.linearRampToValueAtTime(vol * 0.3 / purity, time + 0.0005);
+      gain2.gain.exponentialRampToValueAtTime(0.001, time + ring * 0.6);
+      osc2.connect(gain2); gain2.connect(ctx.destination);
+      osc2.start(time); osc2.stop(time + ring);
+
+      // Soft attack noise (finger contact)
+      if (soft > 0) {
+        const nLen = Math.floor(ctx.sampleRate * 0.008);
+        const nBuf = ctx.createBuffer(1, nLen, ctx.sampleRate);
+        const nd   = nBuf.getChannelData(0);
+        for (let i = 0; i < nLen; i++) nd[i] = (Math.random()*2-1) * Math.pow(1-i/nLen, 4);
+        const nSrc = ctx.createBufferSource(); nSrc.buffer = nBuf;
+        const nF   = ctx.createBiquadFilter(); nF.type='highpass'; nF.frequency.value=2000;
+        const nG   = ctx.createGain(); nG.gain.value = vol * soft * 0.3;
+        nSrc.connect(nF); nF.connect(nG); nG.connect(ctx.destination);
+        nSrc.start(time);
+      }
+    },
+  },
+
+  /* ── 5. JADE CRISP (tuned variant) ── */
+  {
+    id: 'JADE_CRISP',
+    name: 'Jade Crisp',
+    type: 'Box Jade · Lubed · Tuned',
+    desc: 'Box Jade with lube on the click bar legs — removes scratchiness, retains the chirp. Cleaner, faster, more consistent than stock. Popular competitive choice.',
+    specs: ['Lubed click bar', 'Reduced scratch', 'Fast reset', 'Clean chirp'],
+    params: {
+      freq1:  { label: 'Chirp Freq', min: 1500, max: 5000, value: 3000, step: 100 },
+      decay:  { label: 'Decay',      min: 0.003,max: 0.025,value: 0.008, step: 0.001 },
+      clean:  { label: 'Cleanliness',min: 1,    max: 5,    value: 3.2,  step: 0.2  },
+    },
+    play(ctx, time, vol, p) {
+      const freq  = p?.freq1 ?? 3000;
+      const decay = p?.decay ?? 0.008;
+      const clean = p?.clean ?? 3.2;
+
+      // Very fast attack, sharp decay — the "lubed" character
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, time);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.45, time + decay);
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(vol, time + 0.0003); // instant attack
+      gain.gain.exponentialRampToValueAtTime(0.001, time + decay * 1.5);
+      const f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; f.Q.value=clean;
+      osc.connect(f); f.connect(gain); gain.connect(ctx.destination);
+      osc.start(time); osc.stop(time + decay * 2);
+
+      // Reset — fast and clean
+      const rt   = time + decay * 2.5;
+      const osc2 = ctx.createOscillator();
+      const g2   = ctx.createGain();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(freq * 0.55, rt);
+      osc2.frequency.exponentialRampToValueAtTime(freq * 0.2, rt + decay);
+      g2.gain.setValueAtTime(0, rt);
+      g2.gain.linearRampToValueAtTime(vol * 0.45, rt + 0.0003);
+      g2.gain.exponentialRampToValueAtTime(0.001, rt + decay);
+      const f2 = ctx.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=freq*0.55; f2.Q.value=clean*0.8;
+      osc2.connect(f2); f2.connect(g2); g2.connect(ctx.destination);
+      osc2.start(rt); osc2.stop(rt + decay * 1.5);
+    },
+  },
+
+  /* ── 6. DIGITAL (existing, for comparison) ── */
+  {
+    id: 'DIGITAL',
+    name: 'Digital',
+    type: '80s Terminal Beep',
+    desc: 'The existing digital beep profile. Clean square wave sequence. More retro-computer than mechanical keyboard.',
+    specs: ['Square wave', 'Tonal', '80s terminal', 'No noise'],
+    play(ctx, time, vol) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square'; osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(vol, time + 0.004);
+      gain.gain.setValueAtTime(vol, time + 0.028);
+      gain.gain.linearRampToValueAtTime(0, time + 0.034);
+      const f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=880; f.Q.value=3;
+      osc.connect(f); f.connect(gain); gain.connect(ctx.destination);
+      osc.start(time); osc.stop(time + 0.05);
+    },
+  },
+
+];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let activeProfile = PROFILES[1]; // Box Jade default
+let paramValues   = {};
+let globalVol     = 0.18;
+
+/* ═══════════════════════════════════════════
+   FIRE ENGINE
+═══════════════════════════════════════════ */
+function playOne(profile, time, vol, params) {
+  const ctx = getCtx();
+  if (!ctx) return;
+  profile.play(ctx, time, vol, params);
+}
+
+function fireCurrent(tileCount) {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now    = ctx.currentTime;
+  const p      = activeProfile;
+  const params = paramValues[p.id] || {};
+  const vol    = globalVol;
+  const count  = Math.min(tileCount, 200);
+
+  // Spread clicks across time — denser for more tiles
+  const spread = Math.min(count * 0.008, 1.8);
+
+  for (let i = 0; i < count; i++) {
+    const jitter = (Math.random() - 0.5) * 0.04;
+    const t      = now + (i / count) * spread + Math.max(0, jitter);
+    const v      = vol * (0.7 + Math.random() * 0.3);
+    playOne(p, t, v, params);
+  }
+
+  // Waveform pulse
+  pushWave(Math.min(count / 20, 1));
+}
+
+/* ═══════════════════════════════════════════
+   BUILD UI
+═══════════════════════════════════════════ */
+function buildSwitchCards() {
+  const grid = document.getElementById('switchGrid');
+  grid.innerHTML = '';
+  PROFILES.forEach((p, i) => {
+    const card = document.createElement('div');
+    card.className = 'switch-card' + (p.id === activeProfile.id ? ' active' : '');
+    card.id = 'card-' + p.id;
+    card.onclick = () => selectProfile(p.id);
+
+    const ind = document.createElement('div');
+    ind.className = 'select-indicator';
+
+    card.innerHTML = `
+      <div class="switch-name">${p.name}</div>
+      <div class="switch-type">${p.type}</div>
+      <div class="switch-desc">${p.desc}</div>
+      <div class="switch-specs">${(p.specs||[]).map(s=>`<span class="spec-pill">${s}</span>`).join('')}</div>`;
+    card.appendChild(ind);
+    grid.appendChild(card);
+  });
+}
+
+function buildParams() {
+  const row = document.getElementById('paramsRow');
+  row.innerHTML = '';
+  const p = activeProfile;
+  if (!p.params) {
+    row.innerHTML = `<div style="font-size:10px;color:#444;letter-spacing:0.1em;text-transform:uppercase">No adjustable parameters for this profile</div>`;
+    return;
+  }
+  if (!paramValues[p.id]) paramValues[p.id] = {};
+
+  Object.entries(p.params).forEach(([key, def]) => {
+    if (!paramValues[p.id][key]) paramValues[p.id][key] = def.value;
+    const grp = document.createElement('div');
+    grp.className = 'param-group';
+    const valId = `pval-${p.id}-${key}`;
+    grp.innerHTML = `
+      <div class="param-label">${def.label} <span id="${valId}">${def.value}</span></div>
+      <input type="range" class="param-slider" min="${def.min}" max="${def.max}"
+        step="${def.step}" value="${paramValues[p.id][key]}"
+        oninput="updateParam('${key}', parseFloat(this.value), '${valId}')">`;
+    row.appendChild(grp);
+  });
+
+  // Volume param always shown
+  const volGrp = document.createElement('div');
+  volGrp.className = 'param-group';
+  volGrp.innerHTML = `
+    <div class="param-label">Volume <span id="pval-vol">${Math.round(globalVol*100)}%</span></div>
+    <input type="range" class="param-slider" min="0.02" max="0.5" step="0.01" value="${globalVol}"
+      oninput="globalVol=parseFloat(this.value);document.getElementById('pval-vol').textContent=Math.round(globalVol*100)+'%'">`;
+  row.appendChild(volGrp);
+}
+
+function buildCompare() {
+  const row = document.getElementById('compareRow');
+  row.innerHTML = '';
+  PROFILES.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'compare-btn';
+    btn.id = 'cmp-' + p.id;
+    btn.textContent = p.name;
+    btn.onclick = () => auditOne(p);
+    row.appendChild(btn);
+  });
+}
+
+function updateParam(key, val, displayId) {
+  if (!paramValues[activeProfile.id]) paramValues[activeProfile.id] = {};
+  paramValues[activeProfile.id][key] = val;
+  const el = document.getElementById(displayId);
+  if (el) el.textContent = val;
+  fireCurrent(8);
+}
+
+function selectProfile(id) {
+  activeProfile = PROFILES.find(p => p.id === id);
+  document.querySelectorAll('.switch-card').forEach(c => c.classList.remove('active'));
+  const card = document.getElementById('card-' + id);
+  if (card) {
+    card.classList.add('active');
+    card.classList.add('firing');
+    setTimeout(() => card.classList.remove('firing'), 300);
+  }
+  document.getElementById('currentName').textContent = activeProfile.name;
+  document.getElementById('commitName').textContent  = '"' + activeProfile.id + '"';
+  buildParams();
+  fireCurrent(6);
+}
+
+function auditOne(profile) {
+  const btn = document.getElementById('cmp-' + profile.id);
+  if (btn) { btn.classList.add('playing'); setTimeout(() => btn.classList.remove('playing'), 600); }
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  for (let i = 0; i < 8; i++) {
+    const t = now + i * 0.09 + (Math.random() - 0.5) * 0.02;
+    playOne(profile, t, globalVol, paramValues[profile.id] || {});
+  }
+  pushWave(0.5);
+}
+
+function copyCommit() {
+  const name = activeProfile.id;
+  navigator.clipboard.writeText(name).then(() => {
+    const btn = document.querySelector('.commit-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = 'Copy Profile Name', 2000);
+  });
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+buildSwitchCards();
+buildCompare();
+selectProfile('BOX_JADE');
+drawWave();
+
+// Keyboard — spacebar fires
+document.addEventListener('keydown', e => {
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); fireCurrent(12); }
+  if (e.key === 'ArrowRight') { const idx = PROFILES.findIndex(p=>p.id===activeProfile.id); selectProfile(PROFILES[(idx+1)%PROFILES.length].id); }
+  if (e.key === 'ArrowLeft')  { const idx = PROFILES.findIndex(p=>p.id===activeProfile.id); selectProfile(PROFILES[(idx-1+PROFILES.length)%PROFILES.length].id); }
+});
+
+// Click anywhere to unlock audio
+document.addEventListener('click', () => getCtx(), { once: true });
+</script>
+</body>
+</html>
