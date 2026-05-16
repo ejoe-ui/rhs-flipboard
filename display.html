@@ -701,11 +701,29 @@ setInterval(async () => {
     passes?.length ? cwBuildPassableScreen(passes) : null, buildDots);
 }, 30 * 1000);
 
-// Quick message: every 30s
+// Quick message: every 30s — handles multiple approved posts
 setInterval(async () => {
   if (cwFindSlotIdx(messages,'quickMsg') < 0) return;
-  const msg = await cwFetchQuickMessage();
-  cwInjectSlot(messages,'quickMsg', cwBuildQuickMsgScreen(msg), buildDots);
+  const msgs = await cwFetchAllApprovedMessages();
+  // Remove any previously injected extra message screens
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i]._isQuickMsgSlot && i !== cwFindSlotIdx(messages,'quickMsg')) {
+      messages.splice(i, 1);
+    }
+  }
+  if (!msgs || !msgs.length) {
+    cwInjectSlot(messages,'quickMsg', null, buildDots);
+    return;
+  }
+  cwInjectSlot(messages,'quickMsg', cwBuildQuickMsgScreen(msgs[0]), buildDots);
+  if (msgs.length > 1) {
+    const slotIdx = cwFindSlotIdx(messages,'quickMsg');
+    const extras  = msgs.slice(1).map(m => cwBuildQuickMsgScreen(m)).filter(Boolean);
+    if (slotIdx >= 0 && extras.length) {
+      messages.splice(slotIdx + 1, 0, ...extras);
+      buildDots();
+    }
+  }
 }, 30 * 1000);
 
 // Weather: every 30 min

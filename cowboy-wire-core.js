@@ -782,10 +782,11 @@ async function cwSupabasePatch(table, id, body) {
   } catch(e) { return null; }
 }
 
-// Fetch the active quick message for this room
+// Fetch active approved messages for this room (not expired)
 async function cwFetchQuickMessage() {
+  const now  = new Date().toISOString();
   const rows = await cwSupabaseFetch(
-    `cw_messages?room=eq.${CW.room}&active=eq.true&order=created_at.desc&limit=1`
+    `cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&order=created_at.desc&limit=1`
   );
   return rows && rows.length ? rows[0] : null;
 }
@@ -810,6 +811,15 @@ async function cwFetchHonorRoll() {
   return await cwSupabaseFetch(
     `cw_honor_roll?room=eq.${CW.room}&active=eq.true&order=grade.asc`
   );
+}
+
+// Fetch ALL active approved messages (for building multiple screens)
+async function cwFetchAllApprovedMessages() {
+  const now  = new Date().toISOString();
+  const rows = await cwSupabaseFetch(
+    `cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&order=created_at.desc`
+  );
+  return rows || [];
 }
 
 // Build quick message screen from Supabase row
@@ -1196,8 +1206,22 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
     }));
   }
   if (has('quickMsg') && CW.screens.quickMsg) {
-    jobs.push(cwFetchQuickMessage().then(msg => {
-      cwInjectSlot(messages, 'quickMsg', cwBuildQuickMsgScreen(msg), buildDotsFn);
+    jobs.push(cwFetchAllApprovedMessages().then(msgs => {
+      if (!msgs || !msgs.length) {
+        cwInjectSlot(messages, 'quickMsg', null, buildDotsFn);
+        return;
+      }
+      // First message goes into the placeholder slot
+      cwInjectSlot(messages, 'quickMsg', cwBuildQuickMsgScreen(msgs[0]), buildDotsFn);
+      // Additional messages get inserted right after the first slot
+      if (msgs.length > 1) {
+        const slotIdx = cwFindSlotIdx(messages, 'quickMsg');
+        const extras  = msgs.slice(1).map(m => cwBuildQuickMsgScreen(m)).filter(Boolean);
+        if (slotIdx >= 0 && extras.length) {
+          messages.splice(slotIdx + 1, 0, ...extras);
+          if (typeof buildDotsFn === 'function') buildDotsFn();
+        }
+      }
     }));
   }
   if (has('countdown') && CW.screens.countdown) {
