@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>RHS · Cowboy Wire</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green:      #006938;
+    --green-dark: #004d28;
+    --green-dim:  #003d20;
+    --tan:        #C4BEB5;
+    --bg:         #0a0a0a;
+    --surface:    #111111;
+    --surface2:   #181818;
+    --border:     #222222;
+    --border2:    #2a2a2a;
+    --text:       #f0ebe0;
+    --text-mid:   #888880;
+    --text-dim:   #444440;
+    --mono:       'Courier New', Courier, monospace;
+    --sans:       -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius:     10px;
+  }
+
+  html { background: var(--bg); min-height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ══ HEADER ══ */
+  #header {
+    background: #0a0a0a;
+    border-bottom: 2px solid var(--green);
+    padding: 14px 16px 12px;
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .h-left { display: flex; align-items: center; gap: 10px; }
+  .h-badge {
+    background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 11px; font-weight: 900;
+    letter-spacing: 0.15em; padding: 4px 10px;
+    border-radius: 3px; text-transform: uppercase;
+  }
+  .h-sync { display: flex; align-items: center; gap: 5px; }
+  .sync-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #333; flex-shrink: 0;
+  }
+  .sync-dot.live  { background: var(--green); animation: pulse 2.5s infinite; }
+  .sync-dot.error { background: #882222; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .sync-label {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase;
+  }
+  .h-clock {
+    font-family: var(--mono); font-size: 18px;
+    font-weight: 700; color: var(--text); letter-spacing: 0.05em;
+  }
+
+  .accent-bar {
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
+  }
+
+  /* ══ CONTENT ══ */
+  #content {
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* ══ CARD ══ */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card.tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .card.tappable:active { opacity: 0.8; transform: scale(0.99); }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px 7px; border-bottom: 1px solid var(--border);
+  }
+  .card-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .card-label.green { color: var(--green); }
+  .card-label.tan   { color: var(--tan); }
+  .card-tag {
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
+    border: 1px solid var(--border2); padding: 2px 7px; border-radius: 3px;
+  }
+  .card-body { padding: 12px 14px; }
+
+  /* ══ PERIOD TIMER ══ */
+  .period-timer-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--green);
+    padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .period-timer-card.warning { border-left-color: #ff9900; }
+  .period-timer-card.ending  { border-left-color: #cc4444; }
+  .pt-left { flex: 1; }
+  .pt-period {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.08em; color: var(--green);
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .pt-period.warning { color: #ff9900; }
+  .pt-period.ending  { color: #cc4444; }
+  .pt-ends { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+  .pt-time { font-family: var(--mono); font-size: 28px; font-weight: 900; color: var(--text); letter-spacing: 0.04em; text-align: right; }
+  .pt-time.warning { color: #ff9900; }
+  .pt-time.ending  { color: #cc4444; }
+  .pt-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; text-align: right; }
+
+  /* ══ SCHEDULE ══ */
+  .schedule-type {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; color: var(--green);
+    text-transform: uppercase; margin-bottom: 10px;
+  }
+  .period-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 10px; border-radius: 6px; margin-bottom: 4px;
+  }
+  .period-row.now  { background: var(--green-dim); border: 1px solid var(--green); }
+  .period-row.past { opacity: 0.4; }
+  .period-name {
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; color: var(--text); min-width: 72px;
+  }
+  .period-time {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-mid); letter-spacing: 0.04em; flex: 1;
+  }
+  .now-badge {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.15em; color: var(--green); text-transform: uppercase;
+    border: 1px solid var(--green); padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+  }
+  .break-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px; margin-bottom: 4px;
+  }
+  .break-name { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; min-width: 72px; }
+  .break-time { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+  .no-school  { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-mid); text-transform: uppercase; text-align: center; padding: 8px 0; }
+  .next-day   { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; text-align: center; margin-top: 4px; }
+
+  /* ══ WEATHER ══ */
+  .weather-main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .weather-temp { font-family: var(--mono); font-size: 48px; font-weight: 900; color: var(--text); letter-spacing: -0.02em; line-height: 1; }
+  .weather-feels { font-family: var(--mono); font-size: 11px; color: var(--text-mid); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+  .weather-icon-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .weather-icon { font-size: 44px; line-height: 1; }
+  .weather-desc { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-mid); text-align: center; }
+  .weather-details { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .weather-detail-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+  .weather-detail-label { font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 3px; }
+  .weather-detail-value { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
+
+  /* ══ MENU ══ */
+  .menu-item {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--text); letter-spacing: 0.04em;
+    padding: 5px 0; border-bottom: 1px solid var(--border);
+  }
+  .menu-item:first-child { color: var(--green); font-size: 14px; }
+  .menu-item:last-child  { border-bottom: none; }
+
+  /* ══ CALENDAR ══ */
+  .event-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .event-row:last-child { border-bottom: none; }
+  .event-time { font-family: var(--mono); font-size: 10px; color: var(--text-mid); letter-spacing: 0.04em; min-width: 60px; padding-top: 1px; flex-shrink: 0; }
+  .event-title { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); line-height: 1.4; }
+  .no-events { font-family: var(--mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; text-align: center; padding: 8px 0; }
+
+  /* ══ COUNTDOWN ══ */
+  .countdown-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .countdown-row:last-child { border-bottom: none; }
+  .countdown-label { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
+  .countdown-days { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--green); letter-spacing: 0.04em; white-space: nowrap; }
+  .countdown-days.soon  { color: #ff9900; }
+  .countdown-days.today { color: var(--green); }
+
+  /* ══ BIRTHDAY ══ */
+  .bday-today { font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; color: var(--text); line-height: 1.6; }
+  .bday-week  { font-family: var(--mono); font-size: 12px; color: var(--text-mid); letter-spacing: 0.04em; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.7; }
+
+  /* ══ FACTS ══ */
+  .fact-text { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); line-height: 1.6; }
+
+  /* ══ BOARD MESSAGE ══ */
+  .msg-from { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; }
+  .msg-text  { font-family: var(--mono); font-size: 15px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); line-height: 1.6; }
+
+  /* ══ SUBMIT FORM ══ */
+  .submit-form { display: flex; flex-direction: column; gap: 10px; }
+  .form-field {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 10px 12px;
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+    width: 100%; outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .form-field:focus { border-color: var(--green); }
+  .form-field::placeholder { color: var(--text-dim); }
+  .form-hint { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
+  .submit-btn {
+    background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 12px; font-weight: 900;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    border: none; border-radius: 6px; padding: 12px;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, transform 0.1s; width: 100%;
+  }
+  .submit-btn:active { background: var(--green-dark); transform: scale(0.98); }
+  .submit-btn:disabled { background: #333; color: var(--text-dim); cursor: not-allowed; }
+  .submit-success {
+    font-family: var(--mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.1em; color: var(--green); text-transform: uppercase;
+    text-align: center; padding: 8px 0;
+  }
+
+  /* ══ PASS STATUS ══ */
+  .pass-status-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); overflow: hidden; }
+  .pass-ring-container { position: relative; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .pass-ring-svg { width: 140px; height: 140px; transform: rotate(-90deg); }
+  .pass-ring-bg  { fill: none; stroke: var(--border2); stroke-width: 8; }
+  .pass-ring-fg  { fill: none; stroke: var(--green); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+  .pass-ring-fg.warning { stroke: #ff9900; }
+  .pass-ring-fg.ending  { stroke: #cc4444; }
+  .pass-ring-inner { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .pass-circle-wrap { display: flex; flex-direction: column; align-items: center; padding: 20px 14px 14px; }
+  .pass-elapsed-time { font-family: var(--mono); font-size: 28px; font-weight: 900; color: var(--text); letter-spacing: 0.04em; line-height: 1; }
+  .pass-elapsed-time.warning { color: #ff9900; }
+  .pass-elapsed-time.ending  { color: #cc4444; }
+  .pass-elapsed-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-top: 3px; }
+  .pass-remaining-text { font-family: var(--mono); font-size: 11px; color: var(--text-mid); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+  .pass-reason-block  { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .pass-reason-label  { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .pass-reason-value  { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
+  .pass-checkout-block { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .pass-checkout-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .pass-checkout-value { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); }
+  .pass-stats-row  { display: flex; gap: 8px; width: 100%; margin-top: 8px; }
+  .pass-stat-block { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .pass-stat-num   { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
+  .pass-stat-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .pass-checked-in-wrap { display: flex; flex-direction: column; align-items: center; padding: 24px 14px 14px; }
+  .pass-checked-in-icon  { font-size: 48px; margin-bottom: 8px; }
+  .pass-checked-in-label { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: var(--green); text-transform: uppercase; margin-bottom: 16px; }
+  .pass-scan-hint { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; text-align: center; padding: 10px 0 4px; border-top: 1px solid var(--border); width: 100%; }
+
+  /* ══ MY PASS BUTTON (floating) ══ */
+  #pass-link-wrap {
+    position: fixed; bottom: 76px; right: 16px; z-index: 101;
+  }
+  #passLinkBtn {
+    display: none;
+    background: var(--surface); border: 1px solid var(--green);
+    color: var(--green); font-family: var(--mono);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; padding: 6px 12px;
+    border-radius: 6px; text-decoration: none;
+  }
+
+  /* ══ BOTTOM SUBMIT BUTTON ══ */
+  #post-btn-wrap {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(transparent, var(--bg) 30%);
+    z-index: 100;
+  }
+  .post-btn {
+    display: block; width: 100%;
+    background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 13px; font-weight: 900;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    text-align: center; text-decoration: none;
+    padding: 14px; border-radius: var(--radius);
+    border: none; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .post-btn:active { background: var(--green-dark); transform: scale(0.98); }
+
+  /* ══ MODAL ══ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 200;
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-sheet {
+    background: #111; border-top: 2px solid var(--green);
+    border-radius: 16px 16px 0 0; width: 100%;
+    max-height: 85vh; overflow-y: auto;
+    padding: 0 0 env(safe-area-inset-bottom, 16px);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  .modal-overlay.open .modal-sheet { transform: translateY(0); }
+  .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 8px; }
+  .modal-title  { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); padding: 0 16px 12px; border-bottom: 1px solid var(--border); }
+  .modal-body   { padding: 12px 16px 20px; }
+  .modal-period-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 8px; margin-bottom: 4px; }
+  .modal-period-row.now  { background: var(--green-dim); border: 1px solid var(--green); }
+  .modal-period-row.past { opacity: 0.35; }
+  .modal-p-name { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); min-width: 76px; }
+  .modal-p-time { font-family: var(--mono); font-size: 12px; color: var(--text-mid); flex: 1; }
+  .modal-p-now  { font-family: var(--mono); font-size: 9px; font-weight: 700; color: var(--green); border: 1px solid var(--green); padding: 2px 7px; border-radius: 3px; }
+  .modal-break-row  { display: flex; align-items: center; gap: 12px; padding: 5px 12px; margin-bottom: 4px; }
+  .modal-break-name { font-family: var(--mono); font-size: 11px; color: var(--text-dim); min-width: 76px; }
+  .modal-break-time { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+
+  /* ══ BIRTHDAY MODAL ══ */
+  .bday-card-modal { text-align: center; padding: 20px 0 10px; }
+  .bday-icon { font-size: 72px; display: block; margin-bottom: 12px; animation: bounce 0.6s ease; }
+  @keyframes bounce { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+  .bday-name-big { font-family: var(--mono); font-size: 20px; font-weight: 900; letter-spacing: 0.06em; color: var(--text); margin-bottom: 6px; }
+  .bday-wish     { font-family: var(--mono); font-size: 13px; color: var(--green); letter-spacing: 0.08em; margin-bottom: 16px; }
+  .bday-tap-btn  {
+    display: inline-block; background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em; padding: 12px 24px; border-radius: 8px;
+    border: none; cursor: pointer; width: 100%; margin-bottom: 10px;
+    -webkit-tap-highlight-color: transparent; transition: transform 0.1s, background 0.15s;
+  }
+  .bday-tap-btn:active { transform: scale(0.95); background: var(--green-dark); }
+  .bday-tap-count { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* ══ LOADING ══ */
+  .loading-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .loading-dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: ldot 1.2s infinite ease-in-out; }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes ldot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+  .error-state { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-align: center; padding: 16px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div id="header">
+  <div class="h-left">
+    <div class="h-badge" id="roomBadge">RHS · ROOM 27</div>
+    <div class="h-sync">
+      <div class="sync-dot" id="syncDot"></div>
+      <span class="sync-label" id="syncLabel">Loading</span>
+    </div>
+  </div>
+  <div class="h-clock" id="clock">--:-- --</div>
+</div>
+<div class="accent-bar"></div>
+
+<!-- ══ CONTENT ══ -->
+<div id="content">
+  <div class="loading-card">
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+    <div class="loading-dot"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL ══ -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet" id="modalSheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-body"  id="modalBody"></div>
+  </div>
+</div>
+
+<!-- ══ MY PASS BUTTON (floating, only shows with ?uid=) ══ -->
+<div id="pass-link-wrap">
+  <a id="passLinkBtn" href="#">&#9632; My Pass</a>
+</div>
+
+<!-- ══ BOTTOM POST BUTTON ══ -->
+<div id="post-btn-wrap">
+  <button class="post-btn" onclick="openPostModal()">▶ Post a Message to the Board</button>
+</div>
+
+<!-- ══ SCRIPTS ══ -->
+<script src="config.js"></script>
+<script src="cowboy-wire-core.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════
+   MOBILE.HTML — Student-facing Cowboy Wire
+   PassAble connection: ?uid= or ?student= param
+   Post flow: submit → pending → teacher approves → board
+════════════════════════════════════════════════════════ */
+
+/* ── Apply config identity ── */
+document.getElementById('roomBadge').textContent = 'RHS · ROOM ' + CLASSROOM_CONFIG.room;
+document.title = 'RHS · Room ' + CLASSROOM_CONFIG.room;
+
+const RING_R      = 54;
+const RING_CIRCUM = 2 * Math.PI * RING_R;
+const PASS_MAX    = 15; // minutes before ring fills
+
+let passTimerInterval   = null;
+let passPollingInterval = null;
+
+/* ════ CLOCK ════ */
+function updateClock() {
+  const now = new Date();
+  let h = now.getHours();
+  const m = now.getMinutes().toString().padStart(2,'0');
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  document.getElementById('clock').textContent = `${h}:${m} ${ap}`;
+}
+
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot' + (state==='live' ? ' live' : state==='error' ? ' error' : '');
+  document.getElementById('syncLabel').textContent = label;
+}
+
+/* ════ PASSABLE ════ */
+async function fetchPassStatus(uid, studentId) {
+  try {
+    let q = `${CW.supabaseUrl}/rest/v1/students?select=id,full_name,period,nfc_uid&limit=1`;
+    if (uid)       q += `&nfc_uid=eq.${uid}`;
+    else if (studentId) q += `&id=eq.${studentId}`;
+    const sRes  = await fetch(q, { headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` } });
+    const sData = await sRes.json();
+    const student = sData[0] || null;
+    if (!student) return null;
+
+    const passRes = await fetch(
+      `${CW.supabaseUrl}/rest/v1/passes?select=*&student_id=eq.${student.id}&time_in=is.null&order=time_out.desc&limit=1`,
+      { headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` } }
+    );
+    const passes     = await passRes.json();
+    const activePass = passes[0] || null;
+
+    // Weekly stats
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - (weekStart.getDay()===0 ? 6 : weekStart.getDay()-1));
+    weekStart.setHours(0,0,0,0);
+    const statsRes   = await fetch(
+      `${CW.supabaseUrl}/rest/v1/passes?select=duration_minutes&student_id=eq.${student.id}&time_out=gte.${weekStart.toISOString()}`,
+      { headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` } }
+    );
+    const weekPasses = await statsRes.json();
+
+    return {
+      student,
+      activePass,
+      weekCount: weekPasses.length,
+      weekMins:  weekPasses.reduce((s,p) => s + (p.duration_minutes||0), 0),
+    };
+  } catch(e) { return null; }
+}
+
+function fmtTime12(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  let h = d.getHours(), m = d.getMinutes();
+  const ap = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return m > 0 ? `${h}:${String(m).padStart(2,'0')} ${ap}` : `${h} ${ap}`;
+}
+
+function renderPassCard(data) {
+  if (!data) return null;
+  const { student, activePass, weekCount, weekMins } = data;
+  const name = student?.full_name || 'Student';
+  const card = document.createElement('div');
+  card.className = 'pass-status-card';
+
+  if (activePass) {
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-label green">Pass Active</span>
+        <span class="card-tag">${name}</span>
+      </div>
+      <div class="pass-circle-wrap">
+        <div class="pass-ring-container">
+          <svg class="pass-ring-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+            <circle class="pass-ring-bg" cx="60" cy="60" r="${RING_R}"/>
+            <circle class="pass-ring-fg" id="passRingFg" cx="60" cy="60" r="${RING_R}"
+              stroke-dasharray="${RING_CIRCUM}" stroke-dashoffset="${RING_CIRCUM}"/>
+          </svg>
+          <div class="pass-ring-inner">
+            <div class="pass-elapsed-time" id="passElapsed">00:00</div>
+            <div class="pass-elapsed-label">elapsed</div>
+          </div>
+        </div>
+        <div class="pass-remaining-text" id="passRemaining"></div>
+        <div class="pass-reason-block">
+          <div class="pass-reason-label">Reason</div>
+          <div class="pass-reason-value">${activePass.reason || 'Hall Pass'}</div>
+        </div>
+        <div class="pass-checkout-block">
+          <div class="pass-checkout-label">Checked Out</div>
+          <div class="pass-checkout-value">${fmtTime12(activePass.time_out)}</div>
+        </div>
+        <div class="pass-stats-row">
+          <div class="pass-stat-block">
+            <span class="pass-stat-num">${weekCount}</span>
+            <span class="pass-stat-label">Passes this week</span>
+          </div>
+          <div class="pass-stat-block">
+            <span class="pass-stat-num">${weekMins}</span>
+            <span class="pass-stat-label">Total minutes</span>
+          </div>
+        </div>
+        <div class="pass-scan-hint">Scan badge at Room ${CLASSROOM_CONFIG.room} kiosk to check in</div>
+      </div>`;
+    setTimeout(() => startPassTimer(activePass.time_out), 50);
+    if (student) setTimeout(() => startPassPolling(student.id), 1000);
+  } else {
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-label green">Pass Status</span>
+        <span class="card-tag">${name}</span>
+      </div>
+      <div class="pass-checked-in-wrap">
+        <div class="pass-checked-in-icon">✓</div>
+        <div class="pass-checked-in-label">In Class</div>
+        <div class="pass-stats-row">
+          <div class="pass-stat-block">
+            <span class="pass-stat-num">${weekCount}</span>
+            <span class="pass-stat-label">Passes this week</span>
+          </div>
+          <div class="pass-stat-block">
+            <span class="pass-stat-num">${weekMins}</span>
+            <span class="pass-stat-label">Total minutes</span>
+          </div>
+        </div>
+      </div>`;
+  }
+  return card;
+}
+
+function startPassTimer(timeOutISO) {
+  if (passTimerInterval) clearInterval(passTimerInterval);
+  function tick() {
+    const elapsed = Math.floor((new Date() - new Date(timeOutISO)) / 1000);
+    const mins    = Math.floor(elapsed / 60);
+    const secs    = elapsed % 60;
+    const display = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+    const elEl    = document.getElementById('passElapsed');
+    const remEl   = document.getElementById('passRemaining');
+    const ringEl  = document.getElementById('passRingFg');
+    if (!elEl) { clearInterval(passTimerInterval); return; }
+    const cls = mins >= 15 ? 'ending' : mins >= 10 ? 'warning' : '';
+    elEl.textContent = display;
+    elEl.className   = 'pass-elapsed-time ' + cls;
+    if (ringEl) {
+      ringEl.style.strokeDashoffset = RING_CIRCUM * (1 - Math.min(elapsed / (PASS_MAX * 60), 1));
+      ringEl.className = 'pass-ring-fg ' + cls;
+    }
+    if (remEl) {
+      const rem = PASS_MAX * 60 - elapsed;
+      if (rem > 0) {
+        remEl.textContent = String(Math.floor(rem/60)).padStart(2,'0') + ':' + String(rem%60).padStart(2,'0') + ' remaining';
+      } else {
+        remEl.textContent = 'Over time limit';
+        remEl.style.color = '#cc4444';
+      }
+    }
+  }
+  tick();
+  passTimerInterval = setInterval(tick, 1000);
+}
+
+function startPassPolling(studentId) {
+  if (passPollingInterval) clearInterval(passPollingInterval);
+  if (!studentId) return;
+  passPollingInterval = setInterval(async () => {
+    try {
+      const res = await fetch(
+        `${CW.supabaseUrl}/rest/v1/passes?select=time_in&student_id=eq.${studentId}&time_in=is.null&limit=1`,
+        { headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` } }
+      );
+      const passes = await res.json();
+      if (passes.length === 0) {
+        clearInterval(passPollingInterval);
+        clearInterval(passTimerInterval);
+        const params = new URLSearchParams(window.location.search);
+        const fresh  = await fetchPassStatus(params.get('uid'), params.get('student'));
+        const oldCard = document.querySelector('.pass-status-card');
+        if (oldCard && fresh) {
+          const newCard = renderPassCard(fresh);
+          if (newCard) oldCard.replaceWith(newCard);
+        }
+      }
+    } catch(e) {}
+  }, 15000);
+}
+
+/* ════ WEATHER ════ */
+async function fetchWeatherMobile() {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${CW.lat}&longitude=${CW.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,relative_humidity_2m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=1`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.current || null;
+  } catch(e) { return null; }
+}
+
+function buildWeatherCardMobile(wx) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  if (!wx) {
+    card.innerHTML = `<div class="card-header"><span class="card-label">Weather · ${CW.city}</span></div><div class="card-body"><div class="error-state">Unable to load weather</div></div>`;
+    return card;
+  }
+  const [icon, desc] = cwWxCode(wx.weather_code, wx.is_day);
+  const temp  = Math.round(wx.temperature_2m);
+  const feels = Math.round(wx.apparent_temperature);
+  const wind  = Math.round(wx.wind_speed_10m);
+  const humid = Math.round(wx.relative_humidity_2m);
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-label">Weather · ${CW.city}</span>
+      <span class="card-tag">${new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>
+    </div>
+    <div class="card-body">
+      <div class="weather-main">
+        <div><div class="weather-temp">${temp}°</div><div class="weather-feels">Feels like ${feels}°</div></div>
+        <div class="weather-icon-wrap"><div class="weather-icon">${icon}</div><div class="weather-desc">${desc}</div></div>
+      </div>
+      <div class="weather-details">
+        <div class="weather-detail-item"><div class="weather-detail-label">Humidity</div><div class="weather-detail-value">${humid}%</div></div>
+        <div class="weather-detail-item"><div class="weather-detail-label">Wind</div><div class="weather-detail-value">${wind} mph</div></div>
+      </div>
+    </div>`;
+  return card;
+}
+
+/* ════ MENU ════ */
+function buildMenuCard() {
+  const screen = cwBuildMenuScreen();
+  if (!screen) return null;
+  const card = document.createElement('div');
+  card.className = 'card';
+  const items = screen.lines.filter(l => l.trim());
+  const rows  = items.map(i => `<div class="menu-item">${i}</div>`).join('');
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-label">Brunch + Lunch</span>
+      <span class="card-tag">Today</span>
+    </div>
+    <div class="card-body">${rows || '<div class="error-state">No menu today</div>'}</div>`;
+  return card;
+}
+
+/* ════ POST SUBMIT MODAL ════ */
+function openPostModal() {
+  openModal('Post to the Board', `
+    <div class="submit-form" id="submitForm">
+      <div class="form-hint">Your name</div>
+      <input class="form-field" id="postSender" placeholder="First name or nickname" maxlength="30">
+      <div class="form-hint">Your message (3 lines max)</div>
+      <input class="form-field" id="postLine1" placeholder="Line 1" maxlength="28">
+      <input class="form-field" id="postLine2" placeholder="Line 2 (optional)" maxlength="28">
+      <input class="form-field" id="postLine3" placeholder="Line 3 (optional)" maxlength="28">
+      <div class="form-hint">Posts are reviewed by your teacher before appearing on the board.</div>
+      <button class="submit-btn" id="submitBtn" onclick="submitPost()">Submit for Approval</button>
+    </div>`);
+}
+
+async function submitPost() {
+  const sender = (document.getElementById('postSender')?.value || '').trim();
+  const line1  = (document.getElementById('postLine1')?.value  || '').trim();
+  const line2  = (document.getElementById('postLine2')?.value  || '').trim();
+  const line3  = (document.getElementById('postLine3')?.value  || '').trim();
+  const btn    = document.getElementById('submitBtn');
+
+  if (!line1) {
+    document.getElementById('postLine1').focus();
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
+  try {
+    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_messages`, {
+      method: 'POST',
+      headers: {
+        'apikey':        CW.supabaseKey,
+        'Authorization': `Bearer ${CW.supabaseKey}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=minimal',
+      },
+      body: JSON.stringify({
+        room:   CW.room,
+        sender: sender || 'ANONYMOUS',
+        line1:  line1.toUpperCase(),
+        line2:  line2.toUpperCase(),
+        line3:  line3.toUpperCase(),
+        status: 'pending',
+      }),
+    });
+
+    if (res.ok || res.status === 201) {
+      document.getElementById('submitForm').innerHTML = `
+        <div class="submit-success">
+          ✓ Submitted!<br><br>
+          Your message is waiting for teacher approval.<br>
+          Once approved it will appear on the board.
+        </div>`;
+    } else {
+      throw new Error('Submit failed');
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+  }
+}
+
+/* ════ RENDER ════ */
+async function render(calEvents, passData, weatherData) {
+  const now     = new Date();
+  const nm      = now.getHours() * 60 + now.getMinutes();
+  const MON     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const schedKey = cwDetectSchedule(calEvents || []);
+  const schedule = schedKey ? SCHEDULES[schedKey] : null;
+  const sections = [];
+
+  /* ── Pass status (if uid present) ── */
+  if (passData) {
+    const passCard = renderPassCard(passData);
+    if (passCard) sections.push(passCard);
+  }
+
+  /* ── Period timer ── */
+  const timerCard = cwBuildPeriodTimerCard(calEvents || []);
+  if (timerCard) sections.push(timerCard);
+
+  /* ── Weather ── */
+  sections.push(buildWeatherCardMobile(weatherData));
+
+  /* ── Bell schedule ── */
+  const schedCard = document.createElement('div');
+  schedCard.className = 'card tappable';
+  if (!schedule) {
+    const next = cwGetNextSchoolDay();
+    schedCard.innerHTML = `
+      <div class="card-header"><span class="card-label green">Bell Schedule</span><span class="card-tag">Today</span></div>
+      <div class="card-body">
+        <div class="no-school">No School Today</div>
+        ${next ? `<div class="next-day">Next: ${next.label} · ${next.schedLabel}</div>` : ''}
+      </div>`;
+  } else {
+    let rows = '';
+    for (const p of schedule.periods) {
+      const start = cwTimeToMins(p.start);
+      const end   = cwTimeToMins(p.end);
+      const isNow  = nm >= start && nm < end;
+      const isPast = nm >= end;
+      if (p.break) {
+        rows += `<div class="break-row">
+          <span class="break-name">${p.name}</span>
+          <span class="break-time">${p.start} – ${p.end}</span>
+          ${isNow ? '<span class="now-badge">NOW</span>' : ''}
+        </div>`;
+      } else {
+        rows += `<div class="period-row${isNow?' now':isPast?' past':''}">
+          <span class="period-name">${p.name}</span>
+          <span class="period-time">${p.start} – ${p.end}</span>
+          ${isNow ? '<span class="now-badge">NOW</span>' : ''}
+        </div>`;
+      }
+    }
+    schedCard.innerHTML = `
+      <div class="card-header"><span class="card-label green">Bell Schedule</span><span class="card-tag">${schedule.label}</span></div>
+      <div class="card-body">${rows}</div>`;
+    schedCard.onclick = () => openScheduleModal(schedKey);
+  }
+  sections.push(schedCard);
+
+  /* ── Lunch menu ── */
+  const menuCard = buildMenuCard();
+  if (menuCard) sections.push(menuCard);
+
+  /* ── Calendar ── */
+  const calCard     = document.createElement('div');
+  calCard.className = 'card';
+  const todayEvts   = (calEvents||[]).filter(e => {
+    const d = new Date(e.start || e.dtstart);
+    return d.toDateString() === now.toDateString();
+  }).sort((a,b) => new Date(a.start||a.dtstart) - new Date(b.start||b.dtstart));
+  const upcomingEvts = (calEvents||[]).filter(e => {
+    const d = new Date(e.start||e.dtstart);
+    return d.toDateString() !== now.toDateString() && d > now;
+  }).slice(0,6);
+
+  let calContent = '';
+  if (todayEvts.length) {
+    calContent = todayEvts.map(e => `
+      <div class="event-row" onclick='openEventModal(${JSON.stringify(e)})'>
+        <span class="event-time">${e.allDay ? 'All Day' : fmtTime12(e.start||e.dtstart)}</span>
+        <span class="event-title">${e.title||e.summary}</span>
+      </div>`).join('');
+  } else if (upcomingEvts.length) {
+    calContent = upcomingEvts.map(e => {
+      const d = new Date(e.start||e.dtstart);
+      return `<div class="event-row" onclick='openEventModal(${JSON.stringify(e)})'>
+        <span class="event-time">${MON[d.getMonth()]} ${d.getDate()}</span>
+        <span class="event-title">${e.title||e.summary}</span>
+      </div>`;
+    }).join('');
+  } else {
+    calContent = '<div class="no-events">No events today</div>';
+  }
+  calCard.innerHTML = `
+    <div class="card-header">
+      <span class="card-label">RHS Events</span>
+      <span class="card-tag">${todayEvts.length ? 'Today' : 'Upcoming'}</span>
+    </div>
+    <div class="card-body">${calContent}</div>`;
+  sections.push(calCard);
+
+  /* ── Countdowns ── */
+  const upcoming = CW_HARDCODED_COUNTDOWNS
+    .map(c => ({ ...c, days: cwDaysUntil(c.date) }))
+    .filter(c => c.days >= 0 && c.days <= 180)
+    .sort((a,b) => a.days - b.days)
+    .slice(0, 8);
+  if (upcoming.length) {
+    const cdCard = document.createElement('div');
+    cdCard.className = 'card';
+    const cdRows = upcoming.map(c => {
+      const cls   = c.days === 0 ? 'today' : c.days <= 7 ? 'soon' : '';
+      const label = c.days === 0 ? 'TODAY' : c.days === 1 ? '1 DAY' : `${c.days} DAYS`;
+      return `<div class="countdown-row">
+        <span class="countdown-label">${c.label}</span>
+        <span class="countdown-days ${cls}">${label}</span>
+      </div>`;
+    }).join('');
+    cdCard.innerHTML = `
+      <div class="card-header"><span class="card-label">Countdowns</span></div>
+      <div class="card-body">${cdRows}</div>`;
+    sections.push(cdCard);
+  }
+
+  /* ── Birthdays ── */
+  const { todayBdays, weekBdays } = cwGetWeekBirthdays();
+  let upcomingBdays = [];
+  if (!todayBdays.length && !weekBdays.length) {
+    for (let offset = 1; offset <= 60; offset++) {
+      const d = new Date(now); d.setDate(now.getDate() + offset);
+      CW_BIRTHDAYS.filter(b => b.month===d.getMonth()+1 && b.day===d.getDate())
+        .forEach(b => upcomingBdays.push({...b, offset}));
+      if (upcomingBdays.length >= 4) break;
+    }
+  }
+  if (todayBdays.length || weekBdays.length || upcomingBdays.length) {
+    const bdCard = document.createElement('div');
+    bdCard.className = 'card';
+    let bdContent = '';
+    let cardLabel = 'Birthdays This Week';
+    if (todayBdays.length) {
+      cardLabel = '🎂 Happy Birthday!';
+      bdContent += `<div class="bday-today">${todayBdays.map(b =>
+        `<div style="cursor:pointer;padding:4px 0" onclick='openBdayModal(${JSON.stringify(b)})'>
+          🎉 ${b.name}
+          <span style="font-size:10px;color:var(--green);margin-left:8px;font-family:var(--mono)">TAP TO WISH ▶</span>
+        </div>`).join('')}</div>`;
+    }
+    if (weekBdays.length) {
+      bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b =>
+        `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>
+          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}
+        </div>`).join('')}</div>`;
+    }
+    if (upcomingBdays.length) {
+      cardLabel = 'Coming Up · Birthdays';
+      bdContent += `<div class="bday-week">${upcomingBdays.slice(0,4).map(b =>
+        `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>
+          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}
+          <span style="font-size:10px;color:var(--text-dim);margin-left:6px;font-family:var(--mono)">${b.offset===1?'Tomorrow':'In '+b.offset+' days'}</span>
+        </div>`).join('')}</div>`;
+    }
+    bdCard.innerHTML = `
+      <div class="card-header"><span class="card-label">${cardLabel}</span></div>
+      <div class="card-body">${bdContent}</div>`;
+    sections.push(bdCard);
+  }
+
+  /* ── Approved board messages ── */
+  try {
+    const now_iso = new Date().toISOString();
+    const msgs = await cwSupabaseFetch(
+      `cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now_iso}&order=created_at.desc`
+    );
+    if (msgs && msgs.length) {
+      msgs.forEach(msg => {
+        const posted  = new Date(msg.created_at);
+        const timeStr = posted.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+        const sender  = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : 'Room ' + CW.room;
+        const lines   = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim());
+        const qmCard  = document.createElement('div');
+        qmCard.className = 'card';
+        qmCard.innerHTML = `
+          <div class="card-header">
+            <span class="card-label">Board Message</span>
+            <span class="card-tag">${timeStr}</span>
+          </div>
+          <div class="card-body">
+            <div class="msg-from">From ${sender}</div>
+            <div class="msg-text">${lines.join('<br>')}</div>
+          </div>`;
+        sections.push(qmCard);
+      });
+    }
+  } catch(e) {}
+
+  /* ── Did You Know ── */
+  const factScreen = cwBuildFactsScreen();
+  if (factScreen) {
+    const factCard = document.createElement('div');
+    factCard.className = 'card';
+    const factText = factScreen.lines.filter(l => l.trim() && l !== 'DID YOU KNOW?' && !l.startsWith('ROOM')).join(' ');
+    factCard.innerHTML = `
+      <div class="card-header"><span class="card-label tan">Did You Know?</span></div>
+      <div class="card-body"><div class="fact-text">${factText}</div></div>`;
+    sections.push(factCard);
+  }
+
+  /* ── Render all ── */
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  sections.forEach(s => content.appendChild(s));
+}
+
+/* ════ DATA LOAD ════ */
+async function loadData() {
+  setSyncStatus('', 'Loading...');
+  const params    = new URLSearchParams(window.location.search);
+  const uid       = params.get('uid');
+  const studentId = params.get('student');
+  try {
+    const jobs = [
+      cwFetchCalendar(),
+      fetchWeatherMobile(),
+    ];
+    if (uid || studentId) jobs.push(fetchPassStatus(uid, studentId));
+    const results   = await Promise.allSettled(jobs);
+    const calEvents = results[0].value || [];
+    const weatherData = results[1].value || null;
+    const passData  = (uid || studentId) ? (results[2]?.value || null) : null;
+    await render(calEvents, passData, weatherData);
+    setSyncStatus('live', 'Live');
+  } catch(e) {
+    await render([], null, null);
+    setSyncStatus('error', 'Offline');
+  }
+}
+
+/* ════ MODALS ════ */
+function openModal(title, bodyHTML) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML    = bodyHTML;
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal')) return;
+  document.getElementById('modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openScheduleModal(schedKey) {
+  const schedule = SCHEDULES[schedKey];
+  if (!schedule) return;
+  const nm  = new Date().getHours() * 60 + new Date().getMinutes();
+  let rows  = '';
+  for (const p of schedule.periods) {
+    const start  = cwTimeToMins(p.start);
+    const end    = cwTimeToMins(p.end);
+    const isNow  = nm >= start && nm < end;
+    const isPast = nm >= end;
+    if (p.break) {
+      rows += `<div class="modal-break-row${isPast?' past':''}">
+        <span class="modal-break-name">${p.name}</span>
+        <span class="modal-break-time">${p.start} – ${p.end}</span>
+        ${isNow ? '<span class="modal-p-now">NOW</span>' : ''}
+      </div>`;
+    } else {
+      rows += `<div class="modal-period-row${isNow?' now':isPast?' past':''}">
+        <span class="modal-p-name">${p.name}</span>
+        <span class="modal-p-time">${p.start} – ${p.end}</span>
+        ${isNow ? '<span class="modal-p-now">NOW</span>' : ''}
+      </div>`;
+    }
+  }
+  openModal(schedule.label, rows);
+}
+
+function openEventModal(evt) {
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const d   = new Date(evt.start || evt.dtstart);
+  openModal('Event Details', `
+    <div style="font-family:var(--mono)">
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4">${evt.title||evt.summary}</div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.8">
+        📅 ${MON[d.getMonth()]} ${d.getDate()}<br>
+        ⏰ ${evt.allDay ? 'All Day' : fmtTime12(evt.start||evt.dtstart)}
+        ${evt.location ? `<br>📍 ${evt.location}` : ''}
+      </div>
+    </div>`);
+}
+
+/* ════ BIRTHDAY MODAL ════ */
+const BDAY_ICONS = ['🎉','🎂','🎁','🪅','🎈','🥳','🎊'];
+const bdayCache  = {};
+
+async function openBdayModal(person) {
+  const icon  = BDAY_ICONS[Math.floor(Math.random() * BDAY_ICONS.length)];
+  const wishes = ['HAPPY BIRTHDAY!','HAVE AN AMAZING DAY!','YOU ARE AWESOME!','MAKE IT A GREAT ONE!','WE SEE YOU TODAY!'];
+  const wish  = wishes[Math.floor(Math.random() * wishes.length)];
+  openModal('', `
+    <div class="bday-card-modal">
+      <span class="bday-icon" id="bdayIcon">${icon}</span>
+      <div class="bday-name-big">${person.name}</div>
+      <div class="bday-wish">${wish}</div>
+      <button class="bday-tap-btn" onclick="tapBday('${person.name.replace(/'/g,"\\'")}')">🎉 Send Birthday Wishes</button>
+      <div class="bday-tap-count" id="bdayCount">Be the first to send wishes!</div>
+    </div>`);
+  try {
+    const res  = await fetch(`${CW.calScriptUrl}?action=bdaycount&name=${encodeURIComponent(person.name)}`);
+    const data = await res.json();
+    const el   = document.getElementById('bdayCount');
+    if (el && data.count > 0) el.textContent = data.count + ' wish' + (data.count!==1?'es':'') + ' sent so far';
+  } catch(e) {}
+}
+
+async function tapBday(name) {
+  try {
+    const res  = await fetch(`${CW.calScriptUrl}?action=bdaytap&name=${encodeURIComponent(name)}`);
+    const data = await res.json();
+    const el   = document.getElementById('bdayCount');
+    if (el) el.textContent = (data.count||1) + ' wish' + ((data.count||1)!==1?'es':'') + ' sent so far!';
+  } catch(e) {}
+  const icon = document.getElementById('bdayIcon');
+  if (icon) {
+    icon.style.animation = 'none';
+    icon.offsetHeight;
+    icon.style.animation = 'bounce 0.5s ease';
+    icon.textContent = BDAY_ICONS[Math.floor(Math.random() * BDAY_ICONS.length)];
+  }
+}
+
+/* ════ INIT ════ */
+updateClock();
+setInterval(updateClock, 10000);
+setInterval(loadData, 60000);
+
+// PassAble — show My Pass button if uid or student param present
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const uid    = params.get('uid');
+  const sid    = params.get('student');
+  if (uid || sid) {
+    const btn = document.getElementById('passLinkBtn');
+    if (btn) {
+      btn.href         = `pass.html?${params.toString()}`;
+      btn.style.display = 'inline-block';
+    }
+  }
+})();
+
+// Period timer refresh every 5s
+setInterval(() => {
+  const existing = document.querySelector('.period-timer-card');
+  if (existing) {
+    const newCard = cwBuildPeriodTimerCard(window._cwCalEvents || []);
+    if (newCard) existing.replaceWith(newCard);
+  }
+}, 5000);
+
+loadData();
+</script>
+</body>
+</html>
