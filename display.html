@@ -719,7 +719,7 @@ setInterval(async () => {
 setInterval(async () => {
   if (cwFindSlotIdx(messages,'countdown') < 0) return;
   await cwFetchCustomCountdowns();
-  cwInjectSlot(messages,'countdown', cwBuildCountdownScreen(), buildDotsFn);
+  cwInjectSlot(messages,'countdown', cwBuildCountdownScreen(), buildDots);
 }, 10 * 60 * 1000);
 
 // CODE screens: rotate every 10s
