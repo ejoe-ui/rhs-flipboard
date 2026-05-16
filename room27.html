@@ -161,20 +161,63 @@
 
 <script>
 const COWBOY = [
-  { icon:'📺', name:'TV Display', desc:'Main flip board for the classroom TV. Auto-connects to your Google Sheet on load.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-tv.html', badge:'TV · Auto-Launch', bg:'#e8f3ed', fg:'#006938', br:'#b8dfc8', accent:'#006938' },
-  { icon:'🖥', name:'Main Display', desc:'Full flip board with setup screen. Paste your Sheet URL to connect.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard.html', badge:'Display', bg:'#e8f3ed', fg:'#006938', br:'#b8dfc8', accent:'#006938' },
-  { icon:'📱', name:'Mobile Page', desc:'Student-facing view. Weather, schedule, countdown, pass timer, CODE screen.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-mobile.html', badge:'Student · Mobile', bg:'#e8f3ed', fg:'#006938', br:'#b8dfc8', accent:'#006938' },
-  { icon:'⚙️', name:'Admin Panel', desc:'Content manager for building and exporting message queues. Password protected.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-admin.html', badge:'Teacher Only', bg:'#fdf8e8', fg:'#7a5a00', br:'#ddc870', accent:'#7a5a00' },
-  { icon:'✍️', name:'Post a Message', desc:'Student submission page. Messages go to approval queue before appearing on the board.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-post.html', badge:'Student Submit', bg:'#e8f0f8', fg:'#1a5a8a', br:'#a8c8e0', accent:'#1a5a8a' },
-  { icon:'✅', name:'Message Approval', desc:'Review and approve student-submitted messages before they go live on the board.', url:'https://ejoe-ui.github.io/rhs-flipboard/rhs-flipboard-approve.html', badge:'Teacher Only', bg:'#fdf8e8', fg:'#7a5a00', br:'#ddc870', accent:'#7a5a00' },
+  {
+    icon: '📺', name: 'TV Display',
+    desc: 'Unified flip board for the classroom TV. Reads screens and live data directly from Supabase — no Google Sheets needed.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/display.html',
+    badge: 'TV · Live', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+  },
+  {
+    icon: '📱', name: 'Mobile Page',
+    desc: 'Student-facing view. Schedule, weather, menu, countdowns, birthdays, board messages, and PassAble integration.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/mobile.html',
+    badge: 'Student · Mobile', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+  },
+  {
+    icon: '⚙️', name: 'Admin Panel',
+    desc: 'Teacher dashboard. Approve posts, manage slides, add birthdays, post direct messages, upload honor roll, add countdowns.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/admin.html',
+    badge: 'Teacher Only', bg: '#fdf8e8', fg: '#7a5a00', br: '#ddc870', accent: '#7a5a00',
+  },
+  {
+    icon: '🪪', name: 'Pass Page',
+    desc: 'Student pass status page. Shows active pass timer, elapsed time, destination, and weekly stats. Opens via NFC badge scan.',
+    url: 'https://ejoe-ui.github.io/rhs-flipboard/pass.html',
+    badge: 'Student · PassAble', bg: '#e8f0f8', fg: '#1a5a8a', br: '#a8c8e0', accent: '#1a5a8a',
+  },
 ];
 
 const PASSABLE = [
-  { icon:'🎓', name:'Teacher Dashboard', desc:'Issue passes, view students out, return passes, and manage your class.', url:'https://hall-pass-lime.vercel.app/teacher', badge:'Teacher', bg:'#e8f3ed', fg:'#006938', br:'#b8dfc8', accent:'#006938' },
-  { icon:'🪪', name:'Student Kiosk', desc:'Self-checkout kiosk mode. Students scan their badge to check themselves out.', url:'https://hall-pass-lime.vercel.app/kiosk', badge:'Kiosk · Student', bg:'#e8f3ed', fg:'#006938', br:'#b8dfc8', accent:'#006938' },
-  { icon:'📊', name:'Analytics', desc:'Pass usage data, time-out trends, frequent flyers, and period breakdowns.', url:'https://hall-pass-lime.vercel.app/analytics', badge:'Teacher', bg:'#fdf0ee', fg:'#8a3a1a', br:'#e0b8a8', accent:'#8a3a1a' },
-  { icon:'👥', name:'Manage Students', desc:'Add, edit, import roster, print QR badges, and upload student photos.', url:'https://hall-pass-lime.vercel.app/teacher', badge:'Teacher', bg:'#f0eef8', fg:'#4a3a8a', br:'#c0b8e0', accent:'#4a3a8a' },
-  { icon:'📋', name:'Pass Log', desc:'Full history of all passes — filter by student, date, period, or reason.', url:'https://hall-pass-lime.vercel.app/teacher', badge:'Teacher', bg:'#e8f0f8', fg:'#1a4a6a', br:'#a8c8de', accent:'#1a4a6a' },
+  {
+    icon: '🎓', name: 'Teacher Dashboard',
+    desc: 'Issue passes, view students out, return passes, and manage your class.',
+    url: 'https://hall-pass-lime.vercel.app/teacher',
+    badge: 'Teacher', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+  },
+  {
+    icon: '🪪', name: 'Student Kiosk',
+    desc: 'Self-checkout kiosk mode. Students scan their badge to check themselves out.',
+    url: 'https://hall-pass-lime.vercel.app/kiosk',
+    badge: 'Kiosk · Student', bg: '#e8f3ed', fg: '#006938', br: '#b8dfc8', accent: '#006938',
+  },
+  {
+    icon: '📊', name: 'Analytics',
+    desc: 'Pass usage data, time-out trends, frequent flyers, and period breakdowns.',
+    url: 'https://hall-pass-lime.vercel.app/analytics',
+    badge: 'Teacher', bg: '#fdf0ee', fg: '#8a3a1a', br: '#e0b8a8', accent: '#8a3a1a',
+  },
+  {
+    icon: '👥', name: 'Manage Students',
+    desc: 'Add, edit, import roster, print QR badges, and upload student photos.',
+    url: 'https://hall-pass-lime.vercel.app/teacher',
+    badge: 'Teacher', bg: '#f0eef8', fg: '#4a3a8a', br: '#c0b8e0', accent: '#4a3a8a',
+  },
+  {
+    icon: '📋', name: 'Pass Log',
+    desc: 'Full history of all passes — filter by student, date, period, or reason.',
+    url: 'https://hall-pass-lime.vercel.app/teacher',
+    badge: 'Teacher', bg: '#e8f0f8', fg: '#1a4a6a', br: '#a8c8de', accent: '#1a4a6a',
+  },
 ];
 
 let qc = 0;
@@ -208,13 +251,13 @@ function buildCard(p) {
 
 function toggleQR(e, id, url) {
   e.preventDefault(); e.stopPropagation();
-  const panel = document.getElementById(id);
+  const panel  = document.getElementById(id);
   const canvas = document.getElementById(id + '-c');
   panel.classList.toggle('open');
   if (panel.classList.contains('open') && canvas && !canvas.hasChildNodes()) {
     const img = document.createElement('img');
-    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
-    img.width = 160; img.height = 160;
+    img.src    = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' + encodeURIComponent(url);
+    img.width  = 160; img.height = 160;
     img.style.borderRadius = '4px';
     canvas.appendChild(img);
   }
