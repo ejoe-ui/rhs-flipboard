@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0a0a">
+<title>Cowboy Wire · Admin</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green:      #006938;
+    --green-dark: #004d28;
+    --green-dim:  #003d20;
+    --tan:        #C4BEB5;
+    --bg:         #0a0a0a;
+    --surface:    #111111;
+    --surface2:   #181818;
+    --border:     #222222;
+    --border2:    #2a2a2a;
+    --text:       #f0ebe0;
+    --text-mid:   #888880;
+    --text-dim:   #444440;
+    --red:        #cc3333;
+    --orange:     #cc7700;
+    --mono:       'Courier New', Courier, monospace;
+    --sans:       -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius:     10px;
+  }
+
+  html { background: var(--bg); min-height: 100%; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  /* ══ HEADER ══ */
+  #header {
+    background: #0a0a0a; border-bottom: 2px solid var(--green);
+    padding: 14px 16px 12px; position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .h-left  { display: flex; align-items: center; gap: 10px; }
+  .h-badge {
+    background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 11px; font-weight: 900;
+    letter-spacing: 0.15em; padding: 4px 10px;
+    border-radius: 3px; text-transform: uppercase;
+  }
+  .h-title {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.2em; color: var(--tan); text-transform: uppercase;
+  }
+  .h-sync { display: flex; align-items: center; gap: 5px; }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
+  .sync-dot.live  { background: var(--green); animation: pulse 2.5s infinite; }
+  .sync-dot.error { background: #882222; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .sync-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
+
+  .accent-bar {
+    height: 2px;
+    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
+  }
+
+  /* ══ CONTENT ══ */
+  #content { padding: 14px 14px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ══ SECTION LABEL ══ */
+  .section-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim);
+    padding: 0 2px; margin-bottom: 6px;
+  }
+
+  /* ══ CARD ══ */
+  .card {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 9px 14px 7px; border-bottom: 1px solid var(--border);
+  }
+  .card-label {
+    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .card-label.green  { color: var(--green); }
+  .card-label.orange { color: var(--orange); }
+  .card-label.red    { color: var(--red); }
+  .card-tag {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim);
+    border: 1px solid var(--border2); padding: 2px 7px; border-radius: 3px;
+  }
+  .card-body { padding: 12px 14px; }
+
+  /* ══ PENDING QUEUE ══ */
+  .pending-item {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-left: 3px solid var(--orange);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .pending-item:last-child { margin-bottom: 0; }
+  .pending-sender {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.15em; color: var(--orange); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .pending-lines {
+    font-family: var(--mono); font-size: 14px; font-weight: 700;
+    color: var(--text); letter-spacing: 0.04em; line-height: 1.6; margin-bottom: 10px;
+  }
+  .pending-meta {
+    font-family: var(--mono); font-size: 9px; color: var(--text-dim);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .pending-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ══ APPROVED ITEMS ══ */
+  .approved-item {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-left: 3px solid var(--green);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .approved-item:last-child { margin-bottom: 0; }
+  .approved-sender {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .approved-lines {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--text); letter-spacing: 0.04em; line-height: 1.5; margin-bottom: 8px;
+  }
+  .approved-meta {
+    font-family: var(--mono); font-size: 9px; color: var(--text-dim);
+    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .expires-soon { color: var(--orange); }
+
+  /* ══ BUTTONS ══ */
+  .btn {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 8px 14px; border-radius: 6px; border: none;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-approve { background: var(--green); color: #fff; }
+  .btn-approve:hover { background: var(--green-dark); }
+
+  .btn-deny { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn-deny:hover { background: rgba(204,51,51,0.1); }
+
+  .btn-kill { background: transparent; color: var(--red); border: 1px solid var(--red); font-size: 10px; padding: 6px 10px; }
+  .btn-kill:hover { background: rgba(204,51,51,0.1); }
+
+  .btn-post { background: var(--green); color: #fff; width: 100%; padding: 13px; font-size: 12px; border-radius: 8px; }
+  .btn-post:hover { background: var(--green-dark); }
+
+  .btn-secondary { background: transparent; color: var(--text-mid); border: 1px solid var(--border2); }
+  .btn-secondary:hover { border-color: var(--tan); color: var(--tan); }
+
+  /* expire selector */
+  .expire-select {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 6px; padding: 7px 10px;
+    cursor: pointer; outline: none;
+  }
+  .expire-select:focus { border-color: var(--green); }
+
+  /* ══ TEACHER POST FORM ══ */
+  .form-field {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 10px 12px;
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+    width: 100%; outline: none; transition: border-color 0.15s;
+    -webkit-appearance: none; margin-bottom: 8px;
+  }
+  .form-field:focus { border-color: var(--green); }
+  .form-field::placeholder { color: var(--text-dim); }
+  .form-hint {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+    color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .form-row .form-field { margin-bottom: 0; }
+
+  /* ══ SCREEN TOGGLES ══ */
+  .toggle-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .toggle-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 10px 12px; gap: 8px;
+  }
+  .toggle-label {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; color: var(--text); text-transform: uppercase;
+  }
+  .toggle-switch {
+    position: relative; width: 36px; height: 20px; flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--border2);
+    border-radius: 20px; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute;
+    width: 14px; height: 14px; left: 3px; top: 3px;
+    background: #fff; border-radius: 50%; transition: transform 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: var(--green); }
+  .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+  /* ══ EMPTY STATE ══ */
+  .empty-state {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    text-align: center; padding: 20px 0;
+  }
+
+  /* ══ LOADING ══ */
+  .loading-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 20px 0;
+  }
+  .loading-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: ldot 1.2s infinite ease-in-out; }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes ldot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+
+  /* ══ TOAST ══ */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: #fff;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 10px 20px; border-radius: 6px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s; z-index: 999; white-space: nowrap;
+  }
+  #toast.error { background: var(--red); }
+  #toast.show  { opacity: 1; }
+
+  /* ══ HONOR ROLL UPLOAD ══ */
+  .upload-area {
+    background: var(--surface2); border: 1px dashed var(--border2);
+    border-radius: 8px; padding: 16px; text-align: center;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .upload-area:hover { border-color: var(--green); }
+  .upload-area input { display: none; }
+  .upload-label {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  /* ══ STATS BAR ══ */
+  .stats-row { display: flex; gap: 8px; }
+  .stat-block {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 10px 12px; text-align: center;
+  }
+  .stat-num   { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+
+  /* ══ DISPLAY LINK ══ */
+  .display-link {
+    display: block; text-align: center; text-decoration: none;
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--tan); padding: 12px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; transition: border-color 0.15s;
+  }
+  .display-link:hover { border-color: var(--tan); }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div id="header">
+  <div class="h-left">
+    <div class="h-badge" id="roomBadge">ROOM 27</div>
+    <div class="h-title">Admin</div>
+  </div>
+  <div class="h-sync">
+    <div class="sync-dot" id="syncDot"></div>
+    <span class="sync-label" id="syncLabel">Loading</span>
+  </div>
+</div>
+<div class="accent-bar"></div>
+
+<!-- ══ CONTENT ══ -->
+<div id="content">
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-block"><span class="stat-num" id="statPending">—</span><span class="stat-label">Pending</span></div>
+    <div class="stat-block"><span class="stat-num" id="statLive">—</span><span class="stat-label">Live Now</span></div>
+    <div class="stat-block"><span class="stat-num" id="statTotal">—</span><span class="stat-label">All Time</span></div>
+  </div>
+
+  <!-- Quick links -->
+  <a class="display-link" href="display.html" target="_blank">▶ Open TV Display</a>
+  <a class="display-link" href="mobile.html" target="_blank">📱 Open Mobile View</a>
+
+  <!-- Pending approval queue -->
+  <div>
+    <div class="section-label">⏳ Pending Approval</div>
+    <div class="card">
+      <div class="card-body" id="pendingQueue">
+        <div class="loading-row"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live approved posts -->
+  <div>
+    <div class="section-label">✓ Live on Board</div>
+    <div class="card">
+      <div class="card-body" id="approvedList">
+        <div class="loading-row"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher quick post -->
+  <div>
+    <div class="section-label">📢 Post Direct Message</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label green">Teacher Post</span>
+        <span class="card-tag">Goes live immediately</span>
+      </div>
+      <div class="card-body">
+        <div class="form-hint">Message lines (28 chars max each)</div>
+        <input class="form-field" id="tLine1" placeholder="Line 1 (required)" maxlength="28">
+        <input class="form-field" id="tLine2" placeholder="Line 2 (optional)" maxlength="28">
+        <input class="form-field" id="tLine3" placeholder="Line 3 (optional)" maxlength="28">
+        <div class="form-row">
+          <div class="form-hint" style="margin:0;flex-shrink:0">Expires after</div>
+          <select class="expire-select" id="tExpire">
+            <option value="1">1 hour</option>
+            <option value="4">4 hours</option>
+            <option value="24" selected>24 hours</option>
+            <option value="48">48 hours</option>
+            <option value="72">72 hours</option>
+          </select>
+        </div>
+        <button class="btn btn-post" onclick="postTeacherMessage()">Post to Board Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen toggles -->
+  <div>
+    <div class="section-label">🎛 Screen Toggles</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label">Active Screens</span>
+        <span class="card-tag">Reload display to apply</span>
+      </div>
+      <div class="card-body">
+        <div class="toggle-grid" id="toggleGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Honor roll upload -->
+  <div>
+    <div class="section-label">🏆 Honor Roll</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label">Upload New List</span>
+        <span class="card-tag" id="honorRollCount">0 students</span>
+      </div>
+      <div class="card-body">
+        <div class="form-hint" style="margin-bottom:10px">CSV format: Name, Grade (Freshman/Sophomore/Junior/Senior)</div>
+        <label class="upload-area" id="uploadArea">
+          <input type="file" accept=".csv" id="honorRollFile" onchange="uploadHonorRoll(this)">
+          <div class="upload-label" id="uploadLabel">Tap to select CSV file</div>
+        </label>
+        <div id="uploadStatus" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom countdowns -->
+  <div>
+    <div class="section-label">⏱ Custom Countdowns</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label">Add Event</span>
+      </div>
+      <div class="card-body">
+        <input class="form-field" id="cdLabel" placeholder="Event name (e.g. FIELD TRIP)" maxlength="28">
+        <div class="form-row">
+          <input class="form-field" id="cdDate" type="date" style="flex:1;margin:0">
+          <select class="expire-select" id="cdEmoji">
+            <option value="📅">📅</option>
+            <option value="🎓">🎓</option>
+            <option value="🏆">🏆</option>
+            <option value="🎉">🎉</option>
+            <option value="🚌">🚌</option>
+            <option value="🎭">🎭</option>
+            <option value="⚽">⚽</option>
+            <option value="🎸">🎸</option>
+          </select>
+        </div>
+        <button class="btn btn-approve" style="width:100%;margin-top:4px" onclick="addCountdown()">Add Countdown</button>
+        <div id="countdownList" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
+
+<!-- ══ SCRIPTS ══ -->
+<script src="config.js"></script>
+<script src="cowboy-wire-core.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════
+   ADMIN.HTML — Teacher Dashboard
+   Approval queue, live posts, teacher post,
+   screen toggles, honor roll upload, countdowns
+════════════════════════════════════════════════════════ */
+
+document.getElementById('roomBadge').textContent = 'ROOM ' + CLASSROOM_CONFIG.room;
+
+/* ════ TOAST ════ */
+let toastTimer = null;
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className   = 'show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = '', 2800);
+}
+
+function setSyncStatus(state, label) {
+  const dot = document.getElementById('syncDot');
+  dot.className = 'sync-dot' + (state==='live' ? ' live' : state==='error' ? ' error' : '');
+  document.getElementById('syncLabel').textContent = label;
+}
+
+/* ════ TIME HELPERS ════ */
+function timeAgo(iso) {
+  const diff = Math.floor((new Date() - new Date(iso)) / 60000);
+  if (diff < 1)  return 'just now';
+  if (diff < 60) return diff + ' min ago';
+  const h = Math.floor(diff / 60);
+  return h + 'h ago';
+}
+
+function expiresIn(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((new Date(iso) - new Date()) / 60000);
+  if (diff <= 0)  return 'expired';
+  if (diff < 60)  return 'expires in ' + diff + ' min';
+  const h = Math.floor(diff / 60);
+  if (h < 24)    return 'expires in ' + h + 'h';
+  return 'expires in ' + Math.floor(h/24) + 'd';
+}
+
+function expiresClass(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((new Date(iso) - new Date()) / 60000);
+  return diff < 120 ? 'expires-soon' : '';
+}
+
+/* ════ LOAD DATA ════ */
+async function loadAll() {
+  setSyncStatus('', 'Loading...');
+  try {
+    await Promise.all([
+      loadPending(),
+      loadApproved(),
+      loadCountdowns(),
+      loadHonorRollCount(),
+    ]);
+    await loadStats();
+    setSyncStatus('live', 'Live');
+  } catch(e) {
+    setSyncStatus('error', 'Error');
+  }
+}
+
+async function loadStats() {
+  const now = new Date().toISOString();
+  const [pending, approved, total] = await Promise.all([
+    cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.pending&select=id`),
+    cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&select=id`),
+    cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&select=id`),
+  ]);
+  document.getElementById('statPending').textContent = pending?.length ?? '—';
+  document.getElementById('statLive').textContent    = approved?.length ?? '—';
+  document.getElementById('statTotal').textContent   = total?.length ?? '—';
+}
+
+/* ════ PENDING QUEUE ════ */
+async function loadPending() {
+  const rows = await cwSupabaseFetch(
+    `cw_messages?room=eq.${CW.room}&status=eq.pending&order=created_at.asc`
+  );
+  const el = document.getElementById('pendingQueue');
+
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="empty-state">No pending posts</div>';
+    return;
+  }
+
+  el.innerHTML = rows.map(r => {
+    const lines = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
+    const sender = r.sender || 'Anonymous';
+    return `
+      <div class="pending-item" id="pending-${r.id}">
+        <div class="pending-sender">From ${sender}</div>
+        <div class="pending-lines">${lines}</div>
+        <div class="pending-meta">Submitted ${timeAgo(r.created_at)}</div>
+        <div class="pending-actions">
+          <select class="expire-select" id="expire-${r.id}">
+            <option value="24" selected>24 hours</option>
+            <option value="48">48 hours</option>
+            <option value="72">72 hours</option>
+          </select>
+          <button class="btn btn-approve" onclick="approvePost('${r.id}')">✓ Approve</button>
+          <button class="btn btn-deny"    onclick="denyPost('${r.id}')">✕ Deny</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ════ APPROVE ════ */
+async function approvePost(id) {
+  const hours     = parseInt(document.getElementById('expire-' + id)?.value || '24');
+  const expiresAt = new Date(Date.now() + hours * 3600000).toISOString();
+  const btn       = document.querySelector(`#pending-${id} .btn-approve`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Approving...'; }
+
+  const res = await cwSupabasePatch('cw_messages', id, {
+    status:       'approved',
+    expires_at:   expiresAt,
+    expire_hours: hours,
+    active:       true,
+  });
+
+  if (res) {
+    document.getElementById('pending-' + id)?.remove();
+    showToast('✓ Post approved — live for ' + hours + 'h');
+    await loadAll();
+  } else {
+    showToast('Error approving post', true);
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Approve'; }
+  }
+}
+
+/* ════ DENY ════ */
+async function denyPost(id) {
+  const btn = document.querySelector(`#pending-${id} .btn-deny`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
+
+  const res = await cwSupabasePatch('cw_messages', id, { status: 'denied', active: false });
+  if (res) {
+    document.getElementById('pending-' + id)?.remove();
+    showToast('Post denied and removed');
+    await loadStats();
+  } else {
+    showToast('Error denying post', true);
+    if (btn) { btn.disabled = false; btn.textContent = '✕ Deny'; }
+  }
+}
+
+/* ════ APPROVED LIST ════ */
+async function loadApproved() {
+  const now  = new Date().toISOString();
+  const rows = await cwSupabaseFetch(
+    `cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&order=created_at.desc`
+  );
+  const el = document.getElementById('approvedList');
+
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="empty-state">No live posts right now</div>';
+    return;
+  }
+
+  el.innerHTML = rows.map(r => {
+    const lines  = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
+    const sender = r.sender || 'Anonymous';
+    const expCls = expiresClass(r.expires_at);
+    return `
+      <div class="approved-item" id="approved-${r.id}">
+        <div class="approved-sender">From ${sender}</div>
+        <div class="approved-lines">${lines}</div>
+        <div class="approved-meta ${expCls}">${timeAgo(r.created_at)} · ${expiresIn(r.expires_at)}</div>
+        <button class="btn btn-kill" onclick="killPost('${r.id}')">⚡ Remove Now</button>
+      </div>`;
+  }).join('');
+}
+
+/* ════ KILL POST ════ */
+async function killPost(id) {
+  if (!confirm('Remove this post from the board immediately?')) return;
+  const btn = document.querySelector(`#approved-${id} .btn-kill`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
+
+  const res = await cwSupabasePatch('cw_messages', id, {
+    status:     'removed',
+    active:     false,
+    expires_at: new Date().toISOString(),
+  });
+
+  if (res) {
+    document.getElementById('approved-' + id)?.remove();
+    showToast('Post removed from board');
+    await loadStats();
+    const el = document.getElementById('approvedList');
+    if (!el.querySelector('.approved-item')) {
+      el.innerHTML = '<div class="empty-state">No live posts right now</div>';
+    }
+  } else {
+    showToast('Error removing post', true);
+    if (btn) { btn.disabled = false; btn.textContent = '⚡ Remove Now'; }
+  }
+}
+
+/* ════ TEACHER DIRECT POST ════ */
+async function postTeacherMessage() {
+  const line1  = (document.getElementById('tLine1')?.value || '').trim().toUpperCase();
+  const line2  = (document.getElementById('tLine2')?.value || '').trim().toUpperCase();
+  const line3  = (document.getElementById('tLine3')?.value || '').trim().toUpperCase();
+  const hours  = parseInt(document.getElementById('tExpire')?.value || '24');
+  const btn    = document.querySelector('.btn-post');
+
+  if (!line1) {
+    document.getElementById('tLine1').focus();
+    showToast('Line 1 is required', true);
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
+
+  const expiresAt = new Date(Date.now() + hours * 3600000).toISOString();
+  const res = await cwSupabasePost('cw_messages', {
+    room:         CW.room,
+    sender:       CLASSROOM_CONFIG.teacher,
+    line1,
+    line2,
+    line3,
+    status:       'approved',
+    active:       true,
+    expires_at:   expiresAt,
+    expire_hours: hours,
+  });
+
+  if (res) {
+    document.getElementById('tLine1').value = '';
+    document.getElementById('tLine2').value = '';
+    document.getElementById('tLine3').value = '';
+    showToast('✓ Posted — live for ' + hours + 'h');
+    await loadAll();
+  } else {
+    showToast('Error posting message', true);
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Post to Board Now'; }
+}
+
+/* ════ SCREEN TOGGLES ════ */
+const SCREEN_LABELS = {
+  calendar:  'Calendar',
+  schedule:  'Schedule',
+  birthday:  'Birthdays',
+  countdown: 'Countdowns',
+  weather:   'Weather',
+  menu:      'Menu',
+  facts:     'Facts',
+  passable:  'PassAble',
+  code:      'C.O.D.E',
+  honorRoll: 'Honor Roll',
+  quickMsg:  'Messages',
+};
+
+function buildToggles() {
+  const grid = document.getElementById('toggleGrid');
+  grid.innerHTML = Object.entries(SCREEN_LABELS).map(([key, label]) => {
+    const checked = CLASSROOM_CONFIG.screens[key] !== false ? 'checked' : '';
+    return `
+      <div class="toggle-item">
+        <span class="toggle-label">${label}</span>
+        <label class="toggle-switch">
+          <input type="checkbox" ${checked} onchange="toggleScreen('${key}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>`;
+  }).join('');
+}
+
+function toggleScreen(key, enabled) {
+  CLASSROOM_CONFIG.screens[key] = enabled;
+  showToast((enabled ? '✓ ' : '✕ ') + SCREEN_LABELS[key] + (enabled ? ' enabled' : ' disabled'));
+  // Note: display.html reads config on load — teacher needs to reload display tab
+}
+
+/* ════ HONOR ROLL ════ */
+async function loadHonorRollCount() {
+  const rows = await cwFetchHonorRoll();
+  document.getElementById('honorRollCount').textContent =
+    rows ? rows.length + ' students' : '0 students';
+}
+
+async function uploadHonorRoll(input) {
+  const file = input.files[0];
+  if (!file) return;
+  document.getElementById('uploadLabel').textContent = 'Reading ' + file.name + '...';
+
+  const text = await file.text();
+  const rows = text.trim().split('\n').filter(r => r.trim());
+  if (rows.length < 2) {
+    showToast('CSV appears empty', true);
+    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
+    return;
+  }
+
+  // Parse CSV — expects Name, Grade columns
+  const header  = rows[0].toLowerCase().replace(/\r/g,'').split(',').map(h => h.replace(/^"|"$/g,'').trim());
+  const nameIdx = header.findIndex(h => h === 'name');
+  const gradeIdx= header.findIndex(h => h === 'grade');
+  if (nameIdx < 0 || gradeIdx < 0) {
+    showToast('CSV needs Name and Grade columns', true);
+    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
+    return;
+  }
+
+  const parsed = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cols  = rows[i].replace(/\r/g,'').split(',');
+    const clean = c => (cols[c]||'').replace(/^"|"$/g,'').trim();
+    const name  = clean(nameIdx);
+    const grade = clean(gradeIdx);
+    if (name && grade) parsed.push({ room: CW.room, name, grade, active: true, quarter: 'Q3' });
+  }
+
+  if (!parsed.length) {
+    showToast('No valid rows found', true);
+    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
+    return;
+  }
+
+  document.getElementById('uploadLabel').textContent = 'Uploading ' + parsed.length + ' students...';
+
+  // Clear existing for this room, then insert new
+  try {
+    // Deactivate all current
+    await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll?room=eq.${CW.room}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ active: false }),
+    });
+
+    // Insert new batch
+    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll`, {
+      method: 'POST',
+      headers: {
+        'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(parsed),
+    });
+
+    if (res.ok || res.status === 201) {
+      document.getElementById('uploadLabel').textContent = '✓ ' + parsed.length + ' students uploaded';
+      document.getElementById('honorRollCount').textContent = parsed.length + ' students';
+      showToast('✓ Honor roll updated — ' + parsed.length + ' students');
+    } else {
+      throw new Error('Upload failed');
+    }
+  } catch(e) {
+    showToast('Upload error — try again', true);
+    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
+  }
+}
+
+/* ════ CUSTOM COUNTDOWNS ════ */
+async function loadCountdowns() {
+  const rows = await cwSupabaseFetch(
+    `cw_countdowns?room=eq.${CW.room}&active=eq.true&order=date.asc`
+  );
+  const el = document.getElementById('countdownList');
+  if (!rows || !rows.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:8px 0">No custom countdowns</div>';
+    return;
+  }
+  el.innerHTML = rows.map(r => {
+    const days = cwDaysUntil(r.date);
+    const label = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days + ' days';
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)">${r.emoji} ${r.label}</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px">${r.date} · ${label}</div>
+        </div>
+        <button class="btn btn-kill" onclick="removeCountdown('${r.id}')">✕</button>
+      </div>`;
+  }).join('');
+}
+
+async function addCountdown() {
+  const label = (document.getElementById('cdLabel')?.value || '').trim().toUpperCase();
+  const date  = document.getElementById('cdDate')?.value;
+  const emoji = document.getElementById('cdEmoji')?.value || '📅';
+
+  if (!label || !date) {
+    showToast('Name and date required', true);
+    return;
+  }
+
+  const res = await cwSupabasePost('cw_countdowns', {
+    room: CW.room, label, date, emoji, active: true,
+  });
+
+  if (res) {
+    document.getElementById('cdLabel').value = '';
+    document.getElementById('cdDate').value  = '';
+    showToast('✓ Countdown added');
+    await loadCountdowns();
+  } else {
+    showToast('Error adding countdown', true);
+  }
+}
+
+async function removeCountdown(id) {
+  const res = await cwSupabasePatch('cw_countdowns', id, { active: false });
+  if (res) {
+    showToast('Countdown removed');
+    await loadCountdowns();
+  } else {
+    showToast('Error removing', true);
+  }
+}
+
+/* ════ INIT ════ */
+buildToggles();
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>
