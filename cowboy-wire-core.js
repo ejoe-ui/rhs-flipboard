@@ -1,5 +1,5 @@
 /**
- * cowboy-wire-core.js  v2.0
+ * cowboy-wire-core.js  v3.0
  * ─────────────────────────────────────────────────────────────
  * Single source of truth for ALL Cowboy Wire logic.
  * Imported by display.html, mobile.html, and admin.html.
@@ -338,36 +338,52 @@ function cwBuildPeriodTimerData(calEvents) {
 
 
 /* ═══════════════════════════════════════════════════════════
-   6. BIRTHDAYS
+   6. BIRTHDAYS  (Supabase-backed — cw_birthdays table)
+   Fallback hardcoded list used until Supabase loads.
 ═══════════════════════════════════════════════════════════ */
 let CW_BIRTHDAYS = [
-  { name: 'CAMILA VILLANUEVA',      month: 5,  day: 9  },
-  { name: 'ELENA MENDES',           month: 5,  day: 10 },
-  { name: 'ISABEL VERA RIOS',       month: 5,  day: 19 },
-  { name: 'CELESTE CARRILLO',       month: 5,  day: 21 },
-  { name: 'EMILLY DIAZ',            month: 5,  day: 26 },
-  { name: 'YERALDINE LOPEZ VEGA',   month: 5,  day: 29 },
-  { name: 'ELLA-JADE STOLLIKER',    month: 5,  day: 31 },
-  { name: 'ALYSSA HERNANDEZ',       month: 6,  day: 17 },
-  { name: 'PERLA MARIN ALVAREZ',    month: 6,  day: 20 },
-  { name: 'JAYLEE YBARRA',          month: 7,  day: 4  },
-  { name: 'GABRIEL GARCIA CORONA',  month: 7,  day: 6  },
-  { name: 'MIGUEL MARCOS-DELGADO',  month: 7,  day: 18 },
-  { name: 'ELPIDIO SOLORIO',        month: 7,  day: 20 },
-  { name: 'MICHELLE RAMIREZ',       month: 7,  day: 22 },
-  { name: 'ALYSSA GONZALEZ',        month: 7,  day: 25 },
-  { name: 'CAMILA CORTES PEREZ',    month: 7,  day: 27 },
-  { name: 'STARR GARCIA',           month: 7,  day: 28 },
-  { name: 'LIYRISE AGUILAR',        month: 8,  day: 4  },
-  { name: 'SANTIAGO CHAVEZ',        month: 8,  day: 4  },
-  { name: 'CINTHIA LAWLESS',        month: 8,  day: 7  },
-  { name: 'NATALIE ARIAS',          month: 8,  day: 11 },
-  { name: 'DOMINIC FIGUEROA',       month: 8,  day: 11 },
-  { name: 'MARISOL FLORES RODRIGUEZ', month: 8, day: 12 },
-  { name: 'VIOLETA TAMAYO',         month: 8,  day: 15 },
-  { name: 'VALERIA PEREZ SOLIS',    month: 8,  day: 24 },
-  { name: 'VALERIA OLGUIN',         month: 8,  day: 29 },
+  { name: 'CAMILA VILLANUEVA',        month: 5,  day: 9  },
+  { name: 'ELENA MENDES',             month: 5,  day: 10 },
+  { name: 'ISABEL VERA RIOS',         month: 5,  day: 19 },
+  { name: 'CELESTE CARRILLO',         month: 5,  day: 21 },
+  { name: 'EMILLY DIAZ',              month: 5,  day: 26 },
+  { name: 'YERALDINE LOPEZ VEGA',     month: 5,  day: 29 },
+  { name: 'ELLA-JADE STOLLIKER',      month: 5,  day: 31 },
+  { name: 'ALYSSA HERNANDEZ',         month: 6,  day: 17 },
+  { name: 'PERLA MARIN ALVAREZ',      month: 6,  day: 20 },
+  { name: 'JAYLEE YBARRA',            month: 7,  day: 4  },
+  { name: 'GABRIEL GARCIA CORONA',    month: 7,  day: 6  },
+  { name: 'MIGUEL MARCOS-DELGADO',    month: 7,  day: 18 },
+  { name: 'ELPIDIO SOLORIO',          month: 7,  day: 20 },
+  { name: 'MICHELLE RAMIREZ',         month: 7,  day: 22 },
+  { name: 'ALYSSA GONZALEZ',          month: 7,  day: 25 },
+  { name: 'CAMILA CORTES PEREZ',      month: 7,  day: 27 },
+  { name: 'STARR GARCIA',             month: 7,  day: 28 },
+  { name: 'LIYRISE AGUILAR',          month: 8,  day: 4  },
+  { name: 'SANTIAGO CHAVEZ',          month: 8,  day: 4  },
+  { name: 'CINTHIA LAWLESS',          month: 8,  day: 7  },
+  { name: 'NATALIE ARIAS',            month: 8,  day: 11 },
+  { name: 'DOMINIC FIGUEROA',         month: 8,  day: 11 },
+  { name: 'MARISOL FLORES RODRIGUEZ', month: 8,  day: 12 },
+  { name: 'VIOLETA TAMAYO',           month: 8,  day: 15 },
+  { name: 'VALERIA PEREZ SOLIS',      month: 8,  day: 24 },
+  { name: 'VALERIA OLGUIN',           month: 8,  day: 29 },
 ];
+
+// Fetch birthdays from Supabase and replace the local list
+async function cwFetchBirthdays() {
+  const rows = await cwSupabaseFetch(
+    `cw_birthdays?room=eq.${CW.room}&active=eq.true&order=month.asc,day.asc`
+  );
+  if (rows && rows.length) {
+    CW_BIRTHDAYS = rows.map(r => ({
+      name:  r.name.toUpperCase(),
+      month: r.month,
+      day:   r.day,
+      id:    r.id,
+    }));
+  }
+}
 
 function cwGetWeekBirthdays() {
   const now  = new Date();
@@ -1117,11 +1133,51 @@ function cwFallbackScreen(key) {
   return { lines: (fb[key] || Array(7).fill('')), speed: 10, [flag]: true };
 }
 
+/* ═══════════════════════════════════════════════════════════
+   SUPABASE SCREENS FETCH
+   Replaces Google Sheets CSV as the slide source.
+   Returns messages array ready for the flipboard.
+═══════════════════════════════════════════════════════════ */
+async function cwFetchScreens() {
+  const rows = await cwSupabaseFetch(
+    `cw_screens?room=eq.${CW.room}&enabled=eq.true&order=sort_order.asc`
+  );
+  if (!rows || !rows.length) return null;
+
+  return rows.map(r => {
+    const lines = Array.isArray(r.lines) ? r.lines : JSON.parse(r.lines || '[]');
+    // Pad to 7 lines
+    while (lines.length < 7) lines.push('');
+
+    if (r.is_slot && r.slot_type) {
+      const flagKey = `_is${r.slot_type.charAt(0).toUpperCase() + r.slot_type.slice(1)}Placeholder`;
+      return {
+        lines,
+        speed: r.speed || 10,
+        id:    r.id,
+        [flagKey]: true,
+      };
+    }
+    return {
+      lines,
+      speed:     r.speed || 10,
+      id:        r.id,
+      sort_order: r.sort_order,
+    };
+  }).filter(s => {
+    const isSlot = Object.values(CW_SLOT_MAP).some(f => s[f.ph]);
+    return isSlot || (s.lines && s.lines.some(l => l && l.trim()));
+  });
+}
+
 // Master refresh — call this with your messages array on init and re-sync
 async function cwRefreshAllSlots(messages, buildDotsFn) {
   const has = key => cwFindSlotIdx(messages, key) >= 0;
 
   const jobs = [];
+
+  // Fetch birthdays from Supabase first so birthday screen is accurate
+  jobs.push(cwFetchBirthdays());
 
   if (has('calendar') && CW.screens.calendar) {
     jobs.push(cwFetchCalendar().then(events => {
@@ -1153,7 +1209,7 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
   // Fire all async fetches in parallel, 5s timeout each
   await Promise.all(jobs.map(j => Promise.race([j, new Promise(r => setTimeout(r, 5000))])));
 
-  // Synchronous slots — build immediately after async jobs complete
+  // Synchronous slots — build after async jobs complete
   if (has('schedule') && CW.screens.schedule) {
     cwInjectSlot(messages, 'schedule', cwBuildScheduleScreen(), buildDotsFn);
   }

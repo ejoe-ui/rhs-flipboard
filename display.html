@@ -656,10 +656,10 @@ async function startBoard(data) {
   showMessage(0);
   setSyncStatus('live', 'LIVE · SYNCS EVERY ' + SYNC_SEC + 'S');
 
-  // Sync loop
+  // Sync loop — re-fetch screens from Supabase
   clearInterval(syncTimer);
   syncTimer = setInterval(async () => {
-    const fresh = await fetchSheet(CLASSROOM_CONFIG.sheetUrl);
+    const fresh = await cwFetchScreens();
     if (fresh) {
       const savedLine = messages[currentIdx]?.lines?.[0] || '';
       messages = smartMerge(fresh);
@@ -719,7 +719,7 @@ setInterval(async () => {
 setInterval(async () => {
   if (cwFindSlotIdx(messages,'countdown') < 0) return;
   await cwFetchCustomCountdowns();
-  cwInjectSlot(messages,'countdown', cwBuildCountdownScreen(), buildDots);
+  cwInjectSlot(messages,'countdown', cwBuildCountdownScreen(), buildDotsFn);
 }, 10 * 60 * 1000);
 
 // CODE screens: rotate every 10s
@@ -895,18 +895,18 @@ window.addEventListener('click', () => {
 
   setSyncStatus('','CONNECTING...');
 
-  const data = await fetchSheet(CLASSROOM_CONFIG.sheetUrl);
+  const data = await cwFetchScreens();
   if (data) {
     await startBoard(data);
   } else {
-    // Sheet failed — show fallback message and retry
-    setSyncStatus('error','SHEET UNAVAILABLE');
+    // Supabase failed — show fallback and retry
+    setSyncStatus('error','CONNECTION UNAVAILABLE');
     messages = [{
       lines: [
         'COWBOY WIRE',
         CLASSROOM_CONFIG.badge,
         '',
-        'CONNECTING TO SHEET...',
+        'CONNECTING...',
         '',
         'PLEASE WAIT',
         'RIVERDALE HIGH SCHOOL',
@@ -915,9 +915,8 @@ window.addEventListener('click', () => {
     }];
     buildDots();
     showMessage(0);
-    // Retry after 15s
     setTimeout(async () => {
-      const retry = await fetchSheet(CLASSROOM_CONFIG.sheetUrl);
+      const retry = await cwFetchScreens();
       if (retry) startBoard(retry);
     }, 15000);
   }
