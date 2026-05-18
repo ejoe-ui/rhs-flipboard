@@ -1,5 +1,5 @@
 /**
- * cowboy-wire-core.js  v3.0
+ * cowboy-wire-core.js  v3.1
  * ─────────────────────────────────────────────────────────────
  * Single source of truth for ALL Cowboy Wire logic.
  * Imported by display.html, mobile.html, and admin.html.
@@ -11,18 +11,19 @@
  *   3.  ACADEMIC CALENDAR (no-school dates, overrides)
  *   4.  SCHEDULE DETECTION
  *   5.  PERIOD TIMER
- *   6.  BIRTHDAYS
+ *   6.  BIRTHDAYS  (DoNotDisplay filtered)
  *   7.  COUNTDOWNS
  *   8.  FACT BANK
  *   9.  WEATHER
  *  10.  DAILY MENU
  *  11.  SUPABASE HELPERS (screens, messages, honor roll, countdowns)
- *  12.  CALENDAR (Google Apps Script feed)
- *  13.  PASSABLE (live hall pass data)
- *  14.  CODE BEHAVIOR SCREENS
- *  15.  SCREEN BUILDERS (one per content type)
- *  16.  SLOT INJECTION ENGINE
- *  17.  UTILITY HELPERS
+ *  12.  DO NOT DISPLAY FILTER (privacy — FERPA)
+ *  13.  CALENDAR (Google Apps Script feed)
+ *  14.  PASSABLE (live hall pass data)
+ *  15.  CODE BEHAVIOR SCREENS
+ *  16.  SCREEN BUILDERS (one per content type)
+ *  17.  SLOT INJECTION ENGINE
+ *  18.  UTILITY HELPERS
  * ─────────────────────────────────────────────────────────────
  */
 
@@ -400,8 +401,10 @@ function cwGetWeekBirthdays() {
     weekDates.push({ m: day.getMonth() + 1, d: day.getDate() });
   }
 
-  const todayBdays = CW_BIRTHDAYS.filter(b => b.month === m && b.day === d);
-  const weekBdays  = CW_BIRTHDAYS.filter(b =>
+  // Apply DoNotDisplay filter before returning
+  const allowed    = cwFilterBirthdays(CW_BIRTHDAYS);
+  const todayBdays = allowed.filter(b => b.month === m && b.day === d);
+  const weekBdays  = allowed.filter(b =>
     !(b.month === m && b.day === d) &&
     weekDates.some(wd => wd.m === b.month && wd.d === b.day)
   );
@@ -413,13 +416,13 @@ function cwBuildBirthdayScreen() {
   const { todayBdays, weekBdays } = cwGetWeekBirthdays();
 
   if (!todayBdays.length && !weekBdays.length) {
-    // Look ahead 60 days
+    // Look ahead 60 days — also filtered
     const now = new Date();
     const upcoming = [];
     for (let offset = 1; offset <= 60 && upcoming.length < 5; offset++) {
       const d = new Date(now);
       d.setDate(now.getDate() + offset);
-      CW_BIRTHDAYS
+      cwFilterBirthdays(CW_BIRTHDAYS)
         .filter(b => b.month === d.getMonth() + 1 && b.day === d.getDate())
         .forEach(b => upcoming.push({ ...b, offset }));
     }
@@ -806,11 +809,12 @@ async function cwFetchCustomCountdowns() {
   }
 }
 
-// Fetch honor roll for this room
+// Fetch honor roll for this room — filtered against DoNotDisplay list
 async function cwFetchHonorRoll() {
-  return await cwSupabaseFetch(
+  const rows = await cwSupabaseFetch(
     `cw_honor_roll?room=eq.${CW.room}&active=eq.true&order=grade.asc`
   );
+  return cwFilterHonorRoll(rows);
 }
 
 // Fetch ALL active approved messages (for building multiple screens)
@@ -869,8 +873,56 @@ function cwBuildHonorRollHTML(rows) {
 
 
 /* ═══════════════════════════════════════════════════════════
-   12. CALENDAR (Google Apps Script JSON feed)
+   12. DO NOT DISPLAY FILTER
+   Privacy list — students whose names may not appear on any
+   public-facing display (TV, mobile, honor roll ticker).
+   Source: cw_do_not_display table in Supabase.
+   This filter is NOT optional. It runs before any student
+   name is rendered on a public screen.
 ═══════════════════════════════════════════════════════════ */
+let CW_DO_NOT_DISPLAY = new Set();
+
+async function cwFetchDoNotDisplay() {
+  const rows = await cwSupabaseFetch(
+    `cw_do_not_display?room=eq.${CW.room}&active=eq.true`
+  );
+  if (rows && rows.length) {
+    CW_DO_NOT_DISPLAY = new Set(
+      rows.map(r => `${r.first_name} ${r.last_name}`.toUpperCase().trim())
+        .concat(rows.map(r => `${r.last_name}, ${r.first_name}`.toUpperCase().trim()))
+        .concat(rows.map(r => `${r.last_name} ${r.first_name}`.toUpperCase().trim()))
+    );
+  }
+}
+
+// Returns true if a name should be hidden from public display
+function cwIsRestricted(name) {
+  if (!name) return false;
+  const n = name.toUpperCase().trim();
+  // Check exact match and partial match (last name only as fallback)
+  if (CW_DO_NOT_DISPLAY.has(n)) return true;
+  for (const restricted of CW_DO_NOT_DISPLAY) {
+    if (n.includes(restricted) || restricted.includes(n)) return true;
+  }
+  return false;
+}
+
+// Filter an array of birthday objects against the DoNotDisplay list
+function cwFilterBirthdays(birthdays) {
+  return birthdays.filter(b => !cwIsRestricted(b.name));
+}
+
+// Filter honor roll HTML — removes restricted names before building ticker
+function cwFilterHonorRoll(rows) {
+  return (rows || []).filter(r => {
+    const full = `${r.name}`.toUpperCase().trim();
+    const parts = r.name.split(',');
+    const flipped = parts.length > 1
+      ? `${parts[1].trim()} ${parts[0].trim()}`.toUpperCase()
+      : full;
+    return !cwIsRestricted(full) && !cwIsRestricted(flipped);
+  });
+}
 window._cwCalEvents = [];
 
 function cwIsToday(dtStr, allDay) {
@@ -1186,7 +1238,11 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
 
   const jobs = [];
 
-  // Fetch birthdays from Supabase first so birthday screen is accurate
+  // ALWAYS fetch DoNotDisplay list first — privacy filter must load
+  // before any student names are rendered anywhere
+  jobs.push(cwFetchDoNotDisplay());
+
+  // Fetch birthdays from Supabase so birthday screen is accurate
   jobs.push(cwFetchBirthdays());
 
   if (has('calendar') && CW.screens.calendar) {
