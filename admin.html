@@ -1643,18 +1643,25 @@ function renderObjectivesEditor(currentKey) {
 
   // Period tabs
   const tabs = PERIODS.map(p => {
-    const hasContent = objData[p] && (objData[p].title || objData[p].line1);
-    const isCurrent  = p === currentKey;
-    const isActive   = objData[p]?.active;
-    return `<button class="obj-tab${p===objActivePeriod?' active':''}${isCurrent?' current':''}${hasContent?' has-content':''}"
-      onclick="selectObjPeriod('${p}')">${p}${isActive?' ✓':''}</button>`;
+    const obj    = objData[p];
+    const status = objStatus(obj);
+    const isCur  = p === currentKey;
+    const isAct  = p === objActivePeriod;
+    return `<button class="obj-tab${isAct?' active':''}${isCur?' current':''}${status==='live'?' live':''}${status==='scheduled'?' scheduled':''}"
+      onclick="selectObjPeriod('${p}')">${p}</button>`;
   }).join('');
 
   if (!objActivePeriod) objActivePeriod = currentKey || 'P1';
-  const obj = objData[objActivePeriod] || {};
+  const obj    = objData[objActivePeriod] || {};
+  const status = objStatus(obj);
+  const today  = todayStr();
 
   el.innerHTML = `
     <div class="obj-period-tabs">${tabs}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="form-hint" style="margin:0">${objActivePeriod} Objectives</div>
+      <span class="obj-status-badge ${status}">${status==='live'?'● Live':status==='scheduled'?'📅 Scheduled':'○ Not set'}</span>
+    </div>
     <div class="obj-form">
       <div class="form-hint">Title (28 chars)</div>
       <input class="obj-title-input" id="objTitle"
@@ -1675,6 +1682,14 @@ function renderObjectivesEditor(currentKey) {
         <div class="obj-char-count" id="objCount${i}">${(obj['line'+i]||'').length}/25</div>
       `).join('')}
 
+      <div class="obj-date-row">
+        <span class="obj-date-label">Date</span>
+        <input type="date" class="obj-date-input" id="objDate"
+          value="${obj.scheduled_date||today}"
+          min="${today}">
+        <span class="obj-date-hint">Today = live now · future date = pre-load</span>
+      </div>
+
       <div class="obj-mode-row">
         <span class="obj-mode-label">Show mode</span>
         <select class="obj-mode-select" id="objMode" onchange="toggleTimedField()">
@@ -1689,11 +1704,12 @@ function renderObjectivesEditor(currentKey) {
 
       <div class="obj-action-row">
         <button class="btn btn-approve" style="flex:1" onclick="saveObjectives()">
-          ${obj.active ? '✓ Update & Keep Live' : '▶ Save & Go Live'}
+          ${status==='inactive'?'▶ Save & Go Live':status==='scheduled'?'📅 Update Schedule':'✓ Update & Keep Live'}
         </button>
-        ${obj.active ? `<button class="btn btn-kill" onclick="clearObjectives()">Stop Showing</button>` : ''}
+        ${status!=='inactive'?`<button class="btn btn-kill" onclick="clearObjectives()">Stop Showing</button>`:''}
         <button class="btn btn-secondary" onclick="clearObjForm()">Clear Form</button>
       </div>
+      ${status==='scheduled'?`<div style="font-family:var(--font-mono);font-size:9px;color:var(--orange);letter-spacing:0.1em;text-align:center;padding:4px 0">Scheduled for ${obj.scheduled_date} · Won't show until that date</div>`:''}
     </div>`;
 }
 
