@@ -361,6 +361,65 @@
     border-radius: 8px; transition: border-color 0.15s;
   }
   .display-link:hover { border-color: var(--tan); }
+
+  /* ══ OBJECTIVES ══ */
+  .obj-period-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .obj-tab {
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 6px 12px; border-radius: 5px;
+    border: 1px solid var(--border2); background: var(--surface2);
+    color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+  }
+  .obj-tab:hover  { border-color: var(--green); color: var(--green); }
+  .obj-tab.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .obj-tab.current { box-shadow: 0 0 0 2px var(--green); }
+  .obj-tab.has-content::after { content: '•'; margin-left: 4px; color: var(--green); }
+  .obj-tab.active.has-content::after { color: rgba(255,255,255,0.7); }
+
+  .obj-form { display: flex; flex-direction: column; gap: 8px; }
+  .obj-title-input {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 10px 12px;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--text); width: 100%; outline: none;
+    transition: border-color 0.15s; letter-spacing: 0.04em;
+  }
+  .obj-title-input:focus { border-color: var(--green); }
+  .obj-title-input::placeholder { color: var(--text-dim); font-weight: 400; }
+  .obj-line-wrap { position: relative; }
+  .obj-line-input {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 10px 8px 28px;
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text); width: 100%; outline: none;
+    transition: border-color 0.15s;
+  }
+  .obj-line-input:focus { border-color: var(--green); }
+  .obj-line-input::placeholder { color: var(--text-dim); }
+  .obj-bullet { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-dim); pointer-events: none; }
+  .obj-char-count { font-family: var(--mono); font-size: 8px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; }
+  .obj-char-count.over { color: var(--red); }
+  .obj-mode-row {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    padding: 10px 12px; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: 6px;
+  }
+  .obj-mode-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+  .obj-mode-select {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 5px; padding: 5px 8px;
+    cursor: pointer; outline: none; flex: 1;
+  }
+  .obj-mode-select:focus { border-color: var(--green); }
+  #objTimedMinutes {
+    font-family: var(--mono); font-size: 11px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 5px; padding: 5px 8px;
+    cursor: pointer; outline: none; width: 80px;
+  }
+  .obj-action-row { display: flex; gap: 8px; }
 </style>
 </head>
 <body>
@@ -436,6 +495,20 @@
           </select>
         </div>
         <button class="btn btn-post" onclick="postTeacherMessage()">Post to Board Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Period objectives -->
+  <div>
+    <div class="section-label">📋 Period Objectives</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label green">Now Learning</span>
+        <span class="card-tag" id="objPeriodTag">Detecting period...</span>
+      </div>
+      <div class="card-body" id="objectivesEditor">
+        <div class="loading-row"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
       </div>
     </div>
   </div>
@@ -1294,12 +1367,185 @@ async function removeBirthday(id) {
   }
 }
 
+/* ════ OBJECTIVES ════ */
+const PERIODS = ['P1','P2','P3','P4','P5','P6','P7'];
+let objData       = {};
+let objActivePeriod = null;
+
+async function loadObjectives() {
+  const rows = await cwSupabaseFetch(
+    `cw_objectives?room=eq.${CW.room}&order=period.asc`
+  );
+  if (rows) rows.forEach(r => objData[r.period] = r);
+
+  // Detect current period
+  const now = new Date();
+  const nm  = now.getHours() * 60 + now.getMinutes();
+  // Simple period detection for admin — use Regular schedule as reference
+  const periods = [
+    { key:'P1', start:'8:10',  end:'9:02'  },
+    { key:'P2', start:'9:06',  end:'9:56'  },
+    { key:'P3', start:'10:15',end:'11:05' },
+    { key:'P4', start:'11:09',end:'11:59' },
+    { key:'P5', start:'12:37',end:'1:27'  },
+    { key:'P6', start:'1:31', end:'2:21'  },
+    { key:'P7', start:'2:25', end:'3:15'  },
+  ];
+  const toMins = t => { const [h,m]=t.split(':').map(Number); return (h>=1&&h<=7?h+12:h)*60+m; };
+  const cur = periods.find(p => nm >= toMins(p.start) && nm < toMins(p.end));
+  const currentKey = cur?.key || null;
+
+  // Update period tag
+  const tag = document.getElementById('objPeriodTag');
+  if (tag) tag.textContent = currentKey ? currentKey + ' active now' : 'No period active';
+
+  renderObjectivesEditor(currentKey);
+}
+
+function renderObjectivesEditor(currentKey) {
+  const el = document.getElementById('objectivesEditor');
+  if (!el) return;
+
+  // Period tabs
+  const tabs = PERIODS.map(p => {
+    const hasContent = objData[p] && (objData[p].title || objData[p].line1);
+    const isCurrent  = p === currentKey;
+    const isActive   = objData[p]?.active;
+    return `<button class="obj-tab${p===objActivePeriod?' active':''}${isCurrent?' current':''}${hasContent?' has-content':''}"
+      onclick="selectObjPeriod('${p}')">${p}${isActive?' ✓':''}</button>`;
+  }).join('');
+
+  if (!objActivePeriod) objActivePeriod = currentKey || 'P1';
+  const obj = objData[objActivePeriod] || {};
+
+  el.innerHTML = `
+    <div class="obj-period-tabs">${tabs}</div>
+    <div class="obj-form">
+      <div class="form-hint">Title (28 chars)</div>
+      <input class="obj-title-input" id="objTitle"
+        placeholder="${objActivePeriod} · LEARNING OBJECTIVES"
+        maxlength="28" value="${obj.title||''}"
+        oninput="updateObjCharCount('objTitleCount', this.value, 28)">
+      <div class="obj-char-count" id="objTitleCount">${(obj.title||'').length}/28</div>
+
+      <div class="form-hint">Objectives (25 chars each — bullet added automatically)</div>
+      ${[1,2,3,4,5,6].map(i => `
+        <div class="obj-line-wrap">
+          <span class="obj-bullet">▸</span>
+          <input class="obj-line-input" id="objLine${i}"
+            placeholder="Objective ${i}${i===1?' (required)':' (optional)'}"
+            maxlength="25" value="${obj['line'+i]||''}"
+            oninput="updateObjCharCount('objCount${i}', this.value, 25)">
+        </div>
+        <div class="obj-char-count" id="objCount${i}">${(obj['line'+i]||'').length}/25</div>
+      `).join('')}
+
+      <div class="obj-mode-row">
+        <span class="obj-mode-label">Show mode</span>
+        <select class="obj-mode-select" id="objMode" onchange="toggleTimedField()">
+          <option value="always"${(obj.display_mode||'always')==='always'?' selected':''}>Always — full period</option>
+          <option value="timed"${obj.display_mode==='timed'?' selected':''}>Timed — first X minutes</option>
+          <option value="manual"${obj.display_mode==='manual'?' selected':''}>Manual — until I turn it off</option>
+        </select>
+        <select id="objTimedMinutes" style="display:${obj.display_mode==='timed'?'block':'none'}">
+          ${[5,10,15,20].map(m=>`<option value="${m}"${obj.timed_minutes==m?' selected':''}>${m} min</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="obj-action-row">
+        <button class="btn btn-approve" style="flex:1" onclick="saveObjectives()">
+          ${obj.active ? '✓ Update & Keep Live' : '▶ Save & Go Live'}
+        </button>
+        ${obj.active ? `<button class="btn btn-kill" onclick="clearObjectives()">Stop Showing</button>` : ''}
+        <button class="btn btn-secondary" onclick="clearObjForm()">Clear Form</button>
+      </div>
+    </div>`;
+}
+
+function selectObjPeriod(period) {
+  objActivePeriod = period;
+  renderObjectivesEditor(null);
+}
+
+function toggleTimedField() {
+  const mode = document.getElementById('objMode')?.value;
+  const tf   = document.getElementById('objTimedMinutes');
+  if (tf) tf.style.display = mode === 'timed' ? 'block' : 'none';
+}
+
+function updateObjCharCount(id, val, max) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val.length + '/' + max;
+  el.className   = 'obj-char-count' + (val.length >= max ? ' over' : '');
+}
+
+async function saveObjectives() {
+  const period = objActivePeriod;
+  const title  = (document.getElementById('objTitle')?.value || '').trim();
+  const line1  = (document.getElementById('objLine1')?.value || '').trim();
+  if (!line1) { showToast('At least one objective required', true); return; }
+
+  const body = {
+    title,
+    line1,
+    line2: (document.getElementById('objLine2')?.value||'').trim(),
+    line3: (document.getElementById('objLine3')?.value||'').trim(),
+    line4: (document.getElementById('objLine4')?.value||'').trim(),
+    line5: (document.getElementById('objLine5')?.value||'').trim(),
+    line6: (document.getElementById('objLine6')?.value||'').trim(),
+    display_mode:   document.getElementById('objMode')?.value || 'always',
+    timed_minutes:  parseInt(document.getElementById('objTimedMinutes')?.value||'10'),
+    active: true,
+    updated_at: new Date().toISOString(),
+  };
+
+  const existing = objData[period];
+  let res;
+  if (existing?.id) {
+    res = await cwSupabasePatch('cw_objectives', existing.id, body);
+  } else {
+    res = await cwSupabasePost('cw_objectives', { ...body, room: CW.room, period });
+  }
+
+  if (res) {
+    objData[period] = { ...(existing||{}), ...body, period };
+    showToast('✓ ' + period + ' objectives live on board');
+    renderObjectivesEditor(null);
+  } else {
+    showToast('Error saving objectives', true);
+  }
+}
+
+async function clearObjectives() {
+  const period   = objActivePeriod;
+  const existing = objData[period];
+  if (!existing?.id) return;
+  const res = await cwSupabasePatch('cw_objectives', existing.id, { active: false });
+  if (res) {
+    objData[period] = { ...existing, active: false };
+    showToast(period + ' objectives removed from board');
+    renderObjectivesEditor(null);
+  } else {
+    showToast('Error removing objectives', true);
+  }
+}
+
+function clearObjForm() {
+  ['objTitle','objLine1','objLine2','objLine3','objLine4','objLine5','objLine6']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['objTitleCount','objCount1','objCount2','objCount3','objCount4','objCount5','objCount6']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.textContent='0/'+((id==='objTitleCount')?'28':'25'); });
+}
+
 /* ════ INIT ════ */
 buildToggles();
 loadAll();
 loadSlides();
 loadBirthdays();
+loadObjectives();
 setInterval(loadAll, 30000);
+setInterval(loadObjectives, 60000);
 </script>
 </body>
 </html>
