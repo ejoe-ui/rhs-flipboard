@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -7,13 +7,24 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0a0a0a">
 <title>Cowboy Wire · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=League+Spartan:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    --green:      #006938;
-    --green-dark: #004d28;
-    --green-dim:  #003d20;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body:    'League Spartan', -apple-system, sans-serif;
+    --font-mono:    'DM Mono', 'Courier New', monospace;
+    --radius:       10px;
+  }
+
+  /* ══ DARK MODE (default) ══ */
+  [data-theme="dark"] {
+    --green:      #00a86b;
+    --green-dark: #007a4d;
+    --green-dim:  #002a1a;
     --tan:        #C4BEB5;
     --bg:         #0a0a0a;
     --surface:    #111111;
@@ -23,43 +34,79 @@
     --text:       #f0ebe0;
     --text-mid:   #888880;
     --text-dim:   #444440;
+    --header-bg:  #080808;
     --red:        #cc3333;
     --orange:     #cc7700;
-    --mono:       'Courier New', Courier, monospace;
-    --sans:       -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --radius:     10px;
+    --toggle-bg:  #f0ebe0;
+    --toggle-fg:  #1a1a18;
+  }
+
+  /* ══ LIGHT MODE ══ */
+  [data-theme="light"] {
+    --green:      #005640;
+    --green-dark: #003d2e;
+    --green-dim:  #e6f0ed;
+    --tan:        #C4BEB5;
+    --bg:         #f4f2ef;
+    --surface:    #ffffff;
+    --surface2:   #f9f8f6;
+    --border:     #e2ddd8;
+    --border2:    #d8d3ce;
+    --text:       #1a1a18;
+    --text-mid:   #5a5a55;
+    --text-dim:   #9a9890;
+    --header-bg:  #0d0d0d;
+    --red:        #cc3333;
+    --orange:     #cc7700;
+    --toggle-bg:  #1a1a1a;
+    --toggle-fg:  #f0ebe0;
   }
 
   html { background: var(--bg); min-height: 100%; }
   body {
     background: var(--bg); color: var(--text);
-    font-family: var(--sans); min-height: 100vh;
+    font-family: var(--font-body); min-height: 100vh;
     padding-bottom: 40px;
+    transition: background 0.2s, color 0.2s;
   }
 
   /* ══ HEADER ══ */
   #header {
-    background: #0a0a0a; border-bottom: 2px solid var(--green);
-    padding: 14px 16px 12px; position: sticky; top: 0; z-index: 100;
+    background: var(--header-bg); border-bottom: 2px solid var(--green);
+    padding: 12px 16px 10px; position: sticky; top: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.2s, border-color 0.2s;
   }
   .h-left  { display: flex; align-items: center; gap: 10px; }
   .h-badge {
     background: var(--green); color: #fff;
-    font-family: var(--mono); font-size: 11px; font-weight: 900;
-    letter-spacing: 0.15em; padding: 4px 10px;
-    border-radius: 3px; text-transform: uppercase;
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 13px; letter-spacing: 0.1em;
+    padding: 4px 10px; border-radius: 3px; text-transform: uppercase;
+    transition: background 0.2s;
   }
   .h-title {
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 0.2em; color: var(--tan); text-transform: uppercase;
   }
+  .h-right { display: flex; align-items: center; gap: 10px; }
+
+  #themeToggle {
+    background: var(--toggle-bg); color: var(--toggle-fg);
+    border: none; border-radius: 5px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 5px 10px; cursor: pointer; white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  #themeToggle:active { opacity: 0.7; }
+
   .h-sync { display: flex; align-items: center; gap: 5px; }
   .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
   .sync-dot.live  { background: var(--green); animation: pulse 2.5s infinite; }
   .sync-dot.error { background: #882222; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .sync-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
+  .sync-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
 
   .accent-bar {
     height: 2px;
@@ -67,11 +114,11 @@
   }
 
   /* ══ CONTENT ══ */
-  #content { padding: 14px 14px; display: flex; flex-direction: column; gap: 14px; }
+  #content { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
 
   /* ══ SECTION LABEL ══ */
   .section-label {
-    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
     letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim);
     padding: 0 2px; margin-bottom: 6px;
   }
@@ -80,160 +127,114 @@
   .card {
     background: var(--surface); border: 1px solid var(--border2);
     border-radius: var(--radius); overflow: hidden;
+    transition: background 0.2s, border-color 0.2s;
   }
   .card-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 9px 14px 7px; border-bottom: 1px solid var(--border);
   }
   .card-label {
-    font-family: var(--mono); font-size: 9px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
     letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim);
   }
   .card-label.green  { color: var(--green); }
   .card-label.orange { color: var(--orange); }
   .card-label.red    { color: var(--red); }
   .card-tag {
-    font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--text-dim);
     border: 1px solid var(--border2); padding: 2px 7px; border-radius: 3px;
   }
   .card-body { padding: 12px 14px; }
 
-  /* ══ PENDING QUEUE ══ */
+  /* ══ PENDING / APPROVED ══ */
   .pending-item {
     background: var(--surface2); border: 1px solid var(--border2);
     border-left: 3px solid var(--orange);
     border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
   }
   .pending-item:last-child { margin-bottom: 0; }
-  .pending-sender {
-    font-family: var(--mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.15em; color: var(--orange); text-transform: uppercase; margin-bottom: 6px;
-  }
-  .pending-lines {
-    font-family: var(--mono); font-size: 14px; font-weight: 700;
-    color: var(--text); letter-spacing: 0.04em; line-height: 1.6; margin-bottom: 10px;
-  }
-  .pending-meta {
-    font-family: var(--mono); font-size: 9px; color: var(--text-dim);
-    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px;
-  }
+  .pending-sender { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; }
+  .pending-lines  { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.6; margin-bottom: 10px; }
+  .pending-meta   { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
   .pending-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* ══ APPROVED ITEMS ══ */
   .approved-item {
     background: var(--surface2); border: 1px solid var(--border2);
     border-left: 3px solid var(--green);
     border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
   }
   .approved-item:last-child { margin-bottom: 0; }
-  .approved-sender {
-    font-family: var(--mono); font-size: 10px; font-weight: 700;
-    letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 6px;
-  }
-  .approved-lines {
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
-    color: var(--text); letter-spacing: 0.04em; line-height: 1.5; margin-bottom: 8px;
-  }
-  .approved-meta {
-    font-family: var(--mono); font-size: 9px; color: var(--text-dim);
-    letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px;
-  }
-  .expires-soon { color: var(--orange); }
+  .approved-sender { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 6px; }
+  .approved-lines  { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.5; margin-bottom: 8px; }
+  .approved-meta   { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .expires-soon    { color: var(--orange); }
 
   /* ══ BUTTONS ══ */
   .btn {
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 0.12em; text-transform: uppercase;
     padding: 8px 14px; border-radius: 6px; border: none;
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-    transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
+    cursor: pointer; transition: opacity 0.15s, transform 0.1s; white-space: nowrap;
   }
-  .btn:active { transform: scale(0.97); }
+  .btn:active   { transform: scale(0.97); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .btn-approve { background: var(--green); color: #fff; }
-  .btn-approve:hover { background: var(--green-dark); }
-
-  .btn-deny { background: transparent; color: var(--red); border: 1px solid var(--red); }
+  .btn-approve  { background: var(--green); color: #fff; }
+  .btn-approve:hover { opacity: 0.85; }
+  .btn-deny     { background: transparent; color: var(--red); border: 1px solid var(--red); }
   .btn-deny:hover { background: rgba(204,51,51,0.1); }
-
-  .btn-kill { background: transparent; color: var(--red); border: 1px solid var(--red); font-size: 10px; padding: 6px 10px; }
+  .btn-kill     { background: transparent; color: var(--red); border: 1px solid var(--red); font-size: 10px; padding: 6px 10px; }
   .btn-kill:hover { background: rgba(204,51,51,0.1); }
-
-  .btn-post { background: var(--green); color: #fff; width: 100%; padding: 13px; font-size: 12px; border-radius: 8px; }
-  .btn-post:hover { background: var(--green-dark); }
-
+  .btn-post     { background: var(--green); color: #fff; width: 100%; padding: 13px; font-size: 12px; border-radius: 8px; }
+  .btn-post:hover { opacity: 0.85; }
   .btn-secondary { background: transparent; color: var(--text-mid); border: 1px solid var(--border2); }
   .btn-secondary:hover { border-color: var(--tan); color: var(--tan); }
 
-  /* expire selector */
   .expire-select {
-    font-family: var(--mono); font-size: 11px;
+    font-family: var(--font-mono); font-size: 11px;
     background: var(--surface); border: 1px solid var(--border2);
     color: var(--text); border-radius: 6px; padding: 7px 10px;
     cursor: pointer; outline: none;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
   }
   .expire-select:focus { border-color: var(--green); }
 
-  /* ══ TEACHER POST FORM ══ */
+  /* ══ FORMS ══ */
   .form-field {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 10px 12px;
-    font-family: var(--mono); font-size: 13px; color: var(--text);
-    width: 100%; outline: none; transition: border-color 0.15s;
+    font-family: var(--font-mono); font-size: 13px; color: var(--text);
+    width: 100%; outline: none; transition: border-color 0.15s, background 0.2s;
     -webkit-appearance: none; margin-bottom: 8px;
   }
   .form-field:focus { border-color: var(--green); }
   .form-field::placeholder { color: var(--text-dim); }
   .form-hint {
-    font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em;
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em;
     color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
   }
   .form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .form-row .form-field { margin-bottom: 0; }
 
-  /* ══ SCREEN TOGGLES ══ */
-  .toggle-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  }
+  /* ══ TOGGLES ══ */
+  .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .toggle-item {
     display: flex; align-items: center; justify-content: space-between;
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 8px; padding: 10px 12px; gap: 8px;
+    transition: background 0.2s;
   }
-  .toggle-label {
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.08em; color: var(--text); text-transform: uppercase;
-  }
-  .toggle-switch {
-    position: relative; width: 36px; height: 20px; flex-shrink: 0;
-  }
+  .toggle-label { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--text); text-transform: uppercase; }
+  .toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
   .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute; inset: 0; background: var(--border2);
-    border-radius: 20px; cursor: pointer; transition: background 0.2s;
-  }
-  .toggle-slider::before {
-    content: ''; position: absolute;
-    width: 14px; height: 14px; left: 3px; top: 3px;
-    background: #fff; border-radius: 50%; transition: transform 0.2s;
-  }
+  .toggle-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 20px; cursor: pointer; transition: background 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: transform 0.2s; }
   .toggle-switch input:checked + .toggle-slider { background: var(--green); }
   .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
 
-  /* ══ EMPTY STATE ══ */
-  .empty-state {
-    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
-    letter-spacing: 0.08em; text-transform: uppercase;
-    text-align: center; padding: 20px 0;
-  }
-
-  /* ══ LOADING ══ */
-  .loading-row {
-    display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 20px 0;
-  }
+  /* ══ EMPTY / LOADING ══ */
+  .empty-state { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; padding: 20px 0; }
+  .loading-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px 0; }
   .loading-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: ldot 1.2s infinite ease-in-out; }
   .loading-dot:nth-child(2) { animation-delay: 0.2s; }
   .loading-dot:nth-child(3) { animation-delay: 0.4s; }
@@ -243,7 +244,7 @@
   #toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--green); color: #fff;
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 0.15em; text-transform: uppercase;
     padding: 10px 20px; border-radius: 6px;
     opacity: 0; pointer-events: none;
@@ -252,7 +253,59 @@
   #toast.error { background: var(--red); }
   #toast.show  { opacity: 1; }
 
-  /* ══ HONOR ROLL UPLOAD ══ */
+  /* ══ STATS ══ */
+  .stats-row { display: flex; gap: 8px; }
+  .stat-block { flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; text-align: center; transition: background 0.2s; }
+  .stat-num   { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+
+  /* ══ DISPLAY LINK ══ */
+  .display-link {
+    display: block; text-align: center; text-decoration: none;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--tan); padding: 12px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; transition: border-color 0.15s, background 0.2s;
+  }
+  .display-link:hover { border-color: var(--tan); }
+
+  /* ══ SLIDE EDITOR ══ */
+  .slide-item {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; gap: 10px; align-items: flex-start;
+    cursor: grab; user-select: none; transition: background 0.2s;
+  }
+  .slide-item:active  { cursor: grabbing; opacity: 0.8; }
+  .slide-item.dragging { opacity: 0.4; border-style: dashed; }
+  .slide-item.drag-over { border-color: var(--green); }
+  .slide-drag-handle { color: var(--text-dim); font-size: 16px; padding-top: 2px; flex-shrink: 0; cursor: grab; }
+  .slide-info { flex: 1; min-width: 0; }
+  .slide-type { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+  .slide-type.slot { color: var(--tan); }
+  .slide-preview { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slide-meta { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+  .slide-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
+  .slide-toggle { cursor: pointer; font-size: 18px; line-height: 1; padding-top: 1px; }
+  .slide-line-input {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 10px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text);
+    width: 100%; outline: none; margin-bottom: 6px;
+    transition: border-color 0.15s; letter-spacing: 0.04em;
+  }
+  .slide-line-input:focus { border-color: var(--green); }
+  .slide-line-input::placeholder { color: var(--text-dim); }
+  .char-count { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; margin-bottom: 6px; }
+
+  /* ══ BIRTHDAY LIST ══ */
+  .bday-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .bday-row:last-child { border-bottom: none; }
+  .bday-name { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); }
+  .bday-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
+
+  /* ══ UPLOAD ══ */
   .upload-area {
     background: var(--surface2); border: 1px dashed var(--border2);
     border-radius: 8px; padding: 16px; text-align: center;
@@ -260,76 +313,7 @@
   }
   .upload-area:hover { border-color: var(--green); }
   .upload-area input { display: none; }
-  .upload-label {
-    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
-    letter-spacing: 0.1em; text-transform: uppercase;
-  }
-
-  /* ══ STATS BAR ══ */
-  .stats-row { display: flex; gap: 8px; }
-  .stat-block {
-    flex: 1; background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 8px; padding: 10px 12px; text-align: center;
-  }
-  .stat-num   { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
-  .stat-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
-
-  /* ══ SLIDE EDITOR ══ */
-  .slide-item {
-    background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
-    display: flex; gap: 10px; align-items: flex-start;
-    cursor: grab; user-select: none;
-  }
-  .slide-item:active { cursor: grabbing; opacity: 0.8; }
-  .slide-item.dragging { opacity: 0.4; border-style: dashed; }
-  .slide-item.drag-over { border-color: var(--green); }
-  .slide-drag-handle {
-    color: var(--text-dim); font-size: 16px; padding-top: 2px;
-    flex-shrink: 0; cursor: grab;
-  }
-  .slide-info { flex: 1; min-width: 0; }
-  .slide-type {
-    font-family: var(--mono); font-size: 9px; font-weight: 700;
-    letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--green); margin-bottom: 4px;
-  }
-  .slide-type.slot { color: var(--tan); }
-  .slide-preview {
-    font-family: var(--mono); font-size: 12px; font-weight: 700;
-    color: var(--text); letter-spacing: 0.04em; line-height: 1.5;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .slide-meta {
-    font-family: var(--mono); font-size: 9px; color: var(--text-dim);
-    letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px;
-  }
-  .slide-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
-  .slide-toggle { cursor: pointer; font-size: 18px; line-height: 1; padding-top: 1px; }
-
-  /* slide edit modal fields */
-  .slide-line-input {
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: 6px; padding: 8px 10px;
-    font-family: var(--mono); font-size: 12px; color: var(--text);
-    width: 100%; outline: none; margin-bottom: 6px;
-    transition: border-color 0.15s; letter-spacing: 0.04em;
-  }
-  .slide-line-input:focus { border-color: var(--green); }
-  .slide-line-input::placeholder { color: var(--text-dim); }
-  .char-count {
-    font-family: var(--mono); font-size: 9px; color: var(--text-dim);
-    letter-spacing: 0.1em; text-align: right; margin-top: -4px; margin-bottom: 6px;
-  }
-
-  /* ══ BIRTHDAY LIST ══ */
-  .bday-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 7px 0; border-bottom: 1px solid var(--border);
-  }
-  .bday-row:last-child { border-bottom: none; }
-  .bday-name  { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--text); }
-  .bday-date  { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
+  .upload-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
   /* ══ MODAL ══ */
   .modal-overlay {
@@ -339,7 +323,7 @@
   }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
   .modal-sheet {
-    background: #111; border-top: 2px solid var(--green);
+    background: var(--surface); border-top: 2px solid var(--green);
     border-radius: 16px 16px 0 0; width: 100%;
     max-height: 90vh; overflow-y: auto;
     transform: translateY(100%);
@@ -348,76 +332,99 @@
   }
   .modal-overlay.open .modal-sheet { transform: translateY(0); }
   .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 8px; }
-  .modal-title  { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); padding: 0 16px 12px; border-bottom: 1px solid var(--border); }
+  .modal-title  { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); padding: 0 16px 12px; border-bottom: 1px solid var(--border); }
   .modal-body   { padding: 14px 16px; }
-
-
-  .display-link {
-    display: block; text-align: center; text-decoration: none;
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--tan); padding: 12px;
-    background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 8px; transition: border-color 0.15s;
-  }
-  .display-link:hover { border-color: var(--tan); }
 
   /* ══ OBJECTIVES ══ */
   .obj-period-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
   .obj-tab {
-    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
     letter-spacing: 0.12em; text-transform: uppercase;
     padding: 6px 12px; border-radius: 5px;
     border: 1px solid var(--border2); background: var(--surface2);
     color: var(--text-dim); cursor: pointer; transition: all 0.15s;
   }
-  .obj-tab:hover  { border-color: var(--green); color: var(--green); }
-  .obj-tab.active { background: var(--green); color: #fff; border-color: var(--green); }
-  .obj-tab.current { box-shadow: 0 0 0 2px var(--green); }
-  .obj-tab.has-content::after { content: '•'; margin-left: 4px; color: var(--green); }
-  .obj-tab.active.has-content::after { color: rgba(255,255,255,0.7); }
+  .obj-tab:hover    { border-color: var(--green); color: var(--green); }
+  .obj-tab.active   { background: var(--green); color: #fff; border-color: var(--green); }
+  .obj-tab.current  { box-shadow: 0 0 0 2px var(--green); }
+  .obj-tab.scheduled::after { content: '📅'; margin-left: 4px; font-size: 9px; }
+  .obj-tab.live::after      { content: '✓'; margin-left: 4px; color: var(--green); }
+  .obj-tab.active.live::after { color: rgba(255,255,255,0.8); }
+  .obj-tab.active.scheduled::after { color: rgba(255,255,255,0.8); }
 
   .obj-form { display: flex; flex-direction: column; gap: 8px; }
   .obj-title-input {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 10px 12px;
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
     color: var(--text); width: 100%; outline: none;
-    transition: border-color 0.15s; letter-spacing: 0.04em;
+    transition: border-color 0.15s, background 0.2s; letter-spacing: 0.04em;
   }
   .obj-title-input:focus { border-color: var(--green); }
   .obj-title-input::placeholder { color: var(--text-dim); font-weight: 400; }
+
   .obj-line-wrap { position: relative; }
   .obj-line-input {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 8px 10px 8px 28px;
-    font-family: var(--mono); font-size: 12px;
+    font-family: var(--font-mono); font-size: 12px;
     color: var(--text); width: 100%; outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.2s;
   }
   .obj-line-input:focus { border-color: var(--green); }
   .obj-line-input::placeholder { color: var(--text-dim); }
   .obj-bullet { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-dim); pointer-events: none; }
-  .obj-char-count { font-family: var(--mono); font-size: 8px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; }
+  .obj-char-count { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; }
   .obj-char-count.over { color: var(--red); }
+
   .obj-mode-row {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     padding: 10px 12px; background: var(--surface2);
     border: 1px solid var(--border2); border-radius: 6px;
+    transition: background 0.2s;
   }
-  .obj-mode-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+  .obj-mode-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
   .obj-mode-select {
-    font-family: var(--mono); font-size: 11px;
+    font-family: var(--font-mono); font-size: 11px;
     background: var(--surface); border: 1px solid var(--border2);
     color: var(--text); border-radius: 5px; padding: 5px 8px;
     cursor: pointer; outline: none; flex: 1;
+    transition: background 0.2s, color 0.2s;
   }
   .obj-mode-select:focus { border-color: var(--green); }
+
+  .obj-date-row {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px 12px; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: 6px;
+    transition: background 0.2s;
+  }
+  .obj-date-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+  .obj-date-input {
+    font-family: var(--font-mono); font-size: 11px;
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 5px; padding: 5px 8px;
+    cursor: pointer; outline: none; flex: 1;
+    transition: background 0.2s, color 0.2s;
+  }
+  .obj-date-input:focus { border-color: var(--green); }
+  .obj-date-hint { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.08em; }
+
+  .obj-status-badge {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; flex-shrink: 0;
+  }
+  .obj-status-badge.live      { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .obj-status-badge.scheduled { background: rgba(204,119,0,0.1); color: var(--orange); border: 1px solid var(--orange); }
+  .obj-status-badge.inactive  { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border2); }
+
   #objTimedMinutes {
-    font-family: var(--mono); font-size: 11px;
+    font-family: var(--font-mono); font-size: 11px;
     background: var(--surface); border: 1px solid var(--border2);
     color: var(--text); border-radius: 5px; padding: 5px 8px;
     cursor: pointer; outline: none; width: 80px;
+    transition: background 0.2s, color 0.2s;
   }
   .obj-action-row { display: flex; gap: 8px; }
 </style>
@@ -430,9 +437,12 @@
     <div class="h-badge" id="roomBadge">ROOM 27</div>
     <div class="h-title">Admin</div>
   </div>
-  <div class="h-sync">
-    <div class="sync-dot" id="syncDot"></div>
-    <span class="sync-label" id="syncLabel">Loading</span>
+  <div class="h-right">
+    <button id="themeToggle" onclick="toggleTheme()">☀️ Light</button>
+    <div class="h-sync">
+      <div class="sync-dot" id="syncDot"></div>
+      <span class="sync-label" id="syncLabel">Loading</span>
+    </div>
   </div>
 </div>
 <div class="accent-bar"></div>
@@ -649,7 +659,25 @@
 
 document.getElementById('roomBadge').textContent = 'ROOM ' + CLASSROOM_CONFIG.room;
 
-/* ════ TOAST ════ */
+/* ════ THEME ════ */
+(function() {
+  const saved = localStorage.getItem('cw-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateToggleLabel(saved);
+})();
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next    = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('cw-theme', next);
+  updateToggleLabel(next);
+}
+
+function updateToggleLabel(theme) {
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
 let toastTimer = null;
 function showToast(msg, isError) {
   const el = document.getElementById('toast');
@@ -1369,8 +1397,215 @@ async function removeBirthday(id) {
 
 /* ════ OBJECTIVES ════ */
 const PERIODS = ['P1','P2','P3','P4','P5','P6','P7'];
-let objData       = {};
+let objData        = {};
 let objActivePeriod = null;
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function objStatus(obj) {
+  if (!obj || (!obj.title && !obj.line1)) return 'inactive';
+  if (!obj.active) return 'inactive';
+  const scheduled = obj.scheduled_date;
+  if (scheduled && scheduled > todayStr()) return 'scheduled';
+  return 'live';
+}
+
+async function loadObjectives() {
+  const rows = await cwSupabaseFetch(
+    `cw_objectives?room=eq.${CW.room}&order=period.asc`
+  );
+  if (rows) rows.forEach(r => { objData[r.period] = r; });
+
+  // Detect current period using simple time check
+  const now = new Date();
+  const nm  = now.getHours() * 60 + now.getMinutes();
+  const pts = [
+    { key:'P1', s:'8:10',  e:'9:02'  },
+    { key:'P2', s:'9:06',  e:'9:56'  },
+    { key:'P3', s:'10:15', e:'11:05' },
+    { key:'P4', s:'11:09', e:'11:59' },
+    { key:'P5', s:'12:37', e:'1:27'  },
+    { key:'P6', s:'1:31',  e:'2:21'  },
+    { key:'P7', s:'2:25',  e:'3:15'  },
+  ];
+  const toM = t => { const [h,m]=t.split(':').map(Number); return (h>=1&&h<=7?h+12:h)*60+m; };
+  const cur = pts.find(p => nm >= toM(p.s) && nm < toM(p.e));
+  const currentKey = cur?.key || null;
+
+  const tag = document.getElementById('objPeriodTag');
+  if (tag) tag.textContent = currentKey ? currentKey + ' active now' : 'No period active';
+
+  if (!objActivePeriod) objActivePeriod = currentKey || 'P1';
+  renderObjectivesEditor(currentKey);
+}
+
+function renderObjectivesEditor(currentKey) {
+  const el = document.getElementById('objectivesEditor');
+  if (!el) return;
+
+  const tabs = PERIODS.map(p => {
+    const obj    = objData[p];
+    const status = objStatus(obj);
+    const isCur  = p === currentKey;
+    const isAct  = p === objActivePeriod;
+    return `<button class="obj-tab${isAct?' active':''}${isCur?' current':''}${status==='live'?' live':''}${status==='scheduled'?' scheduled':''}"
+      onclick="selectObjPeriod('${p}')">${p}</button>`;
+  }).join('');
+
+  const obj    = objData[objActivePeriod] || {};
+  const status = objStatus(obj);
+  const today  = todayStr();
+
+  el.innerHTML = `
+    <div class="obj-period-tabs">${tabs}</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="form-hint" style="margin:0">${objActivePeriod} Objectives</div>
+      <span class="obj-status-badge ${status}">${status === 'live' ? '● Live' : status === 'scheduled' ? '📅 Scheduled' : '○ Not set'}</span>
+    </div>
+
+    <div class="obj-form">
+      <div class="form-hint">Title (28 chars max)</div>
+      <input class="obj-title-input" id="objTitle"
+        placeholder="${objActivePeriod} · LEARNING OBJECTIVES"
+        maxlength="28" value="${obj.title||''}"
+        oninput="updateObjCharCount('objTitleCount',this.value,28)">
+      <div class="obj-char-count" id="objTitleCount">${(obj.title||'').length}/28</div>
+
+      <div class="form-hint">Objectives — 25 chars each · bullet added automatically</div>
+      ${[1,2,3,4,5,6].map(i => `
+        <div class="obj-line-wrap">
+          <span class="obj-bullet">▸</span>
+          <input class="obj-line-input" id="objLine${i}"
+            placeholder="Objective ${i}${i===1?' (required)':''}"
+            maxlength="25" value="${obj['line'+i]||''}"
+            oninput="updateObjCharCount('objCount${i}',this.value,25)">
+        </div>
+        <div class="obj-char-count" id="objCount${i}">${(obj['line'+i]||'').length}/25</div>
+      `).join('')}
+
+      <div class="obj-date-row">
+        <span class="obj-date-label">Date</span>
+        <input type="date" class="obj-date-input" id="objDate"
+          value="${obj.scheduled_date || today}"
+          min="${today}">
+        <span class="obj-date-hint">Leave as today to go live now · pick a future date to pre-load</span>
+      </div>
+
+      <div class="obj-mode-row">
+        <span class="obj-mode-label">Show mode</span>
+        <select class="obj-mode-select" id="objMode" onchange="toggleTimedField()">
+          <option value="always"${(obj.display_mode||'always')==='always'?' selected':''}>Always — full period</option>
+          <option value="timed"${obj.display_mode==='timed'?' selected':''}>Timed — first X minutes only</option>
+          <option value="manual"${obj.display_mode==='manual'?' selected':''}>Manual — until I stop it</option>
+        </select>
+        <select id="objTimedMinutes" style="display:${obj.display_mode==='timed'?'block':'none'}">
+          ${[5,10,15,20].map(m=>`<option value="${m}"${obj.timed_minutes==m?' selected':''}>${m} min</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="obj-action-row">
+        <button class="btn btn-approve" style="flex:1" onclick="saveObjectives()">
+          ${status === 'inactive' ? '▶ Save' : status === 'scheduled' ? '📅 Update Schedule' : '✓ Update'}
+        </button>
+        ${status !== 'inactive' ? `<button class="btn btn-kill" onclick="clearObjectives()">Remove</button>` : ''}
+        <button class="btn btn-secondary" onclick="clearObjForm()">Clear</button>
+      </div>
+
+      ${status === 'scheduled' ? `
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--orange);letter-spacing:0.1em;text-align:center;padding:4px 0">
+          Scheduled for ${obj.scheduled_date} · Won't show until that date
+        </div>` : ''}
+    </div>`;
+}
+
+function selectObjPeriod(period) {
+  objActivePeriod = period;
+  renderObjectivesEditor(null);
+}
+
+function toggleTimedField() {
+  const mode = document.getElementById('objMode')?.value;
+  const tf   = document.getElementById('objTimedMinutes');
+  if (tf) tf.style.display = mode === 'timed' ? 'block' : 'none';
+}
+
+function updateObjCharCount(id, val, max) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val.length + '/' + max;
+  el.className   = 'obj-char-count' + (val.length >= max ? ' over' : '');
+}
+
+async function saveObjectives() {
+  const period = objActivePeriod;
+  const title  = (document.getElementById('objTitle')?.value || '').trim();
+  const line1  = (document.getElementById('objLine1')?.value || '').trim();
+  const date   = document.getElementById('objDate')?.value || todayStr();
+
+  if (!line1) { showToast('At least one objective required', true); return; }
+
+  const body = {
+    title,
+    line1,
+    line2: (document.getElementById('objLine2')?.value||'').trim(),
+    line3: (document.getElementById('objLine3')?.value||'').trim(),
+    line4: (document.getElementById('objLine4')?.value||'').trim(),
+    line5: (document.getElementById('objLine5')?.value||'').trim(),
+    line6: (document.getElementById('objLine6')?.value||'').trim(),
+    display_mode:    document.getElementById('objMode')?.value || 'always',
+    timed_minutes:   parseInt(document.getElementById('objTimedMinutes')?.value||'10'),
+    scheduled_date:  date,
+    active:          true,
+    updated_at:      new Date().toISOString(),
+  };
+
+  const existing = objData[period];
+  let res;
+  if (existing?.id) {
+    res = await cwSupabasePatch('cw_objectives', existing.id, body);
+  } else {
+    res = await cwSupabasePost('cw_objectives', { ...body, room: CW.room, period });
+    if (res && res[0]) objData[period] = { ...res[0] };
+  }
+
+  if (res) {
+    objData[period] = { ...(objData[period]||{}), ...body, period };
+    const isScheduled = date > todayStr();
+    showToast(isScheduled
+      ? '📅 ' + period + ' scheduled for ' + date
+      : '✓ ' + period + ' objectives live');
+    renderObjectivesEditor(null);
+  } else {
+    showToast('Error saving objectives', true);
+  }
+}
+
+async function clearObjectives() {
+  const period   = objActivePeriod;
+  const existing = objData[period];
+  if (!existing?.id) return;
+  const res = await cwSupabasePatch('cw_objectives', existing.id, {
+    active: false, scheduled_date: null,
+  });
+  if (res) {
+    objData[period] = { ...existing, active: false, scheduled_date: null };
+    showToast(period + ' objectives removed');
+    renderObjectivesEditor(null);
+  } else {
+    showToast('Error removing objectives', true);
+  }
+}
+
+function clearObjForm() {
+  ['objTitle','objLine1','objLine2','objLine3','objLine4','objLine5','objLine6']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['objTitleCount','objCount1','objCount2','objCount3','objCount4','objCount5','objCount6']
+    .forEach((id,i) => { const el=document.getElementById(id); if(el) el.textContent='0/'+(i===0?'28':'25'); });
+}
 
 async function loadObjectives() {
   const rows = await cwSupabaseFetch(
