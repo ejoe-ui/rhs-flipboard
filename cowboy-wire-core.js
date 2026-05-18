@@ -1304,6 +1304,9 @@ function cwBuildObjectivesScreen(calEvents) {
     _leftAlign:        true,
   };
 }
+
+/* ═══════════════════════════════════════════════════════════
+   SUPABASE SCREENS FETCH
    Replaces Google Sheets CSV as the slide source.
    Returns messages array ready for the flipboard.
 ═══════════════════════════════════════════════════════════ */
