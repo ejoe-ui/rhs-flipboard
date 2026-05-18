@@ -542,6 +542,11 @@ function padCenter(text, cols) {
   return ' '.repeat(left) + text + ' '.repeat(total - left);
 }
 
+function padLeft(text, cols) {
+  text = (text || '').toUpperCase().substring(0, cols);
+  return text + ' '.repeat(Math.max(0, cols - text.length));
+}
+
 /* ════════════════════════════════════════════════════════
    TILE ANIMATION
 ════════════════════════════════════════════════════════ */
@@ -581,8 +586,11 @@ function showMessage(idx) {
   currentIdx = idx;
 
   const msg      = messages[idx];
+  const useLeft  = msg._leftAlign || msg._isObjectivesSlot;
   const newLines = Array.from({length: ROWS}, (_, r) =>
-    padCenter(msg.lines[r] || '', COLS)
+    useLeft
+      ? padLeft(msg.lines[r] || '', COLS)
+      : padCenter(msg.lines[r] || '', COLS)
   );
 
   updateDots();
@@ -864,6 +872,8 @@ async function startBoard(data) {
       if (ni >= 0) currentIdx = ni;
       buildDots();
       await cwRefreshAllSlots(messages, buildDots);
+      await cwFetchObjectives();
+      cwRefreshObjectives(messages, buildDots);
       const t = new Date();
       let h = t.getHours() % 12 || 12;
       setSyncStatus('live', `SYNCED ${h}:${t.getMinutes().toString().padStart(2,'0')}`);
@@ -885,9 +895,10 @@ async function startBoard(data) {
 /* ════════════════════════════════════════════════════════
    LIVE SLOT REFRESH INTERVALS
 ════════════════════════════════════════════════════════ */
-// Schedule: every 60s (NOW indicator moves)
+// Schedule: every 60s (NOW indicator moves + objectives check)
 setInterval(() => {
   cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(window._cwCalEvents||[]), buildDots);
+  cwRefreshObjectives(messages, buildDots);
 }, 60 * 1000);
 
 // PassAble: every 30s
