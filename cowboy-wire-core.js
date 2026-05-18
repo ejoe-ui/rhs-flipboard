@@ -1269,13 +1269,18 @@ function cwBuildObjectivesScreen(calEvents) {
   if (!obj || !obj.active) return null;
   if (!obj.title && !obj.line1) return null;
 
+  // Check scheduled date — don't show before the scheduled date
+  if (obj.scheduled_date) {
+    const today = cwLocalDateStr(new Date());
+    if (obj.scheduled_date > today) return null;
+  }
+
   // Check display mode
   const mode = obj.display_mode || 'always';
   if (mode === 'timed') {
     const maxMins = obj.timed_minutes || 10;
     if (current.elapsed >= maxMins) return null;
   }
-  // 'manual' and 'always' — just check active flag (already checked above)
 
   const title = cwTrunc((obj.title || current.key + ' · OBJECTIVES').toUpperCase(), 28);
   const lines  = [title];
@@ -1283,16 +1288,14 @@ function cwBuildObjectivesScreen(calEvents) {
   [obj.line1, obj.line2, obj.line3, obj.line4, obj.line5, obj.line6]
     .filter(l => l && l.trim())
     .slice(0, 6)
-    .forEach(l => {
-      lines.push(cwTrunc('▸ ' + l.toUpperCase(), 28));
-    });
+    .forEach(l => lines.push(cwTrunc('▸ ' + l.toUpperCase(), 28)));
 
   while (lines.length < 7) lines.push('');
   return {
-    lines:    lines.slice(0, 7),
-    speed:    12,
+    lines:             lines.slice(0, 7),
+    speed:             12,
     _isObjectivesSlot: true,
-    _leftAlign: true,  // hint to display to left-align instead of center
+    _leftAlign:        true,
   };
 }
    Replaces Google Sheets CSV as the slide source.
