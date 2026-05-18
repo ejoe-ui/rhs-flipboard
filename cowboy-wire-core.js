@@ -1203,6 +1203,12 @@ function cwRefreshObjectives(messages, buildDotsFn) {
 
   if (typeof buildDotsFn === 'function') buildDotsFn();
 }
+
+function cwLocalDateStr(date) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function cwFallbackScreen(key) {
   const flag = CW_SLOT_MAP[key]?.sl || '_slot';
   const fb = {
     calendar:  ['RHS EVENTS CALENDAR','NO EVENTS TODAY','','CHECK RJUSD.ORG','','','RIVERDALE HIGH SCHOOL'],
