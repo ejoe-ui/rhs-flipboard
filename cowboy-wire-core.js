@@ -1146,16 +1146,17 @@ function cwBuildScheduleScreen(calEvents) {
 
 // All known slot keys and their placeholder/slot flag pairs
 const CW_SLOT_MAP = {
-  calendar:  { ph: '_isCalendarPlaceholder',  sl: '_isCalendarSlot'  },
-  schedule:  { ph: '_isSchedulePlaceholder',  sl: '_isScheduleSlot'  },
-  birthday:  { ph: '_isBirthdayPlaceholder',  sl: '_isBirthdaySlot'  },
-  countdown: { ph: '_isCountdownPlaceholder', sl: '_isCountdownSlot' },
-  quickMsg:  { ph: '_isQuickMsgPlaceholder',  sl: '_isQuickMsgSlot'  },
-  facts:     { ph: '_isFactsPlaceholder',     sl: '_isFactsSlot'     },
-  passable:  { ph: '_isPassablePlaceholder',  sl: '_isPassableSlot'  },
-  weather:   { ph: '_isWeatherPlaceholder',   sl: '_isWeatherSlot'   },
-  code:      { ph: '_isCodePlaceholder',      sl: '_isCodeSlot'      },
-  menu:      { ph: '_isMenuPlaceholder',      sl: '_isMenuSlot'      },
+  calendar:   { ph: '_isCalendarPlaceholder',   sl: '_isCalendarSlot'   },
+  schedule:   { ph: '_isSchedulePlaceholder',   sl: '_isScheduleSlot'   },
+  birthday:   { ph: '_isBirthdayPlaceholder',   sl: '_isBirthdaySlot'   },
+  countdown:  { ph: '_isCountdownPlaceholder',  sl: '_isCountdownSlot'  },
+  quickMsg:   { ph: '_isQuickMsgPlaceholder',   sl: '_isQuickMsgSlot'   },
+  facts:      { ph: '_isFactsPlaceholder',      sl: '_isFactsSlot'      },
+  passable:   { ph: '_isPassablePlaceholder',   sl: '_isPassableSlot'   },
+  weather:    { ph: '_isWeatherPlaceholder',    sl: '_isWeatherSlot'    },
+  code:       { ph: '_isCodePlaceholder',       sl: '_isCodeSlot'       },
+  menu:       { ph: '_isMenuPlaceholder',       sl: '_isMenuSlot'       },
+  objectives: { ph: '_isObjectivesPlaceholder', sl: '_isObjectivesSlot' },
 };
 
 function cwFindSlotIdx(messages, key) {
@@ -1178,7 +1179,30 @@ function cwInjectSlot(messages, key, screen, buildDotsFn) {
   if (typeof buildDotsFn === 'function') buildDotsFn();
 }
 
-function cwFallbackScreen(key) {
+// Dynamic objectives refresh — inserts screen when period is active,
+// removes it when period ends or objectives are cleared.
+// Called every 60s from display.html schedule refresh interval.
+function cwRefreshObjectives(messages, buildDotsFn) {
+  const screen  = cwBuildObjectivesScreen(window._cwCalEvents || []);
+  const existingIdx = messages.findIndex(m => m._isObjectivesSlot);
+
+  if (screen) {
+    if (existingIdx >= 0) {
+      // Update in place
+      messages[existingIdx] = screen;
+    } else {
+      // Insert after schedule slot (position 1 in rotation feels natural)
+      const schedIdx = messages.findIndex(m => m._isScheduleSlot || m._isSchedulePlaceholder);
+      const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
+      messages.splice(insertAt, 0, screen);
+    }
+  } else {
+    // Remove if no longer active
+    if (existingIdx >= 0) messages.splice(existingIdx, 1);
+  }
+
+  if (typeof buildDotsFn === 'function') buildDotsFn();
+}
   const flag = CW_SLOT_MAP[key]?.sl || '_slot';
   const fb = {
     calendar:  ['RHS EVENTS CALENDAR','NO EVENTS TODAY','','CHECK RJUSD.ORG','','','RIVERDALE HIGH SCHOOL'],
@@ -1196,7 +1220,81 @@ function cwFallbackScreen(key) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SUPABASE SCREENS FETCH
+   OBJECTIVES SCREEN SYSTEM
+   Shows learning objectives for the current period only.
+   Respects display_mode: always / timed / manual
+   Filters break periods (BRUNCH, LUNCH, etc.) automatically.
+═══════════════════════════════════════════════════════════ */
+let CW_OBJECTIVES = {};  // keyed by period name e.g. 'P1', 'P2'
+
+async function cwFetchObjectives() {
+  const rows = await cwSupabaseFetch(
+    `cw_objectives?room=eq.${CW.room}&order=period.asc`
+  );
+  if (rows && rows.length) {
+    CW_OBJECTIVES = {};
+    rows.forEach(r => { CW_OBJECTIVES[r.period] = r; });
+  }
+}
+
+function cwGetCurrentPeriodKey(calEvents) {
+  const schedKey = cwDetectSchedule(calEvents || window._cwCalEvents || []);
+  if (!schedKey) return null;
+  const schedule = SCHEDULES[schedKey];
+  if (!schedule) return null;
+
+  const now  = new Date();
+  const nm   = now.getHours() * 60 + now.getMinutes();
+
+  for (const p of schedule.periods) {
+    // Skip break periods — never show objectives during brunch/lunch
+    if (p.break) continue;
+    const start = cwTimeToMins(p.start);
+    const end   = cwTimeToMins(p.end);
+    if (nm >= start && nm < end) {
+      // Normalize period name — P1/P2 block days → P1, P2 etc.
+      // We match on the first token before the slash
+      const key = p.name.split('/')[0].trim();
+      return { key, start, end, elapsed: nm - start };
+    }
+  }
+  return null;
+}
+
+function cwBuildObjectivesScreen(calEvents) {
+  const current = cwGetCurrentPeriodKey(calEvents);
+  if (!current) return null;
+
+  const obj = CW_OBJECTIVES[current.key];
+  if (!obj || !obj.active) return null;
+  if (!obj.title && !obj.line1) return null;
+
+  // Check display mode
+  const mode = obj.display_mode || 'always';
+  if (mode === 'timed') {
+    const maxMins = obj.timed_minutes || 10;
+    if (current.elapsed >= maxMins) return null;
+  }
+  // 'manual' and 'always' — just check active flag (already checked above)
+
+  const title = cwTrunc((obj.title || current.key + ' · OBJECTIVES').toUpperCase(), 28);
+  const lines  = [title];
+
+  [obj.line1, obj.line2, obj.line3, obj.line4, obj.line5, obj.line6]
+    .filter(l => l && l.trim())
+    .slice(0, 6)
+    .forEach(l => {
+      lines.push(cwTrunc('▸ ' + l.toUpperCase(), 28));
+    });
+
+  while (lines.length < 7) lines.push('');
+  return {
+    lines:    lines.slice(0, 7),
+    speed:    12,
+    _isObjectivesSlot: true,
+    _leftAlign: true,  // hint to display to left-align instead of center
+  };
+}
    Replaces Google Sheets CSV as the slide source.
    Returns messages array ready for the flipboard.
 ═══════════════════════════════════════════════════════════ */
@@ -1305,6 +1403,9 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
   if (has('code') && CW.screens.code) {
     cwInjectSlot(messages, 'code', cwBuildCodeScreen(), buildDotsFn);
   }
+
+  // Objectives — dynamic inject/remove based on current period
+  cwRefreshObjectives(messages, buildDotsFn);
 }
 
 
