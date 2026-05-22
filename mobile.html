@@ -22,7 +22,6 @@
     --radius:       10px;
   }
 
-  /* ══ DARK MODE (default for mobile) ══ */
   [data-theme="dark"] {
     --green:      #00a86b;
     --green-dark: #007a4d;
@@ -42,7 +41,6 @@
     --toggle-fg:  #1a1a18;
   }
 
-  /* ══ LIGHT MODE ══ */
   [data-theme="light"] {
     --green:      #005640;
     --green-dark: #003d2e;
@@ -87,87 +85,68 @@
     padding: 4px 10px; border-radius: 3px; text-transform: uppercase;
   }
   .h-sync { display: flex; align-items: center; gap: 5px; }
-  .sync-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #333; flex-shrink: 0;
-  }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: #333; flex-shrink: 0; }
   .sync-dot.live  { background: var(--green); animation: pulse 2.5s infinite; }
   .sync-dot.error { background: #882222; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .sync-label {
-    font-family: var(--font-mono); font-size: 9px;
-    letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase;
-  }
+  .sync-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
   .h-right { display: flex; align-items: center; gap: 10px; }
   #themeToggle {
     background: var(--toggle-bg); color: var(--toggle-fg);
     border: none; border-radius: 5px;
     font-family: var(--font-mono); font-size: 9px; font-weight: 500;
     letter-spacing: 0.1em; text-transform: uppercase;
-    padding: 5px 9px; cursor: pointer; white-space: nowrap;
-    transition: opacity 0.15s;
+    padding: 5px 9px; cursor: pointer; white-space: nowrap; transition: opacity 0.15s;
   }
   #themeToggle:active { opacity: 0.7; }
-  .h-clock {
-    font-family: var(--font-display); font-weight: 700;
-    font-size: 18px; color: var(--text); letter-spacing: 0.05em;
-  }
+  .h-clock { font-family: var(--font-display); font-weight: 700; font-size: 18px; color: var(--text); letter-spacing: 0.05em; }
 
-  .accent-bar {
-    height: 2px;
-    background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
+  /* ══ PASS STATUS COLOR BAR ══ */
+  #period-status-bar {
+    display: none;
+    width: 100%;
+    padding: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    position: sticky;
+    top: calc(10vh + 2px);
+    z-index: 99;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.4s;
   }
+  #period-status-bar.show { display: flex; }
+  #period-status-bar.green  { background: #166534; color: white; }
+  #period-status-bar.yellow { background: #d97706; color: white; }
+  #period-status-bar.red    { background: #dc2626; color: white; }
+  #period-status-bar.blue   { background: #1d4ed8; color: white; }
+  #period-status-bar.gray   { background: #4b5563; color: white; }
+
+  .accent-bar { height: 2px; background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark)); }
 
   /* ══ CONTENT ══ */
-  #content {
-    padding: 12px 14px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
+  #content { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
 
   /* ══ CARD ══ */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
+  .card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); overflow: hidden; }
   .card.tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .card.tappable:active { opacity: 0.8; transform: scale(0.99); }
-
-  .card-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 9px 14px 7px; border-bottom: 1px solid var(--border);
-  }
-  .card-label {
-    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
-    letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim);
-  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px 7px; border-bottom: 1px solid var(--border); }
+  .card-label { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); }
   .card-label.green { color: var(--green); }
   .card-label.tan   { color: var(--tan); }
-  .card-tag {
-    font-family: var(--font-mono); font-size: 9px;
-    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim);
-    border: 1px solid var(--border2); padding: 2px 7px; border-radius: 3px;
-  }
+  .card-tag { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); border: 1px solid var(--border2); padding: 2px 7px; border-radius: 3px; }
   .card-body { padding: 12px 14px; }
 
   /* ══ PERIOD TIMER ══ */
-  .period-timer-card {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius);
-    border-left: 4px solid var(--green);
-    padding: 14px 16px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
+  .period-timer-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); border-left: 4px solid var(--green); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
   .period-timer-card.warning { border-left-color: #ff9900; }
   .period-timer-card.ending  { border-left-color: #cc4444; }
   .pt-left { flex: 1; }
-  .pt-period {
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 0.08em; color: var(--green);
-    text-transform: uppercase; margin-bottom: 2px;
-  }
+  .pt-period { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.08em; color: var(--green); text-transform: uppercase; margin-bottom: 2px; }
   .pt-period.warning { color: #ff9900; }
   .pt-period.ending  { color: #cc4444; }
   .pt-ends { font-family: var(--mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -177,34 +156,14 @@
   .pt-label { font-family: var(--mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; text-align: right; }
 
   /* ══ SCHEDULE ══ */
-  .schedule-type {
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 0.1em; color: var(--green);
-    text-transform: uppercase; margin-bottom: 10px;
-  }
-  .period-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 6px 10px; border-radius: 6px; margin-bottom: 4px;
-  }
+  .schedule-type { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: var(--green); text-transform: uppercase; margin-bottom: 10px; }
+  .period-row { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px; margin-bottom: 4px; }
   .period-row.now  { background: var(--green-dim); border: 1px solid var(--green); }
   .period-row.past { opacity: 0.4; }
-  .period-name {
-    font-family: var(--mono); font-size: 12px; font-weight: 700;
-    letter-spacing: 0.06em; color: var(--text); min-width: 72px;
-  }
-  .period-time {
-    font-family: var(--mono); font-size: 11px;
-    color: var(--text-mid); letter-spacing: 0.04em; flex: 1;
-  }
-  .now-badge {
-    font-family: var(--mono); font-size: 9px; font-weight: 700;
-    letter-spacing: 0.15em; color: var(--green); text-transform: uppercase;
-    border: 1px solid var(--green); padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
-  }
-  .break-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 10px; margin-bottom: 4px;
-  }
+  .period-name { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--text); min-width: 72px; }
+  .period-time { font-family: var(--mono); font-size: 11px; color: var(--text-mid); letter-spacing: 0.04em; flex: 1; }
+  .now-badge { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; border: 1px solid var(--green); padding: 2px 6px; border-radius: 3px; flex-shrink: 0; }
+  .break-row { display: flex; align-items: center; gap: 10px; padding: 4px 10px; margin-bottom: 4px; }
   .break-name { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.06em; min-width: 72px; }
   .break-time { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
   .no-school  { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; color: var(--text-mid); text-transform: uppercase; text-align: center; padding: 8px 0; }
@@ -223,20 +182,12 @@
   .weather-detail-value { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; }
 
   /* ══ MENU ══ */
-  .menu-item {
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
-    color: var(--text); letter-spacing: 0.04em;
-    padding: 5px 0; border-bottom: 1px solid var(--border);
-  }
+  .menu-item { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; padding: 5px 0; border-bottom: 1px solid var(--border); }
   .menu-item:first-child { color: var(--green); font-size: 14px; }
   .menu-item:last-child  { border-bottom: none; }
 
   /* ══ CALENDAR ══ */
-  .event-row {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 6px 0; border-bottom: 1px solid var(--border);
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-  }
+  .event-row { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--border); cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .event-row:last-child { border-bottom: none; }
   .event-time { font-family: var(--mono); font-size: 10px; color: var(--text-mid); letter-spacing: 0.04em; min-width: 60px; padding-top: 1px; flex-shrink: 0; }
   .event-title { font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.04em; color: var(--text); line-height: 1.4; }
@@ -263,32 +214,14 @@
 
   /* ══ SUBMIT FORM ══ */
   .submit-form { display: flex; flex-direction: column; gap: 10px; }
-  .form-field {
-    background: var(--surface2); border: 1px solid var(--border2);
-    border-radius: 6px; padding: 10px 12px;
-    font-family: var(--mono); font-size: 13px; color: var(--text);
-    width: 100%; outline: none;
-    transition: border-color 0.15s;
-    -webkit-appearance: none;
-  }
+  .form-field { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 10px 12px; font-family: var(--mono); font-size: 13px; color: var(--text); width: 100%; outline: none; transition: border-color 0.15s; -webkit-appearance: none; }
   .form-field:focus { border-color: var(--green); }
   .form-field::placeholder { color: var(--text-dim); }
   .form-hint { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-dim); text-transform: uppercase; }
-  .submit-btn {
-    background: var(--green); color: #fff;
-    font-family: var(--mono); font-size: 12px; font-weight: 900;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    border: none; border-radius: 6px; padding: 12px;
-    cursor: pointer; -webkit-tap-highlight-color: transparent;
-    transition: background 0.15s, transform 0.1s; width: 100%;
-  }
+  .submit-btn { background: var(--green); color: #fff; font-family: var(--mono); font-size: 12px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; border: none; border-radius: 6px; padding: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, transform 0.1s; width: 100%; }
   .submit-btn:active { background: var(--green-dark); transform: scale(0.98); }
   .submit-btn:disabled { background: #333; color: var(--text-dim); cursor: not-allowed; }
-  .submit-success {
-    font-family: var(--mono); font-size: 12px; font-weight: 700;
-    letter-spacing: 0.1em; color: var(--green); text-transform: uppercase;
-    text-align: center; padding: 8px 0;
-  }
+  .submit-success { font-family: var(--mono); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; color: var(--green); text-transform: uppercase; text-align: center; padding: 8px 0; }
 
   /* ══ PASS STATUS ══ */
   .pass-status-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); overflow: hidden; }
@@ -320,56 +253,19 @@
   .pass-checked-in-label { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: var(--green); text-transform: uppercase; margin-bottom: 16px; }
   .pass-scan-hint { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--text-dim); text-transform: uppercase; text-align: center; padding: 10px 0 4px; border-top: 1px solid var(--border); width: 100%; }
 
-  /* ══ MY PASS BUTTON (floating) ══ */
-  #pass-link-wrap {
-    position: fixed; bottom: 76px; right: 16px; z-index: 101;
-  }
-  #passLinkBtn {
-    display: none;
-    background: var(--surface); border: 1px solid var(--green);
-    color: var(--green); font-family: var(--mono);
-    font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
-    text-transform: uppercase; padding: 6px 12px;
-    border-radius: 6px; text-decoration: none;
-  }
+  /* ══ MY PASS BUTTON ══ */
+  #pass-link-wrap { position: fixed; bottom: 76px; right: 16px; z-index: 101; }
+  #passLinkBtn { display: none; background: var(--surface); border: 1px solid var(--green); color: var(--green); font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 6px 12px; border-radius: 6px; text-decoration: none; }
 
   /* ══ BOTTOM SUBMIT BUTTON ══ */
-  #post-btn-wrap {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    padding: 12px 16px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-    background: linear-gradient(transparent, var(--bg) 30%);
-    z-index: 100;
-  }
-  .post-btn {
-    display: block; width: 100%;
-    background: var(--green); color: #fff;
-    font-family: var(--mono); font-size: 13px; font-weight: 900;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    text-align: center; text-decoration: none;
-    padding: 14px; border-radius: var(--radius);
-    border: none; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.15s, transform 0.1s;
-  }
+  #post-btn-wrap { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--bg) 30%); z-index: 100; }
+  .post-btn { display: block; width: 100%; background: var(--green); color: #fff; font-family: var(--mono); font-size: 13px; font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase; text-align: center; text-decoration: none; padding: 14px; border-radius: var(--radius); border: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.15s, transform 0.1s; }
   .post-btn:active { background: var(--green-dark); transform: scale(0.98); }
 
   /* ══ MODAL ══ */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85); z-index: 200;
-    display: flex; align-items: flex-end;
-    opacity: 0; pointer-events: none; transition: opacity 0.25s;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal-sheet {
-    background: var(--modal-bg); border-top: 2px solid var(--green);
-    border-radius: 16px 16px 0 0; width: 100%;
-    max-height: 85vh; overflow-y: auto;
-    padding: 0 0 env(safe-area-inset-bottom, 16px);
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-  }
+  .modal-sheet { background: var(--modal-bg); border-top: 2px solid var(--green); border-radius: 16px 16px 0 0; width: 100%; max-height: 85vh; overflow-y: auto; padding: 0 0 env(safe-area-inset-bottom, 16px); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
   .modal-overlay.open .modal-sheet { transform: translateY(0); }
   .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 12px auto 8px; }
   .modal-title  { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); padding: 0 16px 12px; border-bottom: 1px solid var(--border); }
@@ -390,13 +286,7 @@
   @keyframes bounce { 0%{transform:scale(0.5);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
   .bday-name-big { font-family: var(--mono); font-size: 20px; font-weight: 900; letter-spacing: 0.06em; color: var(--text); margin-bottom: 6px; }
   .bday-wish     { font-family: var(--mono); font-size: 13px; color: var(--green); letter-spacing: 0.08em; margin-bottom: 16px; }
-  .bday-tap-btn  {
-    display: inline-block; background: var(--green); color: #fff;
-    font-family: var(--mono); font-size: 13px; font-weight: 700;
-    letter-spacing: 0.1em; padding: 12px 24px; border-radius: 8px;
-    border: none; cursor: pointer; width: 100%; margin-bottom: 10px;
-    -webkit-tap-highlight-color: transparent; transition: transform 0.1s, background 0.15s;
-  }
+  .bday-tap-btn  { display: inline-block; background: var(--green); color: #fff; font-family: var(--mono); font-size: 13px; font-weight: 700; letter-spacing: 0.1em; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; width: 100%; margin-bottom: 10px; -webkit-tap-highlight-color: transparent; transition: transform 0.1s, background 0.15s; }
   .bday-tap-btn:active { transform: scale(0.95); background: var(--green-dark); }
   .bday-tap-count { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
@@ -427,6 +317,12 @@
 </div>
 <div class="accent-bar"></div>
 
+<!-- ══ PERIOD STATUS BAR ══ -->
+<div id="period-status-bar">
+  <span id="period-status-primary"></span>
+  <span id="period-status-secondary" style="font-size:9px;opacity:0.85;"></span>
+</div>
+
 <!-- ══ CONTENT ══ -->
 <div id="content">
   <div class="loading-card">
@@ -445,7 +341,7 @@
   </div>
 </div>
 
-<!-- ══ MY PASS BUTTON (floating, only shows with ?uid=) ══ -->
+<!-- ══ MY PASS BUTTON ══ -->
 <div id="pass-link-wrap">
   <a id="passLinkBtn" href="#">&#9632; My Pass</a>
 </div>
@@ -459,12 +355,6 @@
 <script src="config.js"></script>
 <script src="cowboy-wire-core.js"></script>
 <script>
-/* ════════════════════════════════════════════════════════
-   MOBILE.HTML — Student-facing Cowboy Wire
-   PassAble connection: ?uid= or ?student= param
-   Post flow: submit → pending → teacher approves → board
-════════════════════════════════════════════════════════ */
-
 /* ════ THEME ════ */
 (function() {
   const saved = localStorage.getItem('cw-theme') || 'dark';
@@ -485,13 +375,12 @@ function updateToggleLabel(theme) {
   if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
 }
 
-/* ── Apply config identity ── */
 document.getElementById('roomBadge').textContent = 'RHS · ROOM ' + CLASSROOM_CONFIG.room;
 document.title = 'RHS · Room ' + CLASSROOM_CONFIG.room;
 
 const RING_R      = 54;
 const RING_CIRCUM = 2 * Math.PI * RING_R;
-const PASS_MAX    = 15; // minutes before ring fills
+const PASS_MAX    = 15;
 
 let passTimerInterval   = null;
 let passPollingInterval = null;
@@ -512,6 +401,219 @@ function setSyncStatus(state, label) {
   document.getElementById('syncLabel').textContent = label;
 }
 
+/* ════ PERIOD STATUS BAR ════
+   🔴 Red    — first 15 min after bell
+   🟢 Green  — safe window (min 16 to 20 min left)
+   🟡 Yellow — 16–20 min left (last chance)
+   🔴 Red    — last 15 min
+*/
+const SCHEDULES_MOBILE = {
+  regular: {
+    name: 'Regular',
+    periods: [
+      { id:'1', label:'Period 1', start:'08:10', end:'09:02' },
+      { id:'2', label:'Period 2', start:'09:06', end:'09:56' },
+      { id:'brunch', label:'Brunch', start:'09:56', end:'10:11', break:true },
+      { id:'3', label:'Period 3', start:'10:15', end:'11:05' },
+      { id:'4', label:'Period 4', start:'11:09', end:'11:59' },
+      { id:'lunch', label:'Lunch', start:'11:59', end:'12:33', break:true },
+      { id:'5', label:'Period 5', start:'12:37', end:'13:27' },
+      { id:'6', label:'Period 6', start:'13:31', end:'14:21' },
+      { id:'7', label:'Period 7', start:'14:25', end:'15:15' },
+    ]
+  },
+  earlyRelease: {
+    name: 'Early Release',
+    periods: [
+      { id:'1', label:'Period 1', start:'08:10', end:'08:56' },
+      { id:'2', label:'Period 2', start:'09:00', end:'09:41' },
+      { id:'3', label:'Period 3', start:'09:45', end:'10:26' },
+      { id:'4', label:'Period 4', start:'10:30', end:'11:11' },
+      { id:'lunch', label:'Lunch', start:'11:11', end:'11:45', break:true },
+      { id:'5', label:'Period 5', start:'11:49', end:'12:30' },
+      { id:'6', label:'Period 6', start:'12:34', end:'13:15' },
+      { id:'7', label:'Period 7', start:'13:19', end:'14:00' },
+    ]
+  },
+  blockWed: {
+    name: 'Block Day',
+    periods: [
+      { id:'1', label:'Periods 1 & 2', start:'08:10', end:'09:57' },
+      { id:'brunch', label:'Brunch', start:'09:57', end:'10:12', break:true },
+      { id:'3', label:'Periods 3 & 4', start:'10:16', end:'11:59' },
+      { id:'lunch', label:'Lunch', start:'11:59', end:'12:33', break:true },
+      { id:'5', label:'Periods 5 & 6', start:'12:37', end:'14:20' },
+      { id:'7', label:'Period 7', start:'14:24', end:'15:15' },
+    ]
+  },
+  blockThu: {
+    name: 'Block Day',
+    periods: [
+      { id:'2', label:'Periods 1 & 2', start:'08:10', end:'09:57' },
+      { id:'brunch', label:'Brunch', start:'09:57', end:'10:12', break:true },
+      { id:'4', label:'Periods 3 & 4', start:'10:16', end:'11:59' },
+      { id:'lunch', label:'Lunch', start:'11:59', end:'12:33', break:true },
+      { id:'6', label:'Periods 5 & 6', start:'12:37', end:'14:20' },
+      { id:'7', label:'Period 7', start:'14:24', end:'15:15' },
+    ]
+  },
+  minimum: {
+    name: 'Minimum Day',
+    periods: [
+      { id:'1', label:'Period 1', start:'08:10', end:'08:46' },
+      { id:'2', label:'Period 2', start:'08:50', end:'09:23' },
+      { id:'3', label:'Period 3', start:'09:27', end:'10:00' },
+      { id:'4', label:'Period 4', start:'10:04', end:'10:37' },
+      { id:'brunch', label:'Brunch/Lunch', start:'10:37', end:'11:10', break:true },
+      { id:'5', label:'Period 5', start:'11:14', end:'11:47' },
+      { id:'6', label:'Period 6', start:'11:51', end:'12:24' },
+      { id:'7', label:'Period 7', start:'12:28', end:'13:01' },
+    ]
+  },
+  activity: {
+    name: 'Activity Day',
+    periods: [
+      { id:'1', label:'Period 1', start:'08:10', end:'08:56' },
+      { id:'2', label:'Period 2', start:'09:00', end:'09:44' },
+      { id:'brunch', label:'Brunch', start:'09:44', end:'09:59', break:true },
+      { id:'3', label:'Period 3', start:'10:03', end:'10:47' },
+      { id:'4', label:'Period 4', start:'10:51', end:'11:35' },
+      { id:'5', label:'Period 5', start:'11:39', end:'12:23' },
+      { id:'lunch', label:'Lunch', start:'12:23', end:'12:57', break:true },
+      { id:'6', label:'Period 6', start:'13:01', end:'13:45' },
+      { id:'7', label:'Period 7', start:'13:49', end:'14:33' },
+    ]
+  },
+  foggy: {
+    name: 'Late Arrival',
+    periods: [
+      { id:'1', label:'Period 1', start:'10:00', end:'10:44' },
+      { id:'2', label:'Period 2', start:'10:48', end:'11:28' },
+      { id:'3', label:'Period 3', start:'11:32', end:'12:12' },
+      { id:'lunch', label:'Lunch', start:'12:12', end:'12:49', break:true },
+      { id:'4', label:'Period 4', start:'12:53', end:'13:33' },
+      { id:'5', label:'Period 5', start:'13:37', end:'14:17' },
+      { id:'6', label:'Period 6', start:'14:21', end:'15:01' },
+      { id:'7', label:'Period 7', start:'15:05', end:'15:45' },
+    ]
+  },
+  codeDay: {
+    name: 'C.O.D.E Day',
+    periods: [
+      { id:'1', label:'Period 1', start:'08:10', end:'08:56' },
+      { id:'2', label:'Period 2', start:'09:00', end:'09:44' },
+      { id:'brunch', label:'Brunch', start:'09:44', end:'09:59', break:true },
+      { id:'3', label:'Period 3', start:'10:03', end:'10:47' },
+      { id:'4', label:'Period 4', start:'10:51', end:'11:35' },
+      { id:'rally', label:'Kickball Rally', start:'11:39', end:'12:17', break:true },
+      { id:'lunch', label:'Lunch', start:'12:17', end:'12:51', break:true },
+      { id:'5', label:'Period 5', start:'12:55', end:'13:39' },
+      { id:'6', label:'Period 6', start:'13:43', end:'14:27' },
+      { id:'7', label:'Period 7', start:'14:31', end:'15:15' },
+    ]
+  },
+}
+
+const NO_SCHOOL = [
+  '2025-09-01','2025-11-11','2025-11-27','2025-11-28',
+  '2025-12-22','2025-12-23','2025-12-24','2025-12-25','2025-12-26',
+  '2025-12-29','2025-12-30','2025-12-31',
+  '2026-01-01','2026-01-02','2026-01-05','2026-01-06',
+  '2026-01-07','2026-01-08','2026-01-09','2026-01-12',
+  '2026-01-19','2026-02-09','2026-02-16',
+  '2026-03-30','2026-03-31','2026-04-01','2026-04-02','2026-04-03',
+  '2026-05-25',
+]
+
+function toMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+function nowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
+function dateStr(d) { return d.toISOString().split('T')[0]; }
+
+function getScheduleForToday(calEvents) {
+  const now = new Date();
+  const ds  = dateStr(now);
+  const dow = now.getDay();
+  if (dow===0||dow===6) return null;
+  if (NO_SCHOOL.includes(ds)) return null;
+  const titles = (calEvents||[]).map(e=>(e.title||'').toLowerCase());
+  const has = kw => titles.some(t=>t.includes(kw));
+  if (has('foggy')||has('late arrival')) return SCHEDULES_MOBILE.foggy;
+  if (has('minimum')) return SCHEDULES_MOBILE.minimum;
+  if (has('code day')) return SCHEDULES_MOBILE.codeDay;
+  if (has('activity')) return SCHEDULES_MOBILE.activity;
+  if (has('block')) return dow===3 ? SCHEDULES_MOBILE.blockWed : SCHEDULES_MOBILE.blockThu;
+  if (has('early release')) return SCHEDULES_MOBILE.earlyRelease;
+  if (dow===1) return SCHEDULES_MOBILE.earlyRelease;
+  if (dow===3) return SCHEDULES_MOBILE.blockWed;
+  if (dow===4) return SCHEDULES_MOBILE.blockThu;
+  return SCHEDULES_MOBILE.regular;
+}
+
+function getPeriodStatus(schedule) {
+  if (!schedule) return null;
+  const nm = nowMins();
+  const periods = schedule.periods;
+  for (let i=0; i<periods.length; i++) {
+    const p = periods[i];
+    const s = toMins(p.start), e = toMins(p.end);
+    if (nm >= s && nm < e) {
+      if (p.break) {
+        const next = periods[i+1]||null;
+        const minsUntilNext = next ? toMins(next.start) - nm : 0;
+        return { type:'break', label:p.label, next:next?.label, minsUntilNext };
+      }
+      const left = e - nm;
+      const sinceStart = nm - s;
+      let color, primary, secondary;
+      if (sinceStart < 15) {
+        color='red';
+        primary=`🔴 First 15 min`;
+        secondary=`OK in ~${15-sinceStart} min`;
+      } else if (left <= 15) {
+        color='red';
+        primary=`🔴 Last 15 min`;
+        secondary=`${left} min until bell`;
+      } else if (left <= 20) {
+        color='yellow';
+        primary=`🟡 Last chance`;
+        secondary=`${left} min left · check out now`;
+      } else {
+        color='green';
+        primary=`🟢 OK to be out`;
+        secondary=`${left} min left in ${p.label}`;
+      }
+      return { type:'period', color, primary, secondary };
+    }
+  }
+  return null;
+}
+
+let _mobileCalEvents = [];
+
+function updatePeriodStatusBar() {
+  const bar = document.getElementById('period-status-bar');
+  const primary = document.getElementById('period-status-primary');
+  const secondary = document.getElementById('period-status-secondary');
+  if (!bar) return;
+
+  const schedule = getScheduleForToday(_mobileCalEvents);
+  const status = getPeriodStatus(schedule);
+
+  if (!status) { bar.className = 'show gray'; primary.textContent='No active period'; secondary.textContent=''; return; }
+
+  if (status.type === 'break') {
+    bar.className = 'show blue';
+    primary.textContent = `⏸ ${status.label}`;
+    secondary.textContent = status.next ? `${status.next} in ${status.minsUntilNext} min` : '';
+    bar.classList.add('show');
+    return;
+  }
+
+  bar.className = `show ${status.color}`;
+  primary.textContent = status.primary;
+  secondary.textContent = status.secondary;
+}
+
 /* ════ PASSABLE ════ */
 async function fetchPassStatus(uid, studentId) {
   try {
@@ -530,7 +632,6 @@ async function fetchPassStatus(uid, studentId) {
     const passes     = await passRes.json();
     const activePass = passes[0] || null;
 
-    // Weekly stats
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - (weekStart.getDay()===0 ? 6 : weekStart.getDay()-1));
     weekStart.setHours(0,0,0,0);
@@ -540,12 +641,7 @@ async function fetchPassStatus(uid, studentId) {
     );
     const weekPasses = await statsRes.json();
 
-    return {
-      student,
-      activePass,
-      weekCount: weekPasses.length,
-      weekMins:  weekPasses.reduce((s,p) => s + (p.duration_minutes||0), 0),
-    };
+    return { student, activePass, weekCount: weekPasses.length, weekMins: weekPasses.reduce((s,p) => s + (p.duration_minutes||0), 0) };
   } catch(e) { return null; }
 }
 
@@ -737,15 +833,12 @@ function buildMenuCard() {
   const items = screen.lines.filter(l => l.trim());
   const rows  = items.map(i => `<div class="menu-item">${i}</div>`).join('');
   card.innerHTML = `
-    <div class="card-header">
-      <span class="card-label">Brunch + Lunch</span>
-      <span class="card-tag">Today</span>
-    </div>
+    <div class="card-header"><span class="card-label">Brunch + Lunch</span><span class="card-tag">Today</span></div>
     <div class="card-body">${rows || '<div class="error-state">No menu today</div>'}</div>`;
   return card;
 }
 
-/* ════ POST SUBMIT MODAL ════ */
+/* ════ POST MODAL ════ */
 function openPostModal() {
   openModal('Post to the Board', `
     <div class="submit-form" id="submitForm">
@@ -766,43 +859,17 @@ async function submitPost() {
   const line2  = (document.getElementById('postLine2')?.value  || '').trim();
   const line3  = (document.getElementById('postLine3')?.value  || '').trim();
   const btn    = document.getElementById('submitBtn');
-
-  if (!line1) {
-    document.getElementById('postLine1').focus();
-    return;
-  }
-
+  if (!line1) { document.getElementById('postLine1').focus(); return; }
   if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
-
   try {
     const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_messages`, {
       method: 'POST',
-      headers: {
-        'apikey':        CW.supabaseKey,
-        'Authorization': `Bearer ${CW.supabaseKey}`,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=minimal',
-      },
-      body: JSON.stringify({
-        room:   CW.room,
-        sender: sender || 'ANONYMOUS',
-        line1:  line1.toUpperCase(),
-        line2:  line2.toUpperCase(),
-        line3:  line3.toUpperCase(),
-        status: 'pending',
-      }),
+      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ room: CW.room, sender: sender || 'ANONYMOUS', line1: line1.toUpperCase(), line2: line2.toUpperCase(), line3: line3.toUpperCase(), status: 'pending' }),
     });
-
     if (res.ok || res.status === 201) {
-      document.getElementById('submitForm').innerHTML = `
-        <div class="submit-success">
-          ✓ Submitted!<br><br>
-          Your message is waiting for teacher approval.<br>
-          Once approved it will appear on the board.
-        </div>`;
-    } else {
-      throw new Error('Submit failed');
-    }
+      document.getElementById('submitForm').innerHTML = `<div class="submit-success">✓ Submitted!<br><br>Your message is waiting for teacher approval.<br>Once approved it will appear on the board.</div>`;
+    } else { throw new Error('Submit failed'); }
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
   }
@@ -817,20 +884,16 @@ async function render(calEvents, passData, weatherData) {
   const schedule = schedKey ? SCHEDULES[schedKey] : null;
   const sections = [];
 
-  /* ── Pass status (if uid present) ── */
   if (passData) {
     const passCard = renderPassCard(passData);
     if (passCard) sections.push(passCard);
   }
 
-  /* ── Period timer ── */
   const timerCard = cwBuildPeriodTimerCard(calEvents || []);
   if (timerCard) sections.push(timerCard);
 
-  /* ── Weather ── */
   sections.push(buildWeatherCardMobile(weatherData));
 
-  /* ── Bell schedule ── */
   const schedCard = document.createElement('div');
   schedCard.className = 'card tappable';
   if (!schedule) {
@@ -844,181 +907,91 @@ async function render(calEvents, passData, weatherData) {
   } else {
     let rows = '';
     for (const p of schedule.periods) {
-      const start = cwTimeToMins(p.start);
-      const end   = cwTimeToMins(p.end);
-      const isNow  = nm >= start && nm < end;
-      const isPast = nm >= end;
+      const start = cwTimeToMins(p.start), end = cwTimeToMins(p.end);
+      const isNow = nm >= start && nm < end, isPast = nm >= end;
       if (p.break) {
-        rows += `<div class="break-row">
-          <span class="break-name">${p.name}</span>
-          <span class="break-time">${p.start} – ${p.end}</span>
-          ${isNow ? '<span class="now-badge">NOW</span>' : ''}
-        </div>`;
+        rows += `<div class="break-row"><span class="break-name">${p.name}</span><span class="break-time">${p.start} – ${p.end}</span>${isNow ? '<span class="now-badge">NOW</span>' : ''}</div>`;
       } else {
-        rows += `<div class="period-row${isNow?' now':isPast?' past':''}">
-          <span class="period-name">${p.name}</span>
-          <span class="period-time">${p.start} – ${p.end}</span>
-          ${isNow ? '<span class="now-badge">NOW</span>' : ''}
-        </div>`;
+        rows += `<div class="period-row${isNow?' now':isPast?' past':''}"><span class="period-name">${p.name}</span><span class="period-time">${p.start} – ${p.end}</span>${isNow ? '<span class="now-badge">NOW</span>' : ''}</div>`;
       }
     }
-    schedCard.innerHTML = `
-      <div class="card-header"><span class="card-label green">Bell Schedule</span><span class="card-tag">${schedule.label}</span></div>
-      <div class="card-body">${rows}</div>`;
+    schedCard.innerHTML = `<div class="card-header"><span class="card-label green">Bell Schedule</span><span class="card-tag">${schedule.label}</span></div><div class="card-body">${rows}</div>`;
     schedCard.onclick = () => openScheduleModal(schedKey);
   }
   sections.push(schedCard);
 
-  /* ── Lunch menu ── */
   const menuCard = buildMenuCard();
   if (menuCard) sections.push(menuCard);
 
-  /* ── Calendar ── */
-  const calCard     = document.createElement('div');
+  const calCard = document.createElement('div');
   calCard.className = 'card';
-  const todayEvts   = (calEvents||[]).filter(e => {
-    const d = new Date(e.start || e.dtstart);
-    return d.toDateString() === now.toDateString();
-  }).sort((a,b) => new Date(a.start||a.dtstart) - new Date(b.start||b.dtstart));
-  const upcomingEvts = (calEvents||[]).filter(e => {
-    const d = new Date(e.start||e.dtstart);
-    return d.toDateString() !== now.toDateString() && d > now;
-  }).slice(0,6);
-
+  const todayEvts = (calEvents||[]).filter(e => { const d = new Date(e.start || e.dtstart); return d.toDateString() === now.toDateString(); }).sort((a,b) => new Date(a.start||a.dtstart) - new Date(b.start||b.dtstart));
+  const upcomingEvts = (calEvents||[]).filter(e => { const d = new Date(e.start||e.dtstart); return d.toDateString() !== now.toDateString() && d > now; }).slice(0,6);
   let calContent = '';
   if (todayEvts.length) {
-    calContent = todayEvts.map(e => `
-      <div class="event-row" onclick='openEventModal(${JSON.stringify(e)})'>
-        <span class="event-time">${e.allDay ? 'All Day' : fmtTime12(e.start||e.dtstart)}</span>
-        <span class="event-title">${e.title||e.summary}</span>
-      </div>`).join('');
+    calContent = todayEvts.map(e => `<div class="event-row" onclick='openEventModal(${JSON.stringify(e)})'><span class="event-time">${e.allDay ? 'All Day' : fmtTime12(e.start||e.dtstart)}</span><span class="event-title">${e.title||e.summary}</span></div>`).join('');
   } else if (upcomingEvts.length) {
-    calContent = upcomingEvts.map(e => {
-      const d = new Date(e.start||e.dtstart);
-      return `<div class="event-row" onclick='openEventModal(${JSON.stringify(e)})'>
-        <span class="event-time">${MON[d.getMonth()]} ${d.getDate()}</span>
-        <span class="event-title">${e.title||e.summary}</span>
-      </div>`;
-    }).join('');
+    calContent = upcomingEvts.map(e => { const d = new Date(e.start||e.dtstart); return `<div class="event-row" onclick='openEventModal(${JSON.stringify(e)})'><span class="event-time">${MON[d.getMonth()]} ${d.getDate()}</span><span class="event-title">${e.title||e.summary}</span></div>`; }).join('');
   } else {
     calContent = '<div class="no-events">No events today</div>';
   }
-  calCard.innerHTML = `
-    <div class="card-header">
-      <span class="card-label">RHS Events</span>
-      <span class="card-tag">${todayEvts.length ? 'Today' : 'Upcoming'}</span>
-    </div>
-    <div class="card-body">${calContent}</div>`;
+  calCard.innerHTML = `<div class="card-header"><span class="card-label">RHS Events</span><span class="card-tag">${todayEvts.length ? 'Today' : 'Upcoming'}</span></div><div class="card-body">${calContent}</div>`;
   sections.push(calCard);
 
-  /* ── Countdowns ── */
-  const upcoming = CW_HARDCODED_COUNTDOWNS
-    .map(c => ({ ...c, days: cwDaysUntil(c.date) }))
-    .filter(c => c.days >= 0 && c.days <= 180)
-    .sort((a,b) => a.days - b.days)
-    .slice(0, 8);
+  const upcoming = CW_HARDCODED_COUNTDOWNS.map(c => ({ ...c, days: cwDaysUntil(c.date) })).filter(c => c.days >= 0 && c.days <= 180).sort((a,b) => a.days - b.days).slice(0, 8);
   if (upcoming.length) {
     const cdCard = document.createElement('div');
     cdCard.className = 'card';
-    const cdRows = upcoming.map(c => {
-      const cls   = c.days === 0 ? 'today' : c.days <= 7 ? 'soon' : '';
-      const label = c.days === 0 ? 'TODAY' : c.days === 1 ? '1 DAY' : `${c.days} DAYS`;
-      return `<div class="countdown-row">
-        <span class="countdown-label">${c.label}</span>
-        <span class="countdown-days ${cls}">${label}</span>
-      </div>`;
-    }).join('');
-    cdCard.innerHTML = `
-      <div class="card-header"><span class="card-label">Countdowns</span></div>
-      <div class="card-body">${cdRows}</div>`;
+    const cdRows = upcoming.map(c => { const cls = c.days === 0 ? 'today' : c.days <= 7 ? 'soon' : ''; const label = c.days === 0 ? 'TODAY' : c.days === 1 ? '1 DAY' : `${c.days} DAYS`; return `<div class="countdown-row"><span class="countdown-label">${c.label}</span><span class="countdown-days ${cls}">${label}</span></div>`; }).join('');
+    cdCard.innerHTML = `<div class="card-header"><span class="card-label">Countdowns</span></div><div class="card-body">${cdRows}</div>`;
     sections.push(cdCard);
   }
 
-  /* ── Birthdays ── */
   const { todayBdays, weekBdays } = cwGetWeekBirthdays();
   let upcomingBdays = [];
   if (!todayBdays.length && !weekBdays.length) {
     for (let offset = 1; offset <= 60; offset++) {
       const d = new Date(now); d.setDate(now.getDate() + offset);
-      CW_BIRTHDAYS.filter(b => b.month===d.getMonth()+1 && b.day===d.getDate())
-        .forEach(b => upcomingBdays.push({...b, offset}));
+      CW_BIRTHDAYS.filter(b => b.month===d.getMonth()+1 && b.day===d.getDate()).forEach(b => upcomingBdays.push({...b, offset}));
       if (upcomingBdays.length >= 4) break;
     }
   }
   if (todayBdays.length || weekBdays.length || upcomingBdays.length) {
     const bdCard = document.createElement('div');
     bdCard.className = 'card';
-    let bdContent = '';
-    let cardLabel = 'Birthdays This Week';
-    if (todayBdays.length) {
-      cardLabel = '🎂 Happy Birthday!';
-      bdContent += `<div class="bday-today">${todayBdays.map(b =>
-        `<div style="cursor:pointer;padding:4px 0" onclick='openBdayModal(${JSON.stringify(b)})'>
-          🎉 ${b.name}
-          <span style="font-size:10px;color:var(--green);margin-left:8px;font-family:var(--mono)">TAP TO WISH ▶</span>
-        </div>`).join('')}</div>`;
-    }
-    if (weekBdays.length) {
-      bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b =>
-        `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>
-          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}
-        </div>`).join('')}</div>`;
-    }
-    if (upcomingBdays.length) {
-      cardLabel = 'Coming Up · Birthdays';
-      bdContent += `<div class="bday-week">${upcomingBdays.slice(0,4).map(b =>
-        `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>
-          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}
-          <span style="font-size:10px;color:var(--text-dim);margin-left:6px;font-family:var(--mono)">${b.offset===1?'Tomorrow':'In '+b.offset+' days'}</span>
-        </div>`).join('')}</div>`;
-    }
-    bdCard.innerHTML = `
-      <div class="card-header"><span class="card-label">${cardLabel}</span></div>
-      <div class="card-body">${bdContent}</div>`;
+    let bdContent = '', cardLabel = 'Birthdays This Week';
+    if (todayBdays.length) { cardLabel = '🎂 Happy Birthday!'; bdContent += `<div class="bday-today">${todayBdays.map(b => `<div style="cursor:pointer;padding:4px 0" onclick='openBdayModal(${JSON.stringify(b)})'>🎉 ${b.name}<span style="font-size:10px;color:var(--green);margin-left:8px;font-family:var(--font-mono)">TAP TO WISH ▶</span></div>`).join('')}</div>`; }
+    if (weekBdays.length) { bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b => `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}</div>`).join('')}</div>`; }
+    if (upcomingBdays.length) { cardLabel = 'Coming Up · Birthdays'; bdContent += `<div class="bday-week">${upcomingBdays.slice(0,4).map(b => `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}<span style="font-size:10px;color:var(--text-dim);margin-left:6px;font-family:var(--font-mono)">${b.offset===1?'Tomorrow':'In '+b.offset+' days'}</span></div>`).join('')}</div>`; }
+    bdCard.innerHTML = `<div class="card-header"><span class="card-label">${cardLabel}</span></div><div class="card-body">${bdContent}</div>`;
     sections.push(bdCard);
   }
 
-  /* ── Approved board messages ── */
   try {
-    const now_iso = new Date().toISOString();
-    const msgs = await cwSupabaseFetch(
-      `cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now_iso}&order=created_at.desc`
-    );
+    const msgs = await cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${new Date().toISOString()}&order=created_at.desc`);
     if (msgs && msgs.length) {
       msgs.forEach(msg => {
-        const posted  = new Date(msg.created_at);
+        const posted = new Date(msg.created_at);
         const timeStr = posted.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-        const sender  = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : 'Room ' + CW.room;
-        const lines   = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim());
-        const qmCard  = document.createElement('div');
+        const sender = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : 'Room ' + CW.room;
+        const lines = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim());
+        const qmCard = document.createElement('div');
         qmCard.className = 'card';
-        qmCard.innerHTML = `
-          <div class="card-header">
-            <span class="card-label">Board Message</span>
-            <span class="card-tag">${timeStr}</span>
-          </div>
-          <div class="card-body">
-            <div class="msg-from">From ${sender}</div>
-            <div class="msg-text">${lines.join('<br>')}</div>
-          </div>`;
+        qmCard.innerHTML = `<div class="card-header"><span class="card-label">Board Message</span><span class="card-tag">${timeStr}</span></div><div class="card-body"><div class="msg-from">From ${sender}</div><div class="msg-text">${lines.join('<br>')}</div></div>`;
         sections.push(qmCard);
       });
     }
   } catch(e) {}
 
-  /* ── Did You Know ── */
   const factScreen = cwBuildFactsScreen();
   if (factScreen) {
     const factCard = document.createElement('div');
     factCard.className = 'card';
     const factText = factScreen.lines.filter(l => l.trim() && l !== 'DID YOU KNOW?' && !l.startsWith('ROOM')).join(' ');
-    factCard.innerHTML = `
-      <div class="card-header"><span class="card-label tan">Did You Know?</span></div>
-      <div class="card-body"><div class="fact-text">${factText}</div></div>`;
+    factCard.innerHTML = `<div class="card-header"><span class="card-label tan">Did You Know?</span></div><div class="card-body"><div class="fact-text">${factText}</div></div>`;
     sections.push(factCard);
   }
 
-  /* ── Render all ── */
   const content = document.getElementById('content');
   content.innerHTML = '';
   sections.forEach(s => content.appendChild(s));
@@ -1031,16 +1004,15 @@ async function loadData() {
   const uid       = params.get('uid');
   const studentId = params.get('student');
   try {
-    const jobs = [
-      cwFetchCalendar(),
-      fetchWeatherMobile(),
-    ];
+    const jobs = [cwFetchCalendar(), fetchWeatherMobile()];
     if (uid || studentId) jobs.push(fetchPassStatus(uid, studentId));
-    const results   = await Promise.allSettled(jobs);
-    const calEvents = results[0].value || [];
+    const results     = await Promise.allSettled(jobs);
+    const calEvents   = results[0].value || [];
     const weatherData = results[1].value || null;
-    const passData  = (uid || studentId) ? (results[2]?.value || null) : null;
+    const passData    = (uid || studentId) ? (results[2]?.value || null) : null;
+    _mobileCalEvents  = calEvents;
     await render(calEvents, passData, weatherData);
+    updatePeriodStatusBar();
     setSyncStatus('live', 'Live');
   } catch(e) {
     await render([], null, null);
@@ -1064,25 +1036,15 @@ function closeModal(e) {
 function openScheduleModal(schedKey) {
   const schedule = SCHEDULES[schedKey];
   if (!schedule) return;
-  const nm  = new Date().getHours() * 60 + new Date().getMinutes();
-  let rows  = '';
+  const nm = new Date().getHours() * 60 + new Date().getMinutes();
+  let rows = '';
   for (const p of schedule.periods) {
-    const start  = cwTimeToMins(p.start);
-    const end    = cwTimeToMins(p.end);
-    const isNow  = nm >= start && nm < end;
-    const isPast = nm >= end;
+    const start = cwTimeToMins(p.start), end = cwTimeToMins(p.end);
+    const isNow = nm >= start && nm < end, isPast = nm >= end;
     if (p.break) {
-      rows += `<div class="modal-break-row${isPast?' past':''}">
-        <span class="modal-break-name">${p.name}</span>
-        <span class="modal-break-time">${p.start} – ${p.end}</span>
-        ${isNow ? '<span class="modal-p-now">NOW</span>' : ''}
-      </div>`;
+      rows += `<div class="modal-break-row${isPast?' past':''}"><span class="modal-break-name">${p.name}</span><span class="modal-break-time">${p.start} – ${p.end}</span>${isNow ? '<span class="modal-p-now">NOW</span>' : ''}</div>`;
     } else {
-      rows += `<div class="modal-period-row${isNow?' now':isPast?' past':''}">
-        <span class="modal-p-name">${p.name}</span>
-        <span class="modal-p-time">${p.start} – ${p.end}</span>
-        ${isNow ? '<span class="modal-p-now">NOW</span>' : ''}
-      </div>`;
+      rows += `<div class="modal-period-row${isNow?' now':isPast?' past':''}"><span class="modal-p-name">${p.name}</span><span class="modal-p-time">${p.start} – ${p.end}</span>${isNow ? '<span class="modal-p-now">NOW</span>' : ''}</div>`;
     }
   }
   openModal(schedule.label, rows);
@@ -1090,34 +1052,17 @@ function openScheduleModal(schedKey) {
 
 function openEventModal(evt) {
   const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const d   = new Date(evt.start || evt.dtstart);
-  openModal('Event Details', `
-    <div style="font-family:var(--mono)">
-      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4">${evt.title||evt.summary}</div>
-      <div style="font-size:12px;color:var(--text-mid);line-height:1.8">
-        📅 ${MON[d.getMonth()]} ${d.getDate()}<br>
-        ⏰ ${evt.allDay ? 'All Day' : fmtTime12(evt.start||evt.dtstart)}
-        ${evt.location ? `<br>📍 ${evt.location}` : ''}
-      </div>
-    </div>`);
+  const d = new Date(evt.start || evt.dtstart);
+  openModal('Event Details', `<div style="font-family:var(--font-mono)"><div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.4">${evt.title||evt.summary}</div><div style="font-size:12px;color:var(--text-mid);line-height:1.8">📅 ${MON[d.getMonth()]} ${d.getDate()}<br>⏰ ${evt.allDay ? 'All Day' : fmtTime12(evt.start||evt.dtstart)}${evt.location ? `<br>📍 ${evt.location}` : ''}</div></div>`);
 }
 
 /* ════ BIRTHDAY MODAL ════ */
 const BDAY_ICONS = ['🎉','🎂','🎁','🪅','🎈','🥳','🎊'];
-const bdayCache  = {};
-
 async function openBdayModal(person) {
   const icon  = BDAY_ICONS[Math.floor(Math.random() * BDAY_ICONS.length)];
   const wishes = ['HAPPY BIRTHDAY!','HAVE AN AMAZING DAY!','YOU ARE AWESOME!','MAKE IT A GREAT ONE!','WE SEE YOU TODAY!'];
   const wish  = wishes[Math.floor(Math.random() * wishes.length)];
-  openModal('', `
-    <div class="bday-card-modal">
-      <span class="bday-icon" id="bdayIcon">${icon}</span>
-      <div class="bday-name-big">${person.name}</div>
-      <div class="bday-wish">${wish}</div>
-      <button class="bday-tap-btn" onclick="tapBday('${person.name.replace(/'/g,"\\'")}')">🎉 Send Birthday Wishes</button>
-      <div class="bday-tap-count" id="bdayCount">Be the first to send wishes!</div>
-    </div>`);
+  openModal('', `<div class="bday-card-modal"><span class="bday-icon" id="bdayIcon">${icon}</span><div class="bday-name-big">${person.name}</div><div class="bday-wish">${wish}</div><button class="bday-tap-btn" onclick="tapBday('${person.name.replace(/'/g,"\\'")}')">🎉 Send Birthday Wishes</button><div class="bday-tap-count" id="bdayCount">Be the first to send wishes!</div></div>`);
   try {
     const res  = await fetch(`${CW.calScriptUrl}?action=bdaycount&name=${encodeURIComponent(person.name)}`);
     const data = await res.json();
@@ -1134,34 +1079,25 @@ async function tapBday(name) {
     if (el) el.textContent = (data.count||1) + ' wish' + ((data.count||1)!==1?'es':'') + ' sent so far!';
   } catch(e) {}
   const icon = document.getElementById('bdayIcon');
-  if (icon) {
-    icon.style.animation = 'none';
-    icon.offsetHeight;
-    icon.style.animation = 'bounce 0.5s ease';
-    icon.textContent = BDAY_ICONS[Math.floor(Math.random() * BDAY_ICONS.length)];
-  }
+  if (icon) { icon.style.animation='none'; icon.offsetHeight; icon.style.animation='bounce 0.5s ease'; icon.textContent=BDAY_ICONS[Math.floor(Math.random()*BDAY_ICONS.length)]; }
 }
 
 /* ════ INIT ════ */
 updateClock();
 setInterval(updateClock, 10000);
 setInterval(loadData, 60000);
+setInterval(updatePeriodStatusBar, 30000);
 
-// PassAble — show My Pass button if uid or student param present
 (function() {
   const params = new URLSearchParams(window.location.search);
   const uid    = params.get('uid');
   const sid    = params.get('student');
   if (uid || sid) {
     const btn = document.getElementById('passLinkBtn');
-    if (btn) {
-      btn.href         = `pass.html?${params.toString()}`;
-      btn.style.display = 'inline-block';
-    }
+    if (btn) { btn.href = `pass.html?${params.toString()}`; btn.style.display = 'inline-block'; }
   }
 })();
 
-// Period timer refresh every 5s
 setInterval(() => {
   const existing = document.querySelector('.period-timer-card');
   if (existing) {
