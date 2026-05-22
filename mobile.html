@@ -407,7 +407,7 @@ function setSyncStatus(state, label) {
    🟡 Yellow — 16–20 min left (last chance)
    🔴 Red    — last 15 min
 */
-const SCHEDULES_MOBILE = {
+const MOBILE_SCHEDULES = {
   regular: {
     name: 'Regular',
     periods: [
@@ -514,7 +514,7 @@ const SCHEDULES_MOBILE = {
   },
 }
 
-const NO_SCHOOL = [
+const MOBILE_NO_SCHOOL = [
   '2025-09-01','2025-11-11','2025-11-27','2025-11-28',
   '2025-12-22','2025-12-23','2025-12-24','2025-12-25','2025-12-26',
   '2025-12-29','2025-12-30','2025-12-31',
@@ -534,19 +534,19 @@ function getScheduleForToday(calEvents) {
   const ds  = dateStr(now);
   const dow = now.getDay();
   if (dow===0||dow===6) return null;
-  if (NO_SCHOOL.includes(ds)) return null;
+  if (MOBILE_NO_SCHOOL.includes(ds)) return null;
   const titles = (calEvents||[]).map(e=>(e.title||'').toLowerCase());
   const has = kw => titles.some(t=>t.includes(kw));
-  if (has('foggy')||has('late arrival')) return SCHEDULES_MOBILE.foggy;
-  if (has('minimum')) return SCHEDULES_MOBILE.minimum;
-  if (has('code day')) return SCHEDULES_MOBILE.codeDay;
-  if (has('activity')) return SCHEDULES_MOBILE.activity;
-  if (has('block')) return dow===3 ? SCHEDULES_MOBILE.blockWed : SCHEDULES_MOBILE.blockThu;
-  if (has('early release')) return SCHEDULES_MOBILE.earlyRelease;
-  if (dow===1) return SCHEDULES_MOBILE.earlyRelease;
-  if (dow===3) return SCHEDULES_MOBILE.blockWed;
-  if (dow===4) return SCHEDULES_MOBILE.blockThu;
-  return SCHEDULES_MOBILE.regular;
+  if (has('foggy')||has('late arrival')) return MOBILE_SCHEDULES.foggy;
+  if (has('minimum')) return MOBILE_SCHEDULES.minimum;
+  if (has('code day')) return MOBILE_SCHEDULES.codeDay;
+  if (has('activity')) return MOBILE_SCHEDULES.activity;
+  if (has('block')) return dow===3 ? MOBILE_SCHEDULES.blockWed : MOBILE_SCHEDULES.blockThu;
+  if (has('early release')) return MOBILE_SCHEDULES.earlyRelease;
+  if (dow===1) return MOBILE_SCHEDULES.earlyRelease;
+  if (dow===3) return MOBILE_SCHEDULES.blockWed;
+  if (dow===4) return MOBILE_SCHEDULES.blockThu;
+  return MOBILE_SCHEDULES.regular;
 }
 
 function getPeriodStatus(schedule) {
