@@ -76,7 +76,6 @@
   .h-period-time.warning { color: #ff9900; }
   .h-period-time.ending  { color: #cc4444; animation: blink 1s infinite; }
 
-  /* Pass status pill — sits below period time */
   .h-pass-status {
     font-family: var(--font-ui);
     font-size: clamp(7px,0.65vw,11px);
@@ -174,7 +173,6 @@
     <span class="sync-label" id="syncLabel">Starting...</span>
   </div>
   <div class="h-divider" style="max-width:2vw"></div>
-  <!-- Period timer + pass status pill -->
   <div class="h-period-timer" id="periodTimer" style="display:none">
     <div class="h-period-label" id="periodLabel"></div>
     <div class="h-period-time"  id="periodTime"></div>
@@ -246,12 +244,7 @@ let rotateTimer = null;
 let syncTimer   = null;
 let calTimer    = null;
 
-/* ════ PASS STATUS PILL LOGIC ════
-   🔴 Red    — first 15 min after bell
-   🟢 Green  — safe window (min 16 to 20 min left)
-   🟡 Yellow — 16–20 min left (last chance)
-   🔴 Red    — last 15 min
-*/
+/* ════ PASS STATUS PILL ════ */
 const DISPLAY_SCHEDULES = {
   regular: { periods: [
     { id:'1', label:'P1', start:'08:10', end:'09:02' },
@@ -333,45 +326,44 @@ const DISPLAY_SCHEDULES = {
     { id:'6', label:'P6', start:'13:43', end:'14:27' },
     { id:'7', label:'P7', start:'14:31', end:'15:15' },
   ]},
- // ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────
-finals1: { periods: [
-  { id:'1', label:'P1 Rev', start:'08:10', end:'08:48' },
-  { id:'2', label:'P2 Rev', start:'08:52', end:'09:28' },
-  { id:'3', label:'P3 Rev', start:'09:32', end:'10:08' },
-  { id:'brunch', label:'Brunch', start:'10:08', end:'10:23', break:true },
-  { id:'4', label:'P4 Rev', start:'10:27', end:'11:03' },
-  { id:'5', label:'P5 Rev', start:'11:07', end:'11:43' },
-  { id:'lunch', label:'Lunch', start:'11:43', end:'12:18', break:true },
-  { id:'6', label:'P6 Rev', start:'12:22', end:'12:58' },
-  { id:'final6', label:'Final P6', start:'13:02', end:'14:35' },
-  { id:'7', label:'P7 Rev', start:'14:39', end:'15:15' },
-]},
-finals2: { periods: [
-  { id:'1', label:'P1 Rev', start:'08:10', end:'08:54' },
-  { id:'final1', label:'Final P1', start:'08:58', end:'10:31' },
-  { id:'brunch', label:'Brunch', start:'10:31', end:'10:46', break:true },
-  { id:'6', label:'P6 Rev', start:'10:50', end:'11:32' },
-  { id:'2', label:'P2 Rev', start:'11:36', end:'12:18' },
-  { id:'lunch', label:'Lunch', start:'12:18', end:'12:53', break:true },
-  { id:'final2', label:'Final P2', start:'12:57', end:'14:30' },
-  { id:'mtg', label:'Class Mtg', start:'14:34', end:'15:15', break:true },
-]},
-finals3: { periods: [
-  { id:'3', label:'P3 Rev', start:'08:10', end:'08:40' },
-  { id:'final3', label:'Final P3', start:'08:44', end:'10:17' },
-  { id:'4', label:'P4 Rev', start:'10:21', end:'10:51' },
-  { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
-  { id:'final4', label:'Final P4', start:'11:28', end:'13:01' },
-]},
-finals4: { periods: [
-  { id:'5', label:'P5 Rev', start:'08:10', end:'08:40' },
-  { id:'final5', label:'Final P5', start:'08:44', end:'10:17' },
-  { id:'7', label:'P7 Rev', start:'10:21', end:'10:51' },
-  { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
-  { id:'final7', label:'Final P7', start:'11:28', end:'13:01' },
-]},
-// finals5 = June 12 = minimum day (already handled)
-}
+  // ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────
+  finals1: { periods: [
+    { id:'1', label:'P1 Rev', start:'08:10', end:'08:48' },
+    { id:'2', label:'P2 Rev', start:'08:52', end:'09:28' },
+    { id:'3', label:'P3 Rev', start:'09:32', end:'10:08' },
+    { id:'brunch', label:'Brunch', start:'10:08', end:'10:23', break:true },
+    { id:'4', label:'P4 Rev', start:'10:27', end:'11:03' },
+    { id:'5', label:'P5 Rev', start:'11:07', end:'11:43' },
+    { id:'lunch', label:'Lunch', start:'11:43', end:'12:18', break:true },
+    { id:'6', label:'P6 Rev', start:'12:22', end:'12:58' },
+    { id:'final6', label:'Final P6', start:'13:02', end:'14:35' },
+    { id:'7', label:'P7 Rev', start:'14:39', end:'15:15' },
+  ]},
+  finals2: { periods: [
+    { id:'1', label:'P1 Rev', start:'08:10', end:'08:54' },
+    { id:'final1', label:'Final P1', start:'08:58', end:'10:31' },
+    { id:'brunch', label:'Brunch', start:'10:31', end:'10:46', break:true },
+    { id:'6', label:'P6 Rev', start:'10:50', end:'11:32' },
+    { id:'2', label:'P2 Rev', start:'11:36', end:'12:18' },
+    { id:'lunch', label:'Lunch', start:'12:18', end:'12:53', break:true },
+    { id:'final2', label:'Final P2', start:'12:57', end:'14:30' },
+    { id:'mtg', label:'Class Mtg', start:'14:34', end:'15:15', break:true },
+  ]},
+  finals3: { periods: [
+    { id:'3', label:'P3 Rev', start:'08:10', end:'08:40' },
+    { id:'final3', label:'Final P3', start:'08:44', end:'10:17' },
+    { id:'4', label:'P4 Rev', start:'10:21', end:'10:51' },
+    { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
+    { id:'final4', label:'Final P4', start:'11:28', end:'13:01' },
+  ]},
+  finals4: { periods: [
+    { id:'5', label:'P5 Rev', start:'08:10', end:'08:40' },
+    { id:'final5', label:'Final P5', start:'08:44', end:'10:17' },
+    { id:'7', label:'P7 Rev', start:'10:21', end:'10:51' },
+    { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
+    { id:'final7', label:'Final P7', start:'11:28', end:'13:01' },
+  ]},
+};
 
 const NO_SCHOOL_DISPLAY = [
   '2025-09-01','2025-11-11','2025-11-27','2025-11-28',
@@ -382,7 +374,7 @@ const NO_SCHOOL_DISPLAY = [
   '2026-01-19','2026-02-09','2026-02-16',
   '2026-03-30','2026-03-31','2026-04-01','2026-04-02','2026-04-03',
   '2026-05-25',
-]
+];
 
 function dToMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
 function dNowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
@@ -410,9 +402,7 @@ function getDisplaySchedule() {
   if (has('activity')) return DISPLAY_SCHEDULES.activity;
   if (has('block')) return dow===3 ? DISPLAY_SCHEDULES.blockWed : DISPLAY_SCHEDULES.blockThu;
   if (has('early release')) return DISPLAY_SCHEDULES.earlyRelease;
-  // ── Holiday week check — runs before day-of-week defaults ────────────────
   if (_displaySchoolDaysThisWeek(now)<=4) return DISPLAY_SCHEDULES.regular;
-  // ── Normal week defaults ─────────────────────────────────────────────────
   if (dow===1) return DISPLAY_SCHEDULES.earlyRelease;
   if (dow===3) return DISPLAY_SCHEDULES.blockWed;
   if (dow===4) return DISPLAY_SCHEDULES.blockThu;
@@ -431,7 +421,7 @@ function updatePassStatusPill() {
       if (p.break) {
         const next = schedule.periods[schedule.periods.indexOf(p)+1];
         pill.className = 'h-pass-status blue';
-        pill.textContent = `⏸ ${p.label}${next ? ' · '+( dToMins(next.start)-nm)+' min' : ''}`;
+        pill.textContent = `⏸ ${p.label}${next ? ' · '+(dToMins(next.start)-nm)+' min' : ''}`;
         return;
       }
       const left = e - nm, sinceStart = nm - s;
@@ -661,7 +651,7 @@ async function startBoard(data) {
   buildDots();
   setSyncStatus('', 'LOADING...');
   await cwRefreshAllSlots(messages, buildDots);
- // REMOVE AFTER JUNE 12, 2026
+  // Finals inject on init — REMOVE AFTER JUNE 12, 2026
   const finalsScreens = cwBuildFinalsScreensForToday();
   if (finalsScreens.length) {
     const schedIdx = cwFindSlotIdx(messages, 'schedule');
@@ -698,7 +688,8 @@ async function startBoard(data) {
     cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(events), buildDots);
   }, 5 * 60 * 1000);
 }
-// Finals auto-inject — REMOVE AFTER JUNE 12, 2026
+
+// Finals refresh every 60s — REMOVE AFTER JUNE 12, 2026
 setInterval(() => {
   const screens = cwBuildFinalsScreensForToday();
   if (!screens.length) return;
@@ -710,6 +701,7 @@ setInterval(() => {
   messages.splice(insertAt, 0, ...screens);
   buildDots();
 }, 60 * 1000);
+
 setInterval(() => { cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(window._cwCalEvents||[]), buildDots); cwRefreshObjectives(messages, buildDots); }, 60 * 1000);
 setInterval(async () => { if (cwFindSlotIdx(messages,'passable') < 0) return; const passes = await cwFetchPassable(); cwInjectSlot(messages,'passable', passes?.length ? cwBuildPassableScreen(passes) : null, buildDots); }, 30 * 1000);
 setInterval(async () => {
@@ -721,7 +713,14 @@ setInterval(async () => {
   if (msgs.length > 1) { const slotIdx = cwFindSlotIdx(messages,'quickMsg'); const extras = msgs.slice(1).map(m => cwBuildQuickMsgScreen(m)).filter(Boolean); if (slotIdx >= 0 && extras.length) { messages.splice(slotIdx + 1, 0, ...extras); buildDots(); } }
 }, 30 * 1000);
 setInterval(async () => { if (cwFindSlotIdx(messages,'weather') < 0) return; const data = await cwFetchWeather(); cwInjectSlot(messages,'weather', cwBuildWeatherScreen(data), buildDots); }, 30 * 60 * 1000);
-setInterval(async () => { if (cwFindSlotIdx(messages,'countdown') < 0) return; await cwFetchCustomCountdowns(); cwInjectSlot(messages,'countdown', cwBuildCountdownScreen(), buildDots); }, 10 * 60 * 1000);
+
+// ── FIX: Countdown now merges cw_events + hardcoded + custom ─────────────────
+setInterval(async () => {
+  if (cwFindSlotIdx(messages,'countdown') < 0) return;
+  const [, cwEvents] = await Promise.all([cwFetchCustomCountdowns(), cwFetchEvents(CW.room)]);
+  cwInjectSlot(messages, 'countdown', cwBuildMergedCountdownScreen(cwEvents), buildDots);
+}, 10 * 60 * 1000);
+
 setInterval(() => { if (cwFindSlotIdx(messages,'code') < 0) return; cwInjectSlot(messages,'code', cwBuildCodeScreen(), buildDots); }, 10 * 1000);
 
 async function initHonorRoll() {
