@@ -388,12 +388,21 @@ function dToMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
 function dNowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
 function dDateStr(d) { return d.toISOString().split('T')[0]; }
 
+function _displaySchoolDaysThisWeek(date) {
+  const day=date.getDay(), monday=new Date(date);
+  monday.setDate(date.getDate()-(day===0?6:day-1));
+  let count=0;
+  for(let i=0;i<5;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);if(!NO_SCHOOL_DISPLAY.includes(dDateStr(d)))count++;}
+  return count;
+}
+
 function getDisplaySchedule() {
   const now = new Date(), ds = dDateStr(now), dow = now.getDay();
   if (dow===0||dow===6||NO_SCHOOL_DISPLAY.includes(ds)) return null;
- const FINALS_MAP = {'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
-if (FINALS_MAP[ds]) return DISPLAY_SCHEDULES[FINALS_MAP[ds]];
-  const titles = (window._cwCalEvents||[]).map(e=>(e.title||'').toLowerCase());
+  // ── Finals hardcode — REMOVE AFTER JUNE 12, 2026 ────────────────────────
+  const FINALS_MAP = {'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
+  if (FINALS_MAP[ds]) return DISPLAY_SCHEDULES[FINALS_MAP[ds]];
+  const titles = (window._cwCalEvents||[]).filter(e => e.start && e.start.substring(0,10)===ds).map(e=>(e.title||'').toLowerCase());
   const has = kw => titles.some(t=>t.includes(kw));
   if (has('foggy')||has('late arrival')) return DISPLAY_SCHEDULES.foggy;
   if (has('minimum')) return DISPLAY_SCHEDULES.minimum;
@@ -401,6 +410,9 @@ if (FINALS_MAP[ds]) return DISPLAY_SCHEDULES[FINALS_MAP[ds]];
   if (has('activity')) return DISPLAY_SCHEDULES.activity;
   if (has('block')) return dow===3 ? DISPLAY_SCHEDULES.blockWed : DISPLAY_SCHEDULES.blockThu;
   if (has('early release')) return DISPLAY_SCHEDULES.earlyRelease;
+  // ── Holiday week check — runs before day-of-week defaults ────────────────
+  if (_displaySchoolDaysThisWeek(now)<=4) return DISPLAY_SCHEDULES.regular;
+  // ── Normal week defaults ─────────────────────────────────────────────────
   if (dow===1) return DISPLAY_SCHEDULES.earlyRelease;
   if (dow===3) return DISPLAY_SCHEDULES.blockWed;
   if (dow===4) return DISPLAY_SCHEDULES.blockThu;
