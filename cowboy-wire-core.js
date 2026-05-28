@@ -1526,3 +1526,185 @@ function cwBuildPeriodTimerCard(calEvents) {
   }
   return card;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FINALS WEEK ADDITIONS FOR cowboy-wire-core.js
+// Add these constants and functions to cowboy-wire-core.js
+// REMOVE AFTER JUNE 12, 2026
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Finals schedules data ────────────────────────────────────────────────────
+const CW_FINALS_SCHEDULES = {
+  '2026-06-08': {
+    name: 'Finals Day 1 — Monday',
+    periods: [
+      { label: 'P1 Review',  time: '8:10–8:48' },
+      { label: 'P2 Review',  time: '8:52–9:28' },
+      { label: 'P3 Review',  time: '9:32–10:08' },
+      { label: 'Brunch',     time: '10:08–10:23', break: true },
+      { label: 'P4 Review',  time: '10:27–11:03' },
+      { label: 'P5 Review',  time: '11:07–11:43' },
+      { label: 'Lunch',      time: '11:43–12:18', break: true },
+      { label: 'P6 Review',  time: '12:22–12:58' },
+      { label: 'FINAL P6',   time: '1:02–2:35',   final: true },
+      { label: 'P7 Review',  time: '2:39–3:15' },
+    ]
+  },
+  '2026-06-09': {
+    name: 'Finals Day 2 — Tuesday',
+    periods: [
+      { label: 'P1 Review',  time: '8:10–8:54' },
+      { label: 'FINAL P1',   time: '8:58–10:31',  final: true },
+      { label: 'Brunch',     time: '10:31–10:46', break: true },
+      { label: 'P6 Review',  time: '10:50–11:32' },
+      { label: 'P2 Review',  time: '11:36–12:18' },
+      { label: 'Lunch',      time: '12:18–12:53', break: true },
+      { label: 'FINAL P2',   time: '12:57–2:30',  final: true },
+      { label: 'Class Mtgs', time: '2:34–3:15',   break: true },
+    ]
+  },
+  '2026-06-10': {
+    name: 'Finals Day 3 — Wednesday',
+    periods: [
+      { label: 'P3 Review',  time: '8:10–8:40' },
+      { label: 'FINAL P3',   time: '8:44–10:17',  final: true },
+      { label: 'P4 Review',  time: '10:21–10:51' },
+      { label: 'Lunch',      time: '10:51–11:24', break: true },
+      { label: 'FINAL P4',   time: '11:28–1:01',  final: true },
+    ]
+  },
+  '2026-06-11': {
+    name: 'Finals Day 4 — Thursday',
+    periods: [
+      { label: 'P5 Review',  time: '8:10–8:40' },
+      { label: 'FINAL P5',   time: '8:44–10:17',  final: true },
+      { label: 'P7 Review',  time: '10:21–10:51' },
+      { label: 'Lunch',      time: '10:51–11:24', break: true },
+      { label: 'FINAL P7',   time: '11:28–1:01',  final: true },
+    ]
+  },
+  '2026-06-12': {
+    name: 'Finals Day 5 — Friday (Minimum)',
+    periods: [
+      { label: 'Period 1', time: '8:10–8:46' },
+      { label: 'Period 2', time: '8:50–9:23' },
+      { label: 'Period 3', time: '9:27–10:00' },
+      { label: 'Period 4', time: '10:04–10:37' },
+      { label: 'Brunch/Lunch', time: '10:37–11:10', break: true },
+      { label: 'Period 5', time: '11:14–11:47' },
+      { label: 'Period 6', time: '11:51–12:24' },
+      { label: 'Period 7', time: '12:28–1:01' },
+    ]
+  },
+};
+
+// ── Which date shows which "next day" preview ────────────────────────────────
+// REMOVE AFTER JUNE 12, 2026
+const CW_FINALS_PREVIEW_MAP = {
+  '2026-06-05': '2026-06-08', // Friday → show Monday
+  '2026-06-08': '2026-06-09', // Monday → show Tuesday
+  '2026-06-09': '2026-06-10', // Tuesday → show Wednesday
+  '2026-06-10': '2026-06-11', // Wednesday → show Thursday
+  '2026-06-11': '2026-06-12', // Thursday → show Friday (minimum)
+};
+
+// ── Build a flip board screen for a finals day schedule ──────────────────────
+function cwBuildFinalsScreen(dateKey) {
+  const sched = CW_FINALS_SCHEDULES[dateKey];
+  if (!sched) return null;
+  const COLS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.cols : 28;
+  const ROWS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.rows : 7;
+
+  // Build lines — fit schedule into available rows
+  const lines = [];
+  lines.push(sched.name.toUpperCase());
+  lines.push('');
+  for (const p of sched.periods) {
+    if (lines.length >= ROWS - 1) break;
+    const prefix = p.final ? '★ ' : p.break ? '  ' : '  ';
+    lines.push(`${prefix}${p.label.padEnd(12)} ${p.time}`);
+  }
+  // Pad to ROWS
+  while (lines.length < ROWS) lines.push('');
+
+  return {
+    lines: lines.slice(0, ROWS),
+    speed: 12,
+    _isFinalsSlot: true,
+    _finalsDate: dateKey,
+    _leftAlign: true,
+  };
+}
+
+// ── Build "today + tomorrow" finals screens ──────────────────────────────────
+// Returns array of 1 or 2 screen objects
+// REMOVE AFTER JUNE 12, 2026
+function cwBuildFinalsScreensForToday() {
+  const today = new Date().toISOString().split('T')[0];
+  const screens = [];
+
+  // Today's schedule (if it's a finals day)
+  if (CW_FINALS_SCHEDULES[today]) {
+    const todayScreen = cwBuildFinalsScreen(today);
+    if (todayScreen) {
+      todayScreen.lines[0] = "TODAY'S FINALS SCHEDULE";
+      screens.push(todayScreen);
+    }
+  }
+
+  // Tomorrow's preview
+  const nextDate = CW_FINALS_PREVIEW_MAP[today];
+  if (nextDate && CW_FINALS_SCHEDULES[nextDate]) {
+    const nextScreen = cwBuildFinalsScreen(nextDate);
+    if (nextScreen) {
+      nextScreen.lines[0] = "TOMORROW'S FINALS SCHEDULE";
+      screens.push(nextScreen);
+    }
+  }
+
+  return screens;
+}
+
+// ── Fetch cw_events from Supabase ────────────────────────────────────────────
+async function cwFetchEvents(room) {
+  const roomParam = room || 'all';
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const url = `${CW.supabaseUrl}/rest/v1/cw_events?select=date,label,type&active=eq.true&date=gte.${today}&or=(room.eq.all,room.eq.${roomParam})&order=date.asc`;
+    const res = await fetch(url, {
+      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` }
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch(e) { return []; }
+}
+
+// ── Build countdown screen from Supabase events ──────────────────────────────
+function cwBuildCountdownScreenFromEvents(events) {
+  if (!events || !events.length) return null;
+  const COLS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.cols : 28;
+  const ROWS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.rows : 7;
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const upcoming = events
+    .map(e => {
+      const d = new Date(e.date + 'T00:00:00');
+      const days = Math.round((d - today) / 86400000);
+      return { ...e, days };
+    })
+    .filter(e => e.days >= 0 && e.days <= 180)
+    .sort((a,b) => a.days - b.days)
+    .slice(0, ROWS - 1);
+
+  if (!upcoming.length) return null;
+
+  const lines = ['UPCOMING EVENTS'];
+  for (const e of upcoming) {
+    const dayStr = e.days === 0 ? 'TODAY' : e.days === 1 ? '1 DAY' : `${e.days} DAYS`;
+    const label = e.label.substring(0, COLS - 10).toUpperCase();
+    lines.push(`${label.padEnd(COLS - 8)} ${dayStr.padStart(6)}`);
+  }
+  while (lines.length < ROWS) lines.push('');
+
+  return { lines: lines.slice(0, ROWS), speed: 15, _isCountdownSlot: true, _leftAlign: true };
+}
