@@ -661,6 +661,14 @@ async function startBoard(data) {
   buildDots();
   setSyncStatus('', 'LOADING...');
   await cwRefreshAllSlots(messages, buildDots);
+ // REMOVE AFTER JUNE 12, 2026
+  const finalsScreens = cwBuildFinalsScreensForToday();
+  if (finalsScreens.length) {
+    const schedIdx = cwFindSlotIdx(messages, 'schedule');
+    const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
+    messages.splice(insertAt, 0, ...finalsScreens);
+    buildDots();
+  }
   showMessage(0);
   setSyncStatus('live', 'LIVE · SYNCS EVERY ' + SYNC_SEC + 'S');
 
@@ -690,7 +698,18 @@ async function startBoard(data) {
     cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(events), buildDots);
   }, 5 * 60 * 1000);
 }
-
+// Finals auto-inject — REMOVE AFTER JUNE 12, 2026
+setInterval(() => {
+  const screens = cwBuildFinalsScreensForToday();
+  if (!screens.length) return;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i]._isFinalsSlot) messages.splice(i, 1);
+  }
+  const schedIdx = cwFindSlotIdx(messages, 'schedule');
+  const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
+  messages.splice(insertAt, 0, ...screens);
+  buildDots();
+}, 60 * 1000);
 setInterval(() => { cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(window._cwCalEvents||[]), buildDots); cwRefreshObjectives(messages, buildDots); }, 60 * 1000);
 setInterval(async () => { if (cwFindSlotIdx(messages,'passable') < 0) return; const passes = await cwFetchPassable(); cwInjectSlot(messages,'passable', passes?.length ? cwBuildPassableScreen(passes) : null, buildDots); }, 30 * 1000);
 setInterval(async () => {
