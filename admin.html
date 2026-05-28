@@ -1797,29 +1797,7 @@ loadBirthdays();
 loadObjectives();
 setInterval(loadAll, 30000);
 setInterval(loadObjectives, 60000);
- <!-- ══ EVENTS IMPORT CARD ══ -->
-<div class="admin-card" id="events-section">
-  <div class="admin-card-header">
-    <span class="admin-card-title">📅 Events &amp; Countdowns</span>
-    <span class="admin-card-sub">Manage countdown dates for the board</span>
-  </div>
-  <div class="admin-card-body">
-    <div id="events-list-wrap" style="margin-bottom:20px;">
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">Active Events</div>
-      <div id="events-list"><div class="loading-row">Loading...</div></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Import Events via CSV</div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px;line-height:1.7;">Paste CSV below. Format: <code style="color:var(--green)">date,label,type</code><br>date = YYYY-MM-DD &nbsp;|&nbsp; type = countdown or calendar</div>
-      <textarea id="eventsCSV" rows="8" placeholder="2026-06-13,Last Day of School,countdown" style="width:100%;font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px;color:var(--text);resize:vertical;outline:none;line-height:1.6;"></textarea>
-      <div style="display:flex;gap:10px;margin-top:10px;align-items:center;">
-        <button onclick="importEventsCSV()" style="background:var(--green);color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;border:none;border-radius:6px;padding:10px 20px;cursor:pointer;">Import</button>
-        <button onclick="clearEventsCSV()" style="background:var(--surface2);color:var(--text-mid);font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--border2);border-radius:6px;padding:10px 16px;cursor:pointer;">Clear</button>
-        <span id="importStatus" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);"></span>
-      </div>
-    </div>
-  </div>
-</div>
+
  async function loadEventsList() {
   const wrap = document.getElementById('events-list');
   if (!wrap) return;
@@ -1902,5 +1880,28 @@ function clearEventsCSV() {
   if (status) status.textContent = '';
 }
 </script>
+  <!-- ══ EVENTS IMPORT CARD ══ -->
+<div class="admin-card" id="events-section">
+  <div class="admin-card-header">
+    <span class="admin-card-title">📅 Events &amp; Countdowns</span>
+    <span class="admin-card-sub">Manage countdown dates for the board</span>
+  </div>
+  <div class="admin-card-body">
+    <div id="events-list-wrap" style="margin-bottom:20px;">
+      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">Active Events</div>
+      <div id="events-list"><div class="loading-row">Loading...</div></div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Import Events via CSV</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px;line-height:1.7;">Paste CSV below. Format: <code style="color:var(--green)">date,label,type</code><br>date = YYYY-MM-DD &nbsp;|&nbsp; type = countdown or calendar</div>
+      <textarea id="eventsCSV" rows="8" placeholder="2026-06-13,Last Day of School,countdown" style="width:100%;font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px;color:var(--text);resize:vertical;outline:none;line-height:1.6;"></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px;align-items:center;">
+        <button onclick="importEventsCSV()" style="background:var(--green);color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;border:none;border-radius:6px;padding:10px 20px;cursor:pointer;">Import</button>
+        <button onclick="clearEventsCSV()" style="background:var(--surface2);color:var(--text-mid);font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--border2);border-radius:6px;padding:10px 16px;cursor:pointer;">Clear</button>
+        <span id="importStatus" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);"></span>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
