@@ -333,6 +333,44 @@ const DISPLAY_SCHEDULES = {
     { id:'6', label:'P6', start:'13:43', end:'14:27' },
     { id:'7', label:'P7', start:'14:31', end:'15:15' },
   ]},
+ // ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────
+finals1: { periods: [
+  { id:'1', label:'P1 Rev', start:'08:10', end:'08:48' },
+  { id:'2', label:'P2 Rev', start:'08:52', end:'09:28' },
+  { id:'3', label:'P3 Rev', start:'09:32', end:'10:08' },
+  { id:'brunch', label:'Brunch', start:'10:08', end:'10:23', break:true },
+  { id:'4', label:'P4 Rev', start:'10:27', end:'11:03' },
+  { id:'5', label:'P5 Rev', start:'11:07', end:'11:43' },
+  { id:'lunch', label:'Lunch', start:'11:43', end:'12:18', break:true },
+  { id:'6', label:'P6 Rev', start:'12:22', end:'12:58' },
+  { id:'final6', label:'Final P6', start:'13:02', end:'14:35' },
+  { id:'7', label:'P7 Rev', start:'14:39', end:'15:15' },
+]},
+finals2: { periods: [
+  { id:'1', label:'P1 Rev', start:'08:10', end:'08:54' },
+  { id:'final1', label:'Final P1', start:'08:58', end:'10:31' },
+  { id:'brunch', label:'Brunch', start:'10:31', end:'10:46', break:true },
+  { id:'6', label:'P6 Rev', start:'10:50', end:'11:32' },
+  { id:'2', label:'P2 Rev', start:'11:36', end:'12:18' },
+  { id:'lunch', label:'Lunch', start:'12:18', end:'12:53', break:true },
+  { id:'final2', label:'Final P2', start:'12:57', end:'14:30' },
+  { id:'mtg', label:'Class Mtg', start:'14:34', end:'15:15', break:true },
+]},
+finals3: { periods: [
+  { id:'3', label:'P3 Rev', start:'08:10', end:'08:40' },
+  { id:'final3', label:'Final P3', start:'08:44', end:'10:17' },
+  { id:'4', label:'P4 Rev', start:'10:21', end:'10:51' },
+  { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
+  { id:'final4', label:'Final P4', start:'11:28', end:'13:01' },
+]},
+finals4: { periods: [
+  { id:'5', label:'P5 Rev', start:'08:10', end:'08:40' },
+  { id:'final5', label:'Final P5', start:'08:44', end:'10:17' },
+  { id:'7', label:'P7 Rev', start:'10:21', end:'10:51' },
+  { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
+  { id:'final7', label:'Final P7', start:'11:28', end:'13:01' },
+]},
+// finals5 = June 12 = minimum day (already handled)
 }
 
 const NO_SCHOOL_DISPLAY = [
@@ -353,6 +391,8 @@ function dDateStr(d) { return d.toISOString().split('T')[0]; }
 function getDisplaySchedule() {
   const now = new Date(), ds = dDateStr(now), dow = now.getDay();
   if (dow===0||dow===6||NO_SCHOOL_DISPLAY.includes(ds)) return null;
+ const FINALS_MAP = {'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
+if (FINALS_MAP[ds]) return DISPLAY_SCHEDULES[FINALS_MAP[ds]];
   const titles = (window._cwCalEvents||[]).map(e=>(e.title||'').toLowerCase());
   const has = kw => titles.some(t=>t.includes(kw));
   if (has('foggy')||has('late arrival')) return DISPLAY_SCHEDULES.foggy;
