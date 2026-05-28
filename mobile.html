@@ -290,6 +290,31 @@
   .bday-tap-btn:active { transform: scale(0.95); background: var(--green-dark); }
   .bday-tap-count { font-family: var(--mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
+  /* ══ FINALS WEEK CARD ══ */
+  .finals-event-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+  }
+  .finals-event-row:last-child { border-bottom: none; }
+  .finals-event-label {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.04em; color: var(--text);
+  }
+  .finals-event-days {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    color: var(--green); white-space: nowrap; letter-spacing: 0.04em;
+  }
+  .finals-event-days.soon  { color: #ff9900; }
+  .finals-event-days.today { color: var(--green); }
+  .finals-today-badge {
+    display: inline-block;
+    background: var(--green-dim); color: var(--green);
+    border: 1px solid var(--green);
+    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 4px; margin-left: 8px;
+  }
+
   /* ══ LOADING ══ */
   .loading-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .loading-dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: ldot 1.2s infinite ease-in-out; }
@@ -401,12 +426,7 @@ function setSyncStatus(state, label) {
   document.getElementById('syncLabel').textContent = label;
 }
 
-/* ════ PERIOD STATUS BAR ════
-   🔴 Red    — first 15 min after bell
-   🟢 Green  — safe window (min 16 to 20 min left)
-   🟡 Yellow — 16–20 min left (last chance)
-   🔴 Red    — last 15 min
-*/
+/* ════ PERIOD STATUS BAR ════ */
 const MOBILE_SCHEDULES = {
   regular: {
     name: 'Regular',
@@ -512,45 +532,45 @@ const MOBILE_SCHEDULES = {
       { id:'7', label:'Period 7', start:'14:31', end:'15:15' },
     ]
   },
- // ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────
-finals1: { name: 'Finals Day 1', periods: [
-  { id:'1', label:'Period 1 (Review)', start:'08:10', end:'08:48' },
-  { id:'2', label:'Period 2 (Review)', start:'08:52', end:'09:28' },
-  { id:'3', label:'Period 3 (Review)', start:'09:32', end:'10:08' },
-  { id:'brunch', label:'Brunch', start:'10:08', end:'10:23', break:true },
-  { id:'4', label:'Period 4 (Review)', start:'10:27', end:'11:03' },
-  { id:'5', label:'Period 5 (Review)', start:'11:07', end:'11:43' },
-  { id:'lunch', label:'Lunch', start:'11:43', end:'12:18', break:true },
-  { id:'6', label:'Period 6 (Review)', start:'12:22', end:'12:58' },
-  { id:'final6', label:'Final P6', start:'13:02', end:'14:35' },
-  { id:'7', label:'Period 7 (Review)', start:'14:39', end:'15:15' },
-]},
-finals2: { name: 'Finals Day 2', periods: [
-  { id:'1', label:'Period 1 (Review)', start:'08:10', end:'08:54' },
-  { id:'final1', label:'Final P1', start:'08:58', end:'10:31' },
-  { id:'brunch', label:'Brunch', start:'10:31', end:'10:46', break:true },
-  { id:'6', label:'Period 6 (Review)', start:'10:50', end:'11:32' },
-  { id:'2', label:'Period 2 (Review)', start:'11:36', end:'12:18' },
-  { id:'lunch', label:'Lunch', start:'12:18', end:'12:53', break:true },
-  { id:'final2', label:'Final P2', start:'12:57', end:'14:30' },
-  { id:'mtg', label:'Class Meetings', start:'14:34', end:'15:15', break:true },
-]},
-finals3: { name: 'Finals Day 3', periods: [
-  { id:'3', label:'Period 3 (Review)', start:'08:10', end:'08:40' },
-  { id:'final3', label:'Final P3', start:'08:44', end:'10:17' },
-  { id:'4', label:'Period 4 (Review)', start:'10:21', end:'10:51' },
-  { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
-  { id:'final4', label:'Final P4', start:'11:28', end:'13:01' },
-]},
-finals4: { name: 'Finals Day 4', periods: [
-  { id:'5', label:'Period 5 (Review)', start:'08:10', end:'08:40' },
-  { id:'final5', label:'Final P5', start:'08:44', end:'10:17' },
-  { id:'7', label:'Period 7 (Review)', start:'10:21', end:'10:51' },
-  { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
-  { id:'final7', label:'Final P7', start:'11:28', end:'13:01' },
-]},
-// finals5 = June 12 = minimum day
-}
+  // ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────
+  finals1: { name: 'Finals Day 1', periods: [
+    { id:'1', label:'Period 1 (Review)', start:'08:10', end:'08:48' },
+    { id:'2', label:'Period 2 (Review)', start:'08:52', end:'09:28' },
+    { id:'3', label:'Period 3 (Review)', start:'09:32', end:'10:08' },
+    { id:'brunch', label:'Brunch', start:'10:08', end:'10:23', break:true },
+    { id:'4', label:'Period 4 (Review)', start:'10:27', end:'11:03' },
+    { id:'5', label:'Period 5 (Review)', start:'11:07', end:'11:43' },
+    { id:'lunch', label:'Lunch', start:'11:43', end:'12:18', break:true },
+    { id:'6', label:'Period 6 (Review)', start:'12:22', end:'12:58' },
+    { id:'final6', label:'Final P6', start:'13:02', end:'14:35' },
+    { id:'7', label:'Period 7 (Review)', start:'14:39', end:'15:15' },
+  ]},
+  finals2: { name: 'Finals Day 2', periods: [
+    { id:'1', label:'Period 1 (Review)', start:'08:10', end:'08:54' },
+    { id:'final1', label:'Final P1', start:'08:58', end:'10:31' },
+    { id:'brunch', label:'Brunch', start:'10:31', end:'10:46', break:true },
+    { id:'6', label:'Period 6 (Review)', start:'10:50', end:'11:32' },
+    { id:'2', label:'Period 2 (Review)', start:'11:36', end:'12:18' },
+    { id:'lunch', label:'Lunch', start:'12:18', end:'12:53', break:true },
+    { id:'final2', label:'Final P2', start:'12:57', end:'14:30' },
+    { id:'mtg', label:'Class Meetings', start:'14:34', end:'15:15', break:true },
+  ]},
+  finals3: { name: 'Finals Day 3', periods: [
+    { id:'3', label:'Period 3 (Review)', start:'08:10', end:'08:40' },
+    { id:'final3', label:'Final P3', start:'08:44', end:'10:17' },
+    { id:'4', label:'Period 4 (Review)', start:'10:21', end:'10:51' },
+    { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
+    { id:'final4', label:'Final P4', start:'11:28', end:'13:01' },
+  ]},
+  finals4: { name: 'Finals Day 4', periods: [
+    { id:'5', label:'Period 5 (Review)', start:'08:10', end:'08:40' },
+    { id:'final5', label:'Final P5', start:'08:44', end:'10:17' },
+    { id:'7', label:'Period 7 (Review)', start:'10:21', end:'10:51' },
+    { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
+    { id:'final7', label:'Final P7', start:'11:28', end:'13:01' },
+  ]},
+  // finals5 = June 12 = minimum day
+};
 
 const MOBILE_NO_SCHOOL = [
   '2025-09-01','2025-11-11','2025-11-27','2025-11-28',
@@ -561,7 +581,7 @@ const MOBILE_NO_SCHOOL = [
   '2026-01-19','2026-02-09','2026-02-16',
   '2026-03-30','2026-03-31','2026-04-01','2026-04-02','2026-04-03',
   '2026-05-25',
-]
+];
 
 function toMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
 function nowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
@@ -592,9 +612,7 @@ function getScheduleForToday(calEvents) {
   if (has('activity')) return MOBILE_SCHEDULES.activity;
   if (has('block')) return dow===3 ? MOBILE_SCHEDULES.blockWed : MOBILE_SCHEDULES.blockThu;
   if (has('early release')) return MOBILE_SCHEDULES.earlyRelease;
-  // ── Holiday week check — runs before day-of-week defaults ────────────────
   if (_mobileSchoolDaysThisWeek(now)<=4) return MOBILE_SCHEDULES.regular;
-  // ── Normal week defaults ─────────────────────────────────────────────────
   if (dow===1) return MOBILE_SCHEDULES.earlyRelease;
   if (dow===3) return MOBILE_SCHEDULES.blockWed;
   if (dow===4) return MOBILE_SCHEDULES.blockThu;
@@ -618,21 +636,13 @@ function getPeriodStatus(schedule) {
       const sinceStart = nm - s;
       let color, primary, secondary;
       if (sinceStart < 15) {
-        color='red';
-        primary=`🔴 First 15 min`;
-        secondary=`OK in ~${15-sinceStart} min`;
+        color='red'; primary=`🔴 First 15 min`; secondary=`OK in ~${15-sinceStart} min`;
       } else if (left <= 15) {
-        color='red';
-        primary=`🔴 Last 15 min`;
-        secondary=`${left} min until bell`;
+        color='red'; primary=`🔴 Last 15 min`; secondary=`${left} min until bell`;
       } else if (left <= 20) {
-        color='yellow';
-        primary=`🟡 Last chance`;
-        secondary=`${left} min left · check out now`;
+        color='yellow'; primary=`🟡 Last chance`; secondary=`${left} min left · check out now`;
       } else {
-        color='green';
-        primary=`🟢 OK to be out`;
-        secondary=`${left} min left in ${p.label}`;
+        color='green'; primary=`🟢 OK to be out`; secondary=`${left} min left in ${p.label}`;
       }
       return { type:'period', color, primary, secondary };
     }
@@ -647,12 +657,9 @@ function updatePeriodStatusBar() {
   const primary = document.getElementById('period-status-primary');
   const secondary = document.getElementById('period-status-secondary');
   if (!bar) return;
-
   const schedule = getScheduleForToday(_mobileCalEvents);
   const status = getPeriodStatus(schedule);
-
   if (!status) { bar.className = 'show gray'; primary.textContent='No active period'; secondary.textContent=''; return; }
-
   if (status.type === 'break') {
     bar.className = 'show blue';
     primary.textContent = `⏸ ${status.label}`;
@@ -660,10 +667,82 @@ function updatePeriodStatusBar() {
     bar.classList.add('show');
     return;
   }
-
   bar.className = `show ${status.color}`;
   primary.textContent = status.primary;
   secondary.textContent = status.secondary;
+}
+
+/* ════ FINALS WEEK CARD ════
+   FIX: was called in render() but never defined.
+   REMOVE AFTER JUNE 12, 2026
+════ */
+function buildFinalsWeekCard() {
+  const today = new Date().toISOString().split('T')[0];
+
+  // All senior/end-of-year events worth surfacing, keyed by date
+  const FINALS_EVENTS = {
+    '2026-06-01': [{ label: 'Senior Sunset 6PM',       type: 'senior' }],
+    '2026-06-04': [{ label: 'Senior Checkout & BBQ',   type: 'senior' },
+                   { label: 'Academic Awards 6PM',     type: 'school' }],
+    '2026-06-05': [{ label: 'Graduation Practice #1',  type: 'grad'   }],
+    '2026-06-08': [{ label: 'Graduation Practice #2',  type: 'grad'   },
+                   { label: 'Finals Day 1 · Review All', type: 'finals' }],
+    '2026-06-09': [{ label: 'Grad Nite · Disneyland',  type: 'senior' },
+                   { label: 'Finals Day 2 · P1 & P2',  type: 'finals' }],
+    '2026-06-10': [{ label: 'Finals Day 3 · P3 & P4',  type: 'finals' }],
+    '2026-06-11': [{ label: 'Finals Day 4 · P5 & P7',  type: 'finals' },
+                   { label: 'Graduation Practice #4',  type: 'grad'   }],
+    '2026-06-12': [{ label: '🎓 Graduation Day!',       type: 'grad'   },
+                   { label: 'Last Day (Min Day)',       type: 'school' }],
+  };
+
+  // Show card from June 1 through June 12
+  const start = '2026-06-01', end = '2026-06-12';
+  if (today < start || today > end) return null;
+
+  // Collect upcoming events (today + next 5 days)
+  const todayD = new Date(today + 'T00:00:00');
+  const rows = [];
+
+  Object.entries(FINALS_EVENTS)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([date, events]) => {
+      const d = new Date(date + 'T00:00:00');
+      const days = Math.round((d - todayD) / 86400000);
+      if (days < 0 || days > 5) return; // only show today + 5 days ahead
+      events.forEach(evt => {
+        rows.push({ date, label: evt.label, type: evt.type, days });
+      });
+    });
+
+  if (!rows.length) return null;
+
+  const card = document.createElement('div');
+  card.className = 'card';
+
+  const typeColor = { finals: 'var(--orange, #cc7700)', senior: 'var(--tan)', grad: 'var(--green)', school: 'var(--text-mid)' };
+
+  const rowsHTML = rows.map(r => {
+    const isToday = r.days === 0;
+    const dayLabel = isToday ? 'TODAY' : r.days === 1 ? 'TOMORROW' : `IN ${r.days}D`;
+    const dayCls   = isToday ? 'today' : r.days <= 2 ? 'soon' : '';
+    return `
+      <div class="finals-event-row">
+        <span class="finals-event-label" style="color:${typeColor[r.type]||'var(--text)'}">
+          ${r.label}${isToday ? '<span class="finals-today-badge">TODAY</span>' : ''}
+        </span>
+        <span class="finals-event-days ${dayCls}">${isToday ? '' : dayLabel}</span>
+      </div>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-label green">🎓 Finals &amp; End of Year</span>
+      <span class="card-tag">Next 5 Days</span>
+    </div>
+    <div class="card-body">${rowsHTML}</div>`;
+
+  return card;
 }
 
 /* ════ PASSABLE ════ */
@@ -929,23 +1008,27 @@ async function submitPost() {
 
 /* ════ RENDER ════ */
 async function render(calEvents, passData, weatherData) {
-  const now     = new Date();
-  const nm      = now.getHours() * 60 + now.getMinutes();
-  const MON     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const now      = new Date();
+  const nm       = now.getHours() * 60 + now.getMinutes();
+  const MON      = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const schedKey = cwDetectSchedule(calEvents || []);
   const schedule = schedKey ? SCHEDULES[schedKey] : null;
   const sections = [];
 
+  // Pass card
   if (passData) {
     const passCard = renderPassCard(passData);
     if (passCard) sections.push(passCard);
   }
 
+  // Period timer
   const timerCard = cwBuildPeriodTimerCard(calEvents || []);
   if (timerCard) sections.push(timerCard);
 
+  // Weather
   sections.push(buildWeatherCardMobile(weatherData));
 
+  // Bell schedule
   const schedCard = document.createElement('div');
   schedCard.className = 'card tappable';
   if (!schedule) {
@@ -971,12 +1054,16 @@ async function render(calEvents, passData, weatherData) {
     schedCard.onclick = () => openScheduleModal(schedKey);
   }
   sections.push(schedCard);
- const finalsCard = buildFinalsWeekCard();
-if (finalsCard) sections.push(finalsCard);
 
+  // ── FIX: Finals/End-of-Year card — REMOVE AFTER JUNE 12, 2026 ────────────
+  const finalsCard = buildFinalsWeekCard();
+  if (finalsCard) sections.push(finalsCard);
+
+  // Menu
   const menuCard = buildMenuCard();
   if (menuCard) sections.push(menuCard);
 
+  // Calendar events
   const calCard = document.createElement('div');
   calCard.className = 'card';
   const todayEvts = (calEvents||[]).filter(e => { const d = new Date(e.start || e.dtstart); return d.toDateString() === now.toDateString(); }).sort((a,b) => new Date(a.start||a.dtstart) - new Date(b.start||b.dtstart));
@@ -992,6 +1079,7 @@ if (finalsCard) sections.push(finalsCard);
   calCard.innerHTML = `<div class="card-header"><span class="card-label">RHS Events</span><span class="card-tag">${todayEvts.length ? 'Today' : 'Upcoming'}</span></div><div class="card-body">${calContent}</div>`;
   sections.push(calCard);
 
+  // Countdowns
   const upcoming = CW_HARDCODED_COUNTDOWNS.map(c => ({ ...c, days: cwDaysUntil(c.date) })).filter(c => c.days >= 0 && c.days <= 180).sort((a,b) => a.days - b.days).slice(0, 8);
   if (upcoming.length) {
     const cdCard = document.createElement('div');
@@ -1001,6 +1089,7 @@ if (finalsCard) sections.push(finalsCard);
     sections.push(cdCard);
   }
 
+  // Birthdays
   const { todayBdays, weekBdays } = cwGetWeekBirthdays();
   let upcomingBdays = [];
   if (!todayBdays.length && !weekBdays.length) {
@@ -1015,21 +1104,22 @@ if (finalsCard) sections.push(finalsCard);
     bdCard.className = 'card';
     let bdContent = '', cardLabel = 'Birthdays This Week';
     if (todayBdays.length) { cardLabel = '🎂 Happy Birthday!'; bdContent += `<div class="bday-today">${todayBdays.map(b => `<div style="cursor:pointer;padding:4px 0" onclick='openBdayModal(${JSON.stringify(b)})'>🎉 ${b.name}<span style="font-size:10px;color:var(--green);margin-left:8px;font-family:var(--font-mono)">TAP TO WISH ▶</span></div>`).join('')}</div>`; }
-    if (weekBdays.length) { bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b => `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}</div>`).join('')}</div>`; }
-    if (upcomingBdays.length) { cardLabel = 'Coming Up · Birthdays'; bdContent += `<div class="bday-week">${upcomingBdays.slice(0,4).map(b => `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][b.month-1]} ${b.day} · ${b.name}<span style="font-size:10px;color:var(--text-dim);margin-left:6px;font-family:var(--font-mono)">${b.offset===1?'Tomorrow':'In '+b.offset+' days'}</span></div>`).join('')}</div>`; }
+    if (weekBdays.length) { bdContent += `<div class="bday-week">${weekBdays.slice(0,5).map(b => `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>${MON[b.month-1]} ${b.day} · ${b.name}</div>`).join('')}</div>`; }
+    if (upcomingBdays.length) { cardLabel = 'Coming Up · Birthdays'; bdContent += `<div class="bday-week">${upcomingBdays.slice(0,4).map(b => `<div style="cursor:pointer;padding:3px 0" onclick='openBdayModal(${JSON.stringify(b)})'>${MON[b.month-1]} ${b.day} · ${b.name}<span style="font-size:10px;color:var(--text-dim);margin-left:6px;font-family:var(--font-mono)">${b.offset===1?'Tomorrow':'In '+b.offset+' days'}</span></div>`).join('')}</div>`; }
     bdCard.innerHTML = `<div class="card-header"><span class="card-label">${cardLabel}</span></div><div class="card-body">${bdContent}</div>`;
     sections.push(bdCard);
   }
 
+  // Board messages
   try {
     const msgs = await cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${new Date().toISOString()}&order=created_at.desc`);
     if (msgs && msgs.length) {
       msgs.forEach(msg => {
-        const posted = new Date(msg.created_at);
+        const posted  = new Date(msg.created_at);
         const timeStr = posted.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-        const sender = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : 'Room ' + CW.room;
-        const lines = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim());
-        const qmCard = document.createElement('div');
+        const sender  = msg.sender && msg.sender !== 'ANONYMOUS' ? msg.sender : 'Room ' + CW.room;
+        const lines   = [msg.line1, msg.line2, msg.line3].filter(l => l && l.trim());
+        const qmCard  = document.createElement('div');
         qmCard.className = 'card';
         qmCard.innerHTML = `<div class="card-header"><span class="card-label">Board Message</span><span class="card-tag">${timeStr}</span></div><div class="card-body"><div class="msg-from">From ${sender}</div><div class="msg-text">${lines.join('<br>')}</div></div>`;
         sections.push(qmCard);
@@ -1037,6 +1127,7 @@ if (finalsCard) sections.push(finalsCard);
     }
   } catch(e) {}
 
+  // Did You Know
   const factScreen = cwBuildFactsScreen();
   if (factScreen) {
     const factCard = document.createElement('div');
@@ -1161,18 +1252,6 @@ setInterval(() => {
 }, 5000);
 
 loadData();
- // Finals auto-inject — REMOVE AFTER JUNE 12, 2026
-setInterval(() => {
-  const screens = cwBuildFinalsScreensForToday();
-  if (!screens.length) return;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i]._isFinalsSlot) messages.splice(i, 1);
-  }
-  const schedIdx = cwFindSlotIdx(messages, 'schedule');
-  const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
-  messages.splice(insertAt, 0, ...screens);
-  buildDots();
-}, 60 * 1000);
 </script>
 </body>
 </html>
