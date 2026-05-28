@@ -567,15 +567,24 @@ function toMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
 function nowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
 function dateStr(d) { return d.toISOString().split('T')[0]; }
 
+function _mobileSchoolDaysThisWeek(date) {
+  const day=date.getDay(), monday=new Date(date);
+  monday.setDate(date.getDate()-(day===0?6:day-1));
+  let count=0;
+  for(let i=0;i<5;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);if(!MOBILE_NO_SCHOOL.includes(dateStr(d)))count++;}
+  return count;
+}
+
 function getScheduleForToday(calEvents) {
   const now = new Date();
   const ds  = dateStr(now);
   const dow = now.getDay();
   if (dow===0||dow===6) return null;
   if (MOBILE_NO_SCHOOL.includes(ds)) return null;
- const FINALS_MAP = {'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
-if (FINALS_MAP[ds]) return MOBILE_SCHEDULES[FINALS_MAP[ds]];
-  const titles = (calEvents||[]).map(e=>(e.title||'').toLowerCase());
+  // ── Finals hardcode — REMOVE AFTER JUNE 12, 2026 ────────────────────────
+  const FINALS_MAP = {'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
+  if (FINALS_MAP[ds]) return MOBILE_SCHEDULES[FINALS_MAP[ds]];
+  const titles = (calEvents||[]).filter(e => e.start && e.start.substring(0,10)===ds).map(e=>(e.title||'').toLowerCase());
   const has = kw => titles.some(t=>t.includes(kw));
   if (has('foggy')||has('late arrival')) return MOBILE_SCHEDULES.foggy;
   if (has('minimum')) return MOBILE_SCHEDULES.minimum;
@@ -583,6 +592,9 @@ if (FINALS_MAP[ds]) return MOBILE_SCHEDULES[FINALS_MAP[ds]];
   if (has('activity')) return MOBILE_SCHEDULES.activity;
   if (has('block')) return dow===3 ? MOBILE_SCHEDULES.blockWed : MOBILE_SCHEDULES.blockThu;
   if (has('early release')) return MOBILE_SCHEDULES.earlyRelease;
+  // ── Holiday week check — runs before day-of-week defaults ────────────────
+  if (_mobileSchoolDaysThisWeek(now)<=4) return MOBILE_SCHEDULES.regular;
+  // ── Normal week defaults ─────────────────────────────────────────────────
   if (dow===1) return MOBILE_SCHEDULES.earlyRelease;
   if (dow===3) return MOBILE_SCHEDULES.blockWed;
   if (dow===4) return MOBILE_SCHEDULES.blockThu;
