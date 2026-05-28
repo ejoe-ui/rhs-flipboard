@@ -1,5 +1,5 @@
 /**
- * cowboy-wire-core.js  v3.1
+ * cowboy-wire-core.js  v3.2
  * ─────────────────────────────────────────────────────────────
  * Single source of truth for ALL Cowboy Wire logic.
  * Imported by display.html, mobile.html, and admin.html.
@@ -24,13 +24,12 @@
  *  16.  SCREEN BUILDERS (one per content type)
  *  17.  SLOT INJECTION ENGINE
  *  18.  UTILITY HELPERS
+ *  19.  FINALS WEEK (REMOVE AFTER JUNE 12, 2026)
  * ─────────────────────────────────────────────────────────────
  */
 
 /* ═══════════════════════════════════════════════════════════
    1. CONFIG DEFAULTS
-   config.js is loaded before this file and sets CLASSROOM_CONFIG.
-   These are safe fallbacks if a key is missing.
 ═══════════════════════════════════════════════════════════ */
 const CW = (() => {
   const cfg = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG : {};
@@ -191,7 +190,6 @@ const NO_SCHOOL = new Set([
   '2026-05-25',
 ]);
 
-// One-day schedule overrides — keyed by YYYY-MM-DD
 const DATE_OVERRIDES = {
   '2026-05-15': 'CODE_DAY',
   '2026-06-12': 'MINIMUM',
@@ -200,8 +198,6 @@ const DATE_OVERRIDES = {
 
 /* ═══════════════════════════════════════════════════════════
    4. SCHEDULE DETECTION
-   Priority: calendar event keywords → date override →
-             short-week rule → default weekly pattern
 ═══════════════════════════════════════════════════════════ */
 function cwLocalDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -234,7 +230,6 @@ function cwDetectSchedule(calEvents) {
 
   if (dow === 0 || dow === 6 || NO_SCHOOL.has(dateStr)) return null;
 
-  // 1. Calendar event keywords
   if (calEvents && calEvents.length) {
     const todayEvents = calEvents.filter(e => {
       const s = e.start || e.dtstart || '';
@@ -251,13 +246,8 @@ function cwDetectSchedule(calEvents) {
     }
   }
 
-  // 2. Hardcoded date override
   if (DATE_OVERRIDES[dateStr]) return DATE_OVERRIDES[dateStr];
-
-  // 3. Short week → all Regular
   if (cwGetWeekSchoolDays(now) <= 4) return 'REGULAR';
-
-  // 4. Default weekly pattern
   if (dow === 1) return 'EARLY_RELEASE';
   if (dow === 3) return 'BLOCK_WED';
   if (dow === 4) return 'BLOCK_THU';
@@ -288,7 +278,7 @@ function cwGetNextSchoolDay() {
 
 
 /* ═══════════════════════════════════════════════════════════
-   5. PERIOD TIMER  (used by display header + mobile card)
+   5. PERIOD TIMER
 ═══════════════════════════════════════════════════════════ */
 function cwBuildPeriodTimerData(calEvents) {
   const schedKey = cwDetectSchedule(calEvents || window._cwCalEvents || []);
@@ -321,7 +311,6 @@ function cwBuildPeriodTimerData(calEvents) {
     }
   }
 
-  // Between periods — show next
   for (const p of schedule.periods) {
     const start = cwTimeToMins(p.start);
     if (nm < start) {
@@ -339,8 +328,7 @@ function cwBuildPeriodTimerData(calEvents) {
 
 
 /* ═══════════════════════════════════════════════════════════
-   6. BIRTHDAYS  (Supabase-backed — cw_birthdays table)
-   Fallback hardcoded list used until Supabase loads.
+   6. BIRTHDAYS
 ═══════════════════════════════════════════════════════════ */
 let CW_BIRTHDAYS = [
   { name: 'CAMILA VILLANUEVA',        month: 5,  day: 9  },
@@ -371,7 +359,6 @@ let CW_BIRTHDAYS = [
   { name: 'VALERIA OLGUIN',           month: 8,  day: 29 },
 ];
 
-// Fetch birthdays from Supabase and replace the local list
 async function cwFetchBirthdays() {
   const rows = await cwSupabaseFetch(
     `cw_birthdays?room=eq.${CW.room}&active=eq.true&order=month.asc,day.asc`
@@ -401,7 +388,6 @@ function cwGetWeekBirthdays() {
     weekDates.push({ m: day.getMonth() + 1, d: day.getDate() });
   }
 
-  // Apply DoNotDisplay filter before returning
   const allowed    = cwFilterBirthdays(CW_BIRTHDAYS);
   const todayBdays = allowed.filter(b => b.month === m && b.day === d);
   const weekBdays  = allowed.filter(b =>
@@ -416,7 +402,6 @@ function cwBuildBirthdayScreen() {
   const { todayBdays, weekBdays } = cwGetWeekBirthdays();
 
   if (!todayBdays.length && !weekBdays.length) {
-    // Look ahead 60 days — also filtered
     const now = new Date();
     const upcoming = [];
     for (let offset = 1; offset <= 60 && upcoming.length < 5; offset++) {
@@ -493,11 +478,62 @@ function cwDaysUntil(dateStr) {
   return Math.ceil(diff / 86400000);
 }
 
+// Legacy fallback — used when cw_events fetch fails
 function cwBuildCountdownScreen() {
   const all = [...CW_HARDCODED_COUNTDOWNS, ...CW_CUSTOM_COUNTDOWNS]
     .map(c => ({ ...c, days: cwDaysUntil(c.date) }))
     .filter(c => c.days >= 0 && c.days <= 180)
     .sort((a, b) => a.days !== b.days ? a.days - b.days : (a.priority||3) - (b.priority||3));
+
+  if (!all.length) return null;
+
+  const lines = ['COMING UP AT RHS'];
+  all.slice(0, 6).forEach(c => {
+    const dayStr = c.days === 0 ? 'TODAY!' : c.days === 1 ? 'TOMORROW' : c.days + ' DAYS';
+    const label  = cwTrunc(c.label, 28 - dayStr.length - 1);
+    const gap    = 28 - label.length - dayStr.length;
+    lines.push(label + ' '.repeat(Math.max(1, gap)) + dayStr);
+  });
+  while (lines.length < 7) lines.push('');
+  return { lines: lines.slice(0, 7), speed: 15, _isCountdownSlot: true };
+}
+
+// ── FIX: Build merged countdown from cw_events + hardcoded + custom ──────────
+// This replaces cwBuildCountdownScreen() when cw_events data is available.
+// HARDCODED list is still included as a fallback safety net.
+function cwBuildMergedCountdownScreen(cwEvents) {
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Normalize all sources into { label, date, days, priority }
+  const fromEvents = (cwEvents || []).map(e => ({
+    label:    e.label.toUpperCase(),
+    date:     e.date,
+    days:     Math.round((new Date(e.date + 'T00:00:00') - today) / 86400000),
+    priority: 1,
+  }));
+
+  const fromHardcoded = CW_HARDCODED_COUNTDOWNS.map(c => ({
+    ...c,
+    days: cwDaysUntil(c.date),
+  }));
+
+  const fromCustom = CW_CUSTOM_COUNTDOWNS.map(c => ({
+    label:    c.label.toUpperCase(),
+    date:     c.date,
+    days:     cwDaysUntil(c.date),
+    priority: 2,
+  }));
+
+  // Merge — deduplicate by label+date so hardcoded items that also exist
+  // in cw_events don't double-show
+  const seen = new Set();
+  const all  = [...fromEvents, ...fromCustom, ...fromHardcoded].filter(c => {
+    if (c.days < 0 || c.days > 180) return false;
+    const key = c.label + '|' + c.date;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a, b) => a.days !== b.days ? a.days - b.days : (a.priority||3) - (b.priority||3));
 
   if (!all.length) return null;
 
@@ -650,7 +686,6 @@ function cwBuildWeatherScreen(data) {
     ? cwTrunc(`${DAY_ABR[tom.getDay()]} HIGH ${t1} · ${DAY_ABR[da.getDay()]} HIGH ${t2}`, 28)
     : '';
 
-  // Wrap comment across two lines
   const words = comment.split(' ');
   let l1 = '', l2 = '';
   for (const w of words) {
@@ -785,7 +820,6 @@ async function cwSupabasePatch(table, id, body) {
   } catch(e) { return null; }
 }
 
-// Fetch active approved messages for this room (not expired)
 async function cwFetchQuickMessage() {
   const now  = new Date().toISOString();
   const rows = await cwSupabaseFetch(
@@ -794,7 +828,6 @@ async function cwFetchQuickMessage() {
   return rows && rows.length ? rows[0] : null;
 }
 
-// Fetch custom countdowns for this room and merge into CW_CUSTOM_COUNTDOWNS
 async function cwFetchCustomCountdowns() {
   const rows = await cwSupabaseFetch(
     `cw_countdowns?room=eq.${CW.room}&active=eq.true`
@@ -809,7 +842,6 @@ async function cwFetchCustomCountdowns() {
   }
 }
 
-// Fetch honor roll for this room — filtered against DoNotDisplay list
 async function cwFetchHonorRoll() {
   const rows = await cwSupabaseFetch(
     `cw_honor_roll?room=eq.${CW.room}&active=eq.true&order=grade.asc`
@@ -817,7 +849,6 @@ async function cwFetchHonorRoll() {
   return cwFilterHonorRoll(rows);
 }
 
-// Fetch ALL active approved messages (for building multiple screens)
 async function cwFetchAllApprovedMessages() {
   const now  = new Date().toISOString();
   const rows = await cwSupabaseFetch(
@@ -826,7 +857,6 @@ async function cwFetchAllApprovedMessages() {
   return rows || [];
 }
 
-// Build quick message screen from Supabase row
 function cwBuildQuickMsgScreen(msg) {
   if (!msg || !msg.line1) return null;
   const posted  = new Date(msg.created_at);
@@ -848,7 +878,6 @@ function cwBuildQuickMsgScreen(msg) {
   };
 }
 
-// Build honor roll ticker HTML (used by display.html)
 function cwBuildHonorRollHTML(rows) {
   if (!rows || !rows.length) return '';
   const grades   = ['Freshman','Sophomore','Junior','Senior'];
@@ -856,7 +885,6 @@ function cwBuildHonorRollHTML(rows) {
   for (const r of rows) {
     const g = r.grade || 'Other';
     if (!byGrade[g]) byGrade[g] = [];
-    // Flip "Last, First" → "First Last"
     const c = r.name.indexOf(',');
     byGrade[g].push(c < 0 ? r.name : r.name.slice(c+1).trim() + ' ' + r.name.slice(0, c).trim());
   }
@@ -868,17 +896,26 @@ function cwBuildHonorRollHTML(rows) {
       html += `<span class="ticker-name">${n}</span><span class="ticker-sep">&#183;</span>`;
     }
   }
-  return html + html; // doubled for seamless loop
+  return html + html;
+}
+
+// ── FIX: Fetch cw_events from Supabase ───────────────────────────────────────
+async function cwFetchEvents(room) {
+  const roomParam = room || 'all';
+  const today = cwLocalDateStr(new Date());
+  try {
+    const url = `${CW.supabaseUrl}/rest/v1/cw_events?select=date,label,type&active=eq.true&date=gte.${today}&or=(room.eq.all,room.eq.${roomParam})&order=date.asc`;
+    const res = await fetch(url, {
+      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` }
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch(e) { return []; }
 }
 
 
 /* ═══════════════════════════════════════════════════════════
    12. DO NOT DISPLAY FILTER
-   Privacy list — students whose names may not appear on any
-   public-facing display (TV, mobile, honor roll ticker).
-   Source: cw_do_not_display table in Supabase.
-   This filter is NOT optional. It runs before any student
-   name is rendered on a public screen.
 ═══════════════════════════════════════════════════════════ */
 let CW_DO_NOT_DISPLAY = new Set();
 
@@ -895,11 +932,9 @@ async function cwFetchDoNotDisplay() {
   }
 }
 
-// Returns true if a name should be hidden from public display
 function cwIsRestricted(name) {
   if (!name) return false;
   const n = name.toUpperCase().trim();
-  // Check exact match and partial match (last name only as fallback)
   if (CW_DO_NOT_DISPLAY.has(n)) return true;
   for (const restricted of CW_DO_NOT_DISPLAY) {
     if (n.includes(restricted) || restricted.includes(n)) return true;
@@ -907,12 +942,10 @@ function cwIsRestricted(name) {
   return false;
 }
 
-// Filter an array of birthday objects against the DoNotDisplay list
 function cwFilterBirthdays(birthdays) {
   return birthdays.filter(b => !cwIsRestricted(b.name));
 }
 
-// Filter honor roll HTML — removes restricted names before building ticker
 function cwFilterHonorRoll(rows) {
   return (rows || []).filter(r => {
     const full = `${r.name}`.toUpperCase().trim();
@@ -923,6 +956,11 @@ function cwFilterHonorRoll(rows) {
     return !cwIsRestricted(full) && !cwIsRestricted(flipped);
   });
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   13. CALENDAR
+═══════════════════════════════════════════════════════════ */
 window._cwCalEvents = [];
 
 function cwIsToday(dtStr, allDay) {
@@ -1022,7 +1060,7 @@ function cwBuildCalendarScreen(events) {
 
 
 /* ═══════════════════════════════════════════════════════════
-   13. PASSABLE — live hall pass data
+   14. PASSABLE
 ═══════════════════════════════════════════════════════════ */
 async function cwFetchPassable() {
   if (!CW.supabaseKey) return null;
@@ -1069,7 +1107,7 @@ function cwBuildPassableScreen(passes) {
 
 
 /* ═══════════════════════════════════════════════════════════
-   14. CODE BEHAVIOR SCREENS
+   15. CODE BEHAVIOR SCREENS
 ═══════════════════════════════════════════════════════════ */
 const CW_CODE_SCREENS = [
   { lines: ['C.O.D.E · COURTEOUS','','THANK YOU FOR LISTENING','WHEN OTHERS ARE SPEAKING','','',''] },
@@ -1087,7 +1125,7 @@ function cwBuildCodeScreen() {
 
 
 /* ═══════════════════════════════════════════════════════════
-   15. SCHEDULE SCREEN BUILDER
+   16. SCHEDULE SCREEN BUILDER
 ═══════════════════════════════════════════════════════════ */
 function cwBuildScheduleScreen(calEvents) {
   const MON  = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
@@ -1138,13 +1176,8 @@ function cwBuildScheduleScreen(calEvents) {
 
 
 /* ═══════════════════════════════════════════════════════════
-   16. SLOT INJECTION ENGINE
-   The message array uses _flag properties to identify live
-   slots. This engine finds them and replaces with fresh data.
-   Import this into display.html — call cwInjectSlot(messages, key, screen).
+   17. SLOT INJECTION ENGINE
 ═══════════════════════════════════════════════════════════ */
-
-// All known slot keys and their placeholder/slot flag pairs
 const CW_SLOT_MAP = {
   calendar:   { ph: '_isCalendarPlaceholder',   sl: '_isCalendarSlot'   },
   schedule:   { ph: '_isSchedulePlaceholder',   sl: '_isScheduleSlot'   },
@@ -1179,33 +1212,23 @@ function cwInjectSlot(messages, key, screen, buildDotsFn) {
   if (typeof buildDotsFn === 'function') buildDotsFn();
 }
 
-// Dynamic objectives refresh — inserts screen when period is active,
-// removes it when period ends or objectives are cleared.
-// Called every 60s from display.html schedule refresh interval.
 function cwRefreshObjectives(messages, buildDotsFn) {
   const screen  = cwBuildObjectivesScreen(window._cwCalEvents || []);
   const existingIdx = messages.findIndex(m => m._isObjectivesSlot);
 
   if (screen) {
     if (existingIdx >= 0) {
-      // Update in place
       messages[existingIdx] = screen;
     } else {
-      // Insert after schedule slot (position 1 in rotation feels natural)
       const schedIdx = messages.findIndex(m => m._isScheduleSlot || m._isSchedulePlaceholder);
       const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
       messages.splice(insertAt, 0, screen);
     }
   } else {
-    // Remove if no longer active
     if (existingIdx >= 0) messages.splice(existingIdx, 1);
   }
 
   if (typeof buildDotsFn === 'function') buildDotsFn();
-}
-
-function cwLocalDateStr(date) {
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
 }
 
 function cwFallbackScreen(key) {
@@ -1227,11 +1250,8 @@ function cwFallbackScreen(key) {
 
 /* ═══════════════════════════════════════════════════════════
    OBJECTIVES SCREEN SYSTEM
-   Shows learning objectives for the current period only.
-   Respects display_mode: always / timed / manual
-   Filters break periods (BRUNCH, LUNCH, etc.) automatically.
 ═══════════════════════════════════════════════════════════ */
-let CW_OBJECTIVES = {};  // keyed by period name e.g. 'P1', 'P2'
+let CW_OBJECTIVES = {};
 
 async function cwFetchObjectives() {
   const rows = await cwSupabaseFetch(
@@ -1253,13 +1273,10 @@ function cwGetCurrentPeriodKey(calEvents) {
   const nm   = now.getHours() * 60 + now.getMinutes();
 
   for (const p of schedule.periods) {
-    // Skip break periods — never show objectives during brunch/lunch
     if (p.break) continue;
     const start = cwTimeToMins(p.start);
     const end   = cwTimeToMins(p.end);
     if (nm >= start && nm < end) {
-      // Normalize period name — P1/P2 block days → P1, P2 etc.
-      // We match on the first token before the slash
       const key = p.name.split('/')[0].trim();
       return { key, start, end, elapsed: nm - start };
     }
@@ -1275,13 +1292,11 @@ function cwBuildObjectivesScreen(calEvents) {
   if (!obj || !obj.active) return null;
   if (!obj.title && !obj.line1) return null;
 
-  // Check scheduled date — don't show before the scheduled date
   if (obj.scheduled_date) {
     const today = cwLocalDateStr(new Date());
     if (obj.scheduled_date > today) return null;
   }
 
-  // Check display mode
   const mode = obj.display_mode || 'always';
   if (mode === 'timed') {
     const maxMins = obj.timed_minutes || 10;
@@ -1307,8 +1322,6 @@ function cwBuildObjectivesScreen(calEvents) {
 
 /* ═══════════════════════════════════════════════════════════
    SUPABASE SCREENS FETCH
-   Replaces Google Sheets CSV as the slide source.
-   Returns messages array ready for the flipboard.
 ═══════════════════════════════════════════════════════════ */
 async function cwFetchScreens() {
   const rows = await cwSupabaseFetch(
@@ -1318,7 +1331,6 @@ async function cwFetchScreens() {
 
   return rows.map(r => {
     const lines = Array.isArray(r.lines) ? r.lines : JSON.parse(r.lines || '[]');
-    // Pad to 7 lines
     while (lines.length < 7) lines.push('');
 
     if (r.is_slot && r.slot_type) {
@@ -1342,17 +1354,13 @@ async function cwFetchScreens() {
   });
 }
 
-// Master refresh — call this with your messages array on init and re-sync
+// ── FIX: cwRefreshAllSlots now fetches cw_events and merges into countdown ───
 async function cwRefreshAllSlots(messages, buildDotsFn) {
   const has = key => cwFindSlotIdx(messages, key) >= 0;
 
   const jobs = [];
 
-  // ALWAYS fetch DoNotDisplay list first — privacy filter must load
-  // before any student names are rendered anywhere
   jobs.push(cwFetchDoNotDisplay());
-
-  // Fetch birthdays from Supabase so birthday screen is accurate
   jobs.push(cwFetchBirthdays());
 
   if (has('calendar') && CW.screens.calendar) {
@@ -1377,9 +1385,7 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
         cwInjectSlot(messages, 'quickMsg', null, buildDotsFn);
         return;
       }
-      // First message goes into the placeholder slot
       cwInjectSlot(messages, 'quickMsg', cwBuildQuickMsgScreen(msgs[0]), buildDotsFn);
-      // Additional messages get inserted right after the first slot
       if (msgs.length > 1) {
         const slotIdx = cwFindSlotIdx(messages, 'quickMsg');
         const extras  = msgs.slice(1).map(m => cwBuildQuickMsgScreen(m)).filter(Boolean);
@@ -1390,16 +1396,20 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
       }
     }));
   }
+
+  // ── FIX: Countdown now fetches cw_events and merges all sources ──────────
   if (has('countdown') && CW.screens.countdown) {
-    jobs.push(cwFetchCustomCountdowns().then(() => {
-      cwInjectSlot(messages, 'countdown', cwBuildCountdownScreen(), buildDotsFn);
-    }));
+    jobs.push(
+      Promise.all([cwFetchCustomCountdowns(), cwFetchEvents(CW.room)])
+        .then(([, cwEvents]) => {
+          const screen = cwBuildMergedCountdownScreen(cwEvents);
+          cwInjectSlot(messages, 'countdown', screen, buildDotsFn);
+        })
+    );
   }
 
-  // Fire all async fetches in parallel, 5s timeout each
   await Promise.all(jobs.map(j => Promise.race([j, new Promise(r => setTimeout(r, 5000))])));
 
-  // Synchronous slots — build after async jobs complete
   if (has('schedule') && CW.screens.schedule) {
     cwInjectSlot(messages, 'schedule', cwBuildScheduleScreen(), buildDotsFn);
   }
@@ -1416,16 +1426,13 @@ async function cwRefreshAllSlots(messages, buildDotsFn) {
     cwInjectSlot(messages, 'code', cwBuildCodeScreen(), buildDotsFn);
   }
 
-  // Objectives — dynamic inject/remove based on current period
   cwRefreshObjectives(messages, buildDotsFn);
 }
 
 
 /* ═══════════════════════════════════════════════════════════
-   17. UTILITY HELPERS
+   18. UTILITY HELPERS
 ═══════════════════════════════════════════════════════════ */
-
-// Truncate at word boundary
 function cwTrunc(str, max) {
   str = (str || '').toUpperCase().trim();
   if (str.length <= max) return str;
@@ -1434,7 +1441,6 @@ function cwTrunc(str, max) {
   return sp > max * 0.6 ? cut.substring(0, sp) : cut;
 }
 
-// Left-pad or center a string
 function cwPad(str, width, align) {
   str = (str || '').substring(0, width);
   const pad = width - str.length;
@@ -1442,10 +1448,9 @@ function cwPad(str, width, align) {
     const l = Math.floor(pad / 2);
     return ' '.repeat(l) + str + ' '.repeat(pad - l);
   }
-  return str + ' '.repeat(pad); // left
+  return str + ' '.repeat(pad);
 }
 
-// Weather code → emoji + label (used by mobile)
 function cwWxCode(code, isDay) {
   const map = {
     0:  [isDay ? '☀️' : '🌙','Clear'],    1: [isDay ? '🌤':'🌙','Mostly Clear'],
@@ -1460,7 +1465,6 @@ function cwWxCode(code, isDay) {
   return map[code] || ['🌡','Unknown'];
 }
 
-// Build a mobile-style weather card DOM element (used by mobile.html)
 function cwBuildWeatherCard(wx) {
   const card = document.createElement('div');
   card.className = 'card';
@@ -1497,7 +1501,6 @@ function cwBuildWeatherCard(wx) {
   return card;
 }
 
-// Build a mobile-style period timer card DOM element (used by mobile.html)
 function cwBuildPeriodTimerCard(calEvents) {
   const data = cwBuildPeriodTimerData(calEvents);
   if (!data) return null;
@@ -1527,13 +1530,11 @@ function cwBuildPeriodTimerCard(calEvents) {
   return card;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// FINALS WEEK ADDITIONS FOR cowboy-wire-core.js
-// Add these constants and functions to cowboy-wire-core.js
-// REMOVE AFTER JUNE 12, 2026
-// ═══════════════════════════════════════════════════════════════════════════
 
-// ── Finals schedules data ────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════
+   19. FINALS WEEK
+   REMOVE AFTER JUNE 12, 2026
+═══════════════════════════════════════════════════════════ */
 const CW_FINALS_SCHEDULES = {
   '2026-06-08': {
     name: 'Finals Day 1 — Monday',
@@ -1586,45 +1587,39 @@ const CW_FINALS_SCHEDULES = {
   '2026-06-12': {
     name: 'Finals Day 5 — Friday (Minimum)',
     periods: [
-      { label: 'Period 1', time: '8:10–8:46' },
-      { label: 'Period 2', time: '8:50–9:23' },
-      { label: 'Period 3', time: '9:27–10:00' },
-      { label: 'Period 4', time: '10:04–10:37' },
+      { label: 'Period 1',     time: '8:10–8:46' },
+      { label: 'Period 2',     time: '8:50–9:23' },
+      { label: 'Period 3',     time: '9:27–10:00' },
+      { label: 'Period 4',     time: '10:04–10:37' },
       { label: 'Brunch/Lunch', time: '10:37–11:10', break: true },
-      { label: 'Period 5', time: '11:14–11:47' },
-      { label: 'Period 6', time: '11:51–12:24' },
-      { label: 'Period 7', time: '12:28–1:01' },
+      { label: 'Period 5',     time: '11:14–11:47' },
+      { label: 'Period 6',     time: '11:51–12:24' },
+      { label: 'Period 7',     time: '12:28–1:01' },
     ]
   },
 };
 
-// ── Which date shows which "next day" preview ────────────────────────────────
-// REMOVE AFTER JUNE 12, 2026
 const CW_FINALS_PREVIEW_MAP = {
-  '2026-06-05': '2026-06-08', // Friday → show Monday
-  '2026-06-08': '2026-06-09', // Monday → show Tuesday
-  '2026-06-09': '2026-06-10', // Tuesday → show Wednesday
-  '2026-06-10': '2026-06-11', // Wednesday → show Thursday
-  '2026-06-11': '2026-06-12', // Thursday → show Friday (minimum)
+  '2026-06-05': '2026-06-08',
+  '2026-06-08': '2026-06-09',
+  '2026-06-09': '2026-06-10',
+  '2026-06-10': '2026-06-11',
+  '2026-06-11': '2026-06-12',
 };
 
-// ── Build a flip board screen for a finals day schedule ──────────────────────
 function cwBuildFinalsScreen(dateKey) {
   const sched = CW_FINALS_SCHEDULES[dateKey];
   if (!sched) return null;
-  const COLS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.cols : 28;
   const ROWS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.rows : 7;
 
-  // Build lines — fit schedule into available rows
   const lines = [];
   lines.push(sched.name.toUpperCase());
   lines.push('');
   for (const p of sched.periods) {
     if (lines.length >= ROWS - 1) break;
-    const prefix = p.final ? '★ ' : p.break ? '  ' : '  ';
+    const prefix = p.final ? '★ ' : '  ';
     lines.push(`${prefix}${p.label.padEnd(12)} ${p.time}`);
   }
-  // Pad to ROWS
   while (lines.length < ROWS) lines.push('');
 
   return {
@@ -1636,14 +1631,10 @@ function cwBuildFinalsScreen(dateKey) {
   };
 }
 
-// ── Build "today + tomorrow" finals screens ──────────────────────────────────
-// Returns array of 1 or 2 screen objects
-// REMOVE AFTER JUNE 12, 2026
 function cwBuildFinalsScreensForToday() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = cwLocalDateStr(new Date());
   const screens = [];
 
-  // Today's schedule (if it's a finals day)
   if (CW_FINALS_SCHEDULES[today]) {
     const todayScreen = cwBuildFinalsScreen(today);
     if (todayScreen) {
@@ -1652,7 +1643,6 @@ function cwBuildFinalsScreensForToday() {
     }
   }
 
-  // Tomorrow's preview
   const nextDate = CW_FINALS_PREVIEW_MAP[today];
   if (nextDate && CW_FINALS_SCHEDULES[nextDate]) {
     const nextScreen = cwBuildFinalsScreen(nextDate);
@@ -1665,46 +1655,7 @@ function cwBuildFinalsScreensForToday() {
   return screens;
 }
 
-// ── Fetch cw_events from Supabase ────────────────────────────────────────────
-async function cwFetchEvents(room) {
-  const roomParam = room || 'all';
-  const today = new Date().toISOString().split('T')[0];
-  try {
-    const url = `${CW.supabaseUrl}/rest/v1/cw_events?select=date,label,type&active=eq.true&date=gte.${today}&or=(room.eq.all,room.eq.${roomParam})&order=date.asc`;
-    const res = await fetch(url, {
-      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` }
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch(e) { return []; }
-}
-
-// ── Build countdown screen from Supabase events ──────────────────────────────
+// Legacy alias — kept for any external references
 function cwBuildCountdownScreenFromEvents(events) {
-  if (!events || !events.length) return null;
-  const COLS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.cols : 28;
-  const ROWS = (typeof CLASSROOM_CONFIG !== 'undefined') ? CLASSROOM_CONFIG.display.rows : 7;
-  const today = new Date(); today.setHours(0,0,0,0);
-
-  const upcoming = events
-    .map(e => {
-      const d = new Date(e.date + 'T00:00:00');
-      const days = Math.round((d - today) / 86400000);
-      return { ...e, days };
-    })
-    .filter(e => e.days >= 0 && e.days <= 180)
-    .sort((a,b) => a.days - b.days)
-    .slice(0, ROWS - 1);
-
-  if (!upcoming.length) return null;
-
-  const lines = ['UPCOMING EVENTS'];
-  for (const e of upcoming) {
-    const dayStr = e.days === 0 ? 'TODAY' : e.days === 1 ? '1 DAY' : `${e.days} DAYS`;
-    const label = e.label.substring(0, COLS - 10).toUpperCase();
-    lines.push(`${label.padEnd(COLS - 8)} ${dayStr.padStart(6)}`);
-  }
-  while (lines.length < ROWS) lines.push('');
-
-  return { lines: lines.slice(0, ROWS), speed: 15, _isCountdownSlot: true, _leftAlign: true };
+  return cwBuildMergedCountdownScreen(events);
 }
