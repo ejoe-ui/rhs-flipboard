@@ -633,7 +633,40 @@
     </div>
   </div>
 
-</div>
+  <!-- ══ FIX: Events card now inside #content with correct card classes ══ -->
+  <div>
+    <div class="section-label">📅 Events &amp; Countdowns</div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label green">Manage countdown dates for the board</span>
+      </div>
+      <div class="card-body">
+        <div style="margin-bottom:20px;">
+          <div class="form-hint">Active Events</div>
+          <div id="events-list">
+            <div class="loading-row"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:16px;">
+          <div class="form-hint">Import Events via CSV</div>
+          <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px;line-height:1.7;">
+            Paste CSV below. Format: <code style="color:var(--green)">date,label,type</code><br>
+            date = YYYY-MM-DD &nbsp;|&nbsp; type = countdown or calendar
+          </div>
+          <textarea id="eventsCSV" rows="8"
+            placeholder="2026-06-13,Last Day of School,countdown"
+            style="width:100%;font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px;color:var(--text);resize:vertical;outline:none;line-height:1.6;"></textarea>
+          <div style="display:flex;gap:10px;margin-top:10px;align-items:center;">
+            <button class="btn btn-approve" onclick="importEventsCSV()">Import</button>
+            <button class="btn btn-secondary" onclick="clearEventsCSV()">Clear</button>
+            <span id="importStatus" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#content -->
 
 <!-- ══ SLIDE EDIT MODAL ══ -->
 <div class="modal-overlay" id="slideModal" onclick="closeSlideModal(event)">
@@ -678,6 +711,7 @@ function updateToggleLabel(theme) {
   const btn = document.getElementById('themeToggle');
   if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
 }
+
 let toastTimer = null;
 function showToast(msg, isError) {
   const el = document.getElementById('toast');
@@ -948,7 +982,6 @@ function buildToggles() {
 function toggleScreen(key, enabled) {
   CLASSROOM_CONFIG.screens[key] = enabled;
   showToast((enabled ? '✓ ' : '✕ ') + SCREEN_LABELS[key] + (enabled ? ' enabled' : ' disabled'));
-  // Note: display.html reads config on load — teacher needs to reload display tab
 }
 
 /* ════ HONOR ROLL ════ */
@@ -971,7 +1004,6 @@ async function uploadHonorRoll(input) {
     return;
   }
 
-  // Parse CSV — expects Name, Grade columns
   const header  = rows[0].toLowerCase().replace(/\r/g,'').split(',').map(h => h.replace(/^"|"$/g,'').trim());
   const nameIdx = header.findIndex(h => h === 'name');
   const gradeIdx= header.findIndex(h => h === 'grade');
@@ -998,9 +1030,7 @@ async function uploadHonorRoll(input) {
 
   document.getElementById('uploadLabel').textContent = 'Uploading ' + parsed.length + ' students...';
 
-  // Clear existing for this room, then insert new
   try {
-    // Deactivate all current
     await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll?room=eq.${CW.room}`, {
       method: 'PATCH',
       headers: {
@@ -1010,7 +1040,6 @@ async function uploadHonorRoll(input) {
       body: JSON.stringify({ active: false }),
     });
 
-    // Insert new batch
     const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll`, {
       method: 'POST',
       headers: {
@@ -1099,8 +1128,8 @@ const SLOT_LABELS = {
   weather:'Weather', code:'C.O.D.E', quickmsg:'Messages', menu:'Lunch Menu',
 };
 
-let slideData     = [];
-let dragSrcIdx    = null;
+let slideData  = [];
+let dragSrcIdx = null;
 
 async function loadSlides() {
   const rows = await cwSupabaseFetch(
@@ -1147,7 +1176,6 @@ function renderSlideList() {
   }).join('');
 }
 
-/* ── Drag to reorder ── */
 function dragStart(e, idx) {
   dragSrcIdx = idx;
   e.currentTarget.classList.add('dragging');
@@ -1175,7 +1203,6 @@ async function dragDrop(e, targetIdx) {
 }
 
 async function saveSlideOrder() {
-  // Update sort_order for all slides
   const updates = slideData.map((s, idx) =>
     cwSupabasePatch('cw_screens', s.id, { sort_order: idx + 1 })
   );
@@ -1183,7 +1210,6 @@ async function saveSlideOrder() {
   showToast('✓ Order saved');
 }
 
-/* ── Toggle enabled ── */
 async function toggleSlide(id, enabled) {
   const res = await cwSupabasePatch('cw_screens', id, { enabled });
   if (res) {
@@ -1196,7 +1222,6 @@ async function toggleSlide(id, enabled) {
   }
 }
 
-/* ── Delete slide ── */
 async function deleteSlide(id) {
   const s = slideData.find(s => s.id === id);
   if (s?.is_slot) {
@@ -1217,7 +1242,6 @@ async function deleteSlide(id) {
   } catch(e) { showToast('Error deleting screen', true); }
 }
 
-/* ── Edit slide ── */
 function editSlide(id) {
   const s = slideData.find(s => s.id === id);
   if (!s) return;
@@ -1266,7 +1290,6 @@ async function saveSlide(id) {
   }
 }
 
-/* ── Add new slide ── */
 function openAddSlide() {
   const emptyLines = Array(7).fill('');
   document.getElementById('slideModalTitle').textContent = 'New Screen';
@@ -1282,7 +1305,7 @@ function openAddSlide() {
       <div class="form-hint" style="margin:0">Speed (seconds)</div>
       <select class="expire-select" id="sSpeed">
         ${[6,8,10,12,15,18,20,25,30].map(v =>
-          `<option value="${v}"${v===10?' selected':''}>\ ${v}s</option>`
+          `<option value="${v}"${v===10?' selected':''}>${v}s</option>`
         ).join('')}
       </select>
     </div>
@@ -1397,7 +1420,7 @@ async function removeBirthday(id) {
 
 /* ════ OBJECTIVES ════ */
 const PERIODS = ['P1','P2','P3','P4','P5','P6','P7'];
-let objData        = {};
+let objData         = {};
 let objActivePeriod = null;
 
 function todayStr() {
@@ -1417,22 +1440,21 @@ async function loadObjectives() {
   const rows = await cwSupabaseFetch(
     `cw_objectives?room=eq.${CW.room}&order=period.asc`
   );
-  if (rows) rows.forEach(r => { objData[r.period] = r; });
+  if (rows) rows.forEach(r => objData[r.period] = r);
 
-  // Detect current period using simple time check
   const now = new Date();
   const nm  = now.getHours() * 60 + now.getMinutes();
-  const pts = [
-    { key:'P1', s:'8:10',  e:'9:02'  },
-    { key:'P2', s:'9:06',  e:'9:56'  },
-    { key:'P3', s:'10:15', e:'11:05' },
-    { key:'P4', s:'11:09', e:'11:59' },
-    { key:'P5', s:'12:37', e:'1:27'  },
-    { key:'P6', s:'1:31',  e:'2:21'  },
-    { key:'P7', s:'2:25',  e:'3:15'  },
+  const periods = [
+    { key:'P1', start:'8:10',  end:'9:02'  },
+    { key:'P2', start:'9:06',  end:'9:56'  },
+    { key:'P3', start:'10:15', end:'11:05' },
+    { key:'P4', start:'11:09', end:'11:59' },
+    { key:'P5', start:'12:37', end:'1:27'  },
+    { key:'P6', start:'1:31',  end:'2:21'  },
+    { key:'P7', start:'2:25',  end:'3:15'  },
   ];
-  const toM = t => { const [h,m]=t.split(':').map(Number); return (h>=1&&h<=7?h+12:h)*60+m; };
-  const cur = pts.find(p => nm >= toM(p.s) && nm < toM(p.e));
+  const toMins = t => { const [h,m]=t.split(':').map(Number); return (h>=1&&h<=7?h+12:h)*60+m; };
+  const cur = periods.find(p => nm >= toMins(p.start) && nm < toMins(p.end));
   const currentKey = cur?.key || null;
 
   const tag = document.getElementById('objPeriodTag');
@@ -1446,202 +1468,6 @@ function renderObjectivesEditor(currentKey) {
   const el = document.getElementById('objectivesEditor');
   if (!el) return;
 
-  const tabs = PERIODS.map(p => {
-    const obj    = objData[p];
-    const status = objStatus(obj);
-    const isCur  = p === currentKey;
-    const isAct  = p === objActivePeriod;
-    return `<button class="obj-tab${isAct?' active':''}${isCur?' current':''}${status==='live'?' live':''}${status==='scheduled'?' scheduled':''}"
-      onclick="selectObjPeriod('${p}')">${p}</button>`;
-  }).join('');
-
-  const obj    = objData[objActivePeriod] || {};
-  const status = objStatus(obj);
-  const today  = todayStr();
-
-  el.innerHTML = `
-    <div class="obj-period-tabs">${tabs}</div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="form-hint" style="margin:0">${objActivePeriod} Objectives</div>
-      <span class="obj-status-badge ${status}">${status === 'live' ? '● Live' : status === 'scheduled' ? '📅 Scheduled' : '○ Not set'}</span>
-    </div>
-
-    <div class="obj-form">
-      <div class="form-hint">Title (28 chars max)</div>
-      <input class="obj-title-input" id="objTitle"
-        placeholder="${objActivePeriod} · LEARNING OBJECTIVES"
-        maxlength="28" value="${obj.title||''}"
-        oninput="updateObjCharCount('objTitleCount',this.value,28)">
-      <div class="obj-char-count" id="objTitleCount">${(obj.title||'').length}/28</div>
-
-      <div class="form-hint">Objectives — 25 chars each · bullet added automatically</div>
-      ${[1,2,3,4,5,6].map(i => `
-        <div class="obj-line-wrap">
-          <span class="obj-bullet">▸</span>
-          <input class="obj-line-input" id="objLine${i}"
-            placeholder="Objective ${i}${i===1?' (required)':''}"
-            maxlength="25" value="${obj['line'+i]||''}"
-            oninput="updateObjCharCount('objCount${i}',this.value,25)">
-        </div>
-        <div class="obj-char-count" id="objCount${i}">${(obj['line'+i]||'').length}/25</div>
-      `).join('')}
-
-      <div class="obj-date-row">
-        <span class="obj-date-label">Date</span>
-        <input type="date" class="obj-date-input" id="objDate"
-          value="${obj.scheduled_date || today}"
-          min="${today}">
-        <span class="obj-date-hint">Leave as today to go live now · pick a future date to pre-load</span>
-      </div>
-
-      <div class="obj-mode-row">
-        <span class="obj-mode-label">Show mode</span>
-        <select class="obj-mode-select" id="objMode" onchange="toggleTimedField()">
-          <option value="always"${(obj.display_mode||'always')==='always'?' selected':''}>Always — full period</option>
-          <option value="timed"${obj.display_mode==='timed'?' selected':''}>Timed — first X minutes only</option>
-          <option value="manual"${obj.display_mode==='manual'?' selected':''}>Manual — until I stop it</option>
-        </select>
-        <select id="objTimedMinutes" style="display:${obj.display_mode==='timed'?'block':'none'}">
-          ${[5,10,15,20].map(m=>`<option value="${m}"${obj.timed_minutes==m?' selected':''}>${m} min</option>`).join('')}
-        </select>
-      </div>
-
-      <div class="obj-action-row">
-        <button class="btn btn-approve" style="flex:1" onclick="saveObjectives()">
-          ${status === 'inactive' ? '▶ Save' : status === 'scheduled' ? '📅 Update Schedule' : '✓ Update'}
-        </button>
-        ${status !== 'inactive' ? `<button class="btn btn-kill" onclick="clearObjectives()">Remove</button>` : ''}
-        <button class="btn btn-secondary" onclick="clearObjForm()">Clear</button>
-      </div>
-
-      ${status === 'scheduled' ? `
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--orange);letter-spacing:0.1em;text-align:center;padding:4px 0">
-          Scheduled for ${obj.scheduled_date} · Won't show until that date
-        </div>` : ''}
-    </div>`;
-}
-
-function selectObjPeriod(period) {
-  objActivePeriod = period;
-  renderObjectivesEditor(null);
-}
-
-function toggleTimedField() {
-  const mode = document.getElementById('objMode')?.value;
-  const tf   = document.getElementById('objTimedMinutes');
-  if (tf) tf.style.display = mode === 'timed' ? 'block' : 'none';
-}
-
-function updateObjCharCount(id, val, max) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.textContent = val.length + '/' + max;
-  el.className   = 'obj-char-count' + (val.length >= max ? ' over' : '');
-}
-
-async function saveObjectives() {
-  const period = objActivePeriod;
-  const title  = (document.getElementById('objTitle')?.value || '').trim();
-  const line1  = (document.getElementById('objLine1')?.value || '').trim();
-  const date   = document.getElementById('objDate')?.value || todayStr();
-
-  if (!line1) { showToast('At least one objective required', true); return; }
-
-  const body = {
-    title,
-    line1,
-    line2: (document.getElementById('objLine2')?.value||'').trim(),
-    line3: (document.getElementById('objLine3')?.value||'').trim(),
-    line4: (document.getElementById('objLine4')?.value||'').trim(),
-    line5: (document.getElementById('objLine5')?.value||'').trim(),
-    line6: (document.getElementById('objLine6')?.value||'').trim(),
-    display_mode:    document.getElementById('objMode')?.value || 'always',
-    timed_minutes:   parseInt(document.getElementById('objTimedMinutes')?.value||'10'),
-    scheduled_date:  date,
-    active:          true,
-    updated_at:      new Date().toISOString(),
-  };
-
-  const existing = objData[period];
-  let res;
-  if (existing?.id) {
-    res = await cwSupabasePatch('cw_objectives', existing.id, body);
-  } else {
-    res = await cwSupabasePost('cw_objectives', { ...body, room: CW.room, period });
-    if (res && res[0]) objData[period] = { ...res[0] };
-  }
-
-  if (res) {
-    objData[period] = { ...(objData[period]||{}), ...body, period };
-    const isScheduled = date > todayStr();
-    showToast(isScheduled
-      ? '📅 ' + period + ' scheduled for ' + date
-      : '✓ ' + period + ' objectives live');
-    renderObjectivesEditor(null);
-  } else {
-    showToast('Error saving objectives', true);
-  }
-}
-
-async function clearObjectives() {
-  const period   = objActivePeriod;
-  const existing = objData[period];
-  if (!existing?.id) return;
-  const res = await cwSupabasePatch('cw_objectives', existing.id, {
-    active: false, scheduled_date: null,
-  });
-  if (res) {
-    objData[period] = { ...existing, active: false, scheduled_date: null };
-    showToast(period + ' objectives removed');
-    renderObjectivesEditor(null);
-  } else {
-    showToast('Error removing objectives', true);
-  }
-}
-
-function clearObjForm() {
-  ['objTitle','objLine1','objLine2','objLine3','objLine4','objLine5','objLine6']
-    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  ['objTitleCount','objCount1','objCount2','objCount3','objCount4','objCount5','objCount6']
-    .forEach((id,i) => { const el=document.getElementById(id); if(el) el.textContent='0/'+(i===0?'28':'25'); });
-}
-
-async function loadObjectives() {
-  const rows = await cwSupabaseFetch(
-    `cw_objectives?room=eq.${CW.room}&order=period.asc`
-  );
-  if (rows) rows.forEach(r => objData[r.period] = r);
-
-  // Detect current period
-  const now = new Date();
-  const nm  = now.getHours() * 60 + now.getMinutes();
-  // Simple period detection for admin — use Regular schedule as reference
-  const periods = [
-    { key:'P1', start:'8:10',  end:'9:02'  },
-    { key:'P2', start:'9:06',  end:'9:56'  },
-    { key:'P3', start:'10:15',end:'11:05' },
-    { key:'P4', start:'11:09',end:'11:59' },
-    { key:'P5', start:'12:37',end:'1:27'  },
-    { key:'P6', start:'1:31', end:'2:21'  },
-    { key:'P7', start:'2:25', end:'3:15'  },
-  ];
-  const toMins = t => { const [h,m]=t.split(':').map(Number); return (h>=1&&h<=7?h+12:h)*60+m; };
-  const cur = periods.find(p => nm >= toMins(p.start) && nm < toMins(p.end));
-  const currentKey = cur?.key || null;
-
-  // Update period tag
-  const tag = document.getElementById('objPeriodTag');
-  if (tag) tag.textContent = currentKey ? currentKey + ' active now' : 'No period active';
-
-  renderObjectivesEditor(currentKey);
-}
-
-function renderObjectivesEditor(currentKey) {
-  const el = document.getElementById('objectivesEditor');
-  if (!el) return;
-
-  // Period tabs
   const tabs = PERIODS.map(p => {
     const obj    = objData[p];
     const status = objStatus(obj);
@@ -1789,16 +1615,8 @@ function clearObjForm() {
     .forEach(id => { const el = document.getElementById(id); if(el) el.textContent='0/'+((id==='objTitleCount')?'28':'25'); });
 }
 
-/* ════ INIT ════ */
-buildToggles();
-loadAll();
-loadSlides();
-loadBirthdays();
-loadObjectives();
-setInterval(loadAll, 30000);
-setInterval(loadObjectives, 60000);
-
- async function loadEventsList() {
+/* ════ EVENTS & COUNTDOWNS ════ */
+async function loadEventsList() {
   const wrap = document.getElementById('events-list');
   if (!wrap) return;
   try {
@@ -1808,7 +1626,10 @@ setInterval(loadObjectives, 60000);
       { headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` } }
     );
     const events = await res.json();
-    if (!events.length) { wrap.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-dim);padding:8px 0;">No events yet.</div>'; return; }
+    if (!events.length) {
+      wrap.innerHTML = '<div class="empty-state">No events yet</div>';
+      return;
+    }
     const todayD = new Date(today);
     wrap.innerHTML = events.map(e => {
       const d = new Date(e.date + 'T00:00:00');
@@ -1819,11 +1640,11 @@ setInterval(loadObjectives, 60000);
         <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);min-width:80px;">${e.date}</span>
         <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text);flex:1;">${e.label}</span>
         <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);min-width:50px;text-align:right;">${dayStr}</span>
-        <button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:#cc4444;font-size:14px;cursor:pointer;padding:0 4px;line-height:1;" title="Delete">×</button>
+        <button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;" title="Delete">×</button>
       </div>`;
     }).join('');
   } catch(err) {
-    wrap.innerHTML = '<div style="font-family:var(--font-mono);font-size:11px;color:#cc4444;">Failed to load events.</div>';
+    wrap.innerHTML = '<div class="empty-state" style="color:var(--red);">Failed to load events.</div>';
   }
 }
 
@@ -1839,7 +1660,7 @@ async function deleteEvent(id) {
 }
 
 async function importEventsCSV() {
-  const raw = document.getElementById('eventsCSV')?.value?.trim();
+  const raw    = document.getElementById('eventsCSV')?.value?.trim();
   const status = document.getElementById('importStatus');
   if (!raw) { if (status) status.textContent = 'Nothing to import.'; return; }
   const lines = raw.split('\n').map(l => l.trim()).filter(l => l && !l.startsWith('date'));
@@ -1858,7 +1679,10 @@ async function importEventsCSV() {
   try {
     const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_events`, {
       method: 'POST',
-      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: {
+        'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+      },
       body: JSON.stringify(toInsert)
     });
     if (res.ok || res.status === 201) {
@@ -1866,42 +1690,29 @@ async function importEventsCSV() {
       document.getElementById('eventsCSV').value = '';
       setTimeout(() => loadEventsList(), 500);
     } else {
-      if (status) { status.textContent = 'Import failed.'; status.style.color = '#cc4444'; }
+      if (status) { status.textContent = 'Import failed.'; status.style.color = 'var(--red)'; }
     }
   } catch(e) {
-    if (status) { status.textContent = 'Network error.'; status.style.color = '#cc4444'; }
+    if (status) { status.textContent = 'Network error.'; status.style.color = 'var(--red)'; }
   }
 }
 
 function clearEventsCSV() {
-  const ta = document.getElementById('eventsCSV');
+  const ta     = document.getElementById('eventsCSV');
   const status = document.getElementById('importStatus');
   if (ta) ta.value = '';
-  if (status) status.textContent = '';
+  if (status) { status.textContent = ''; status.style.color = ''; }
 }
+
+/* ════ INIT ════ */
+buildToggles();
+loadAll();
+loadSlides();
+loadBirthdays();
+loadObjectives();
+loadEventsList(); /* ← FIX: was missing from init */
+setInterval(loadAll, 30000);
+setInterval(loadObjectives, 60000);
 </script>
-  <!-- ══ EVENTS IMPORT CARD ══ -->
-<div class="admin-card" id="events-section">
-  <div class="admin-card-header">
-    <span class="admin-card-title">📅 Events &amp; Countdowns</span>
-    <span class="admin-card-sub">Manage countdown dates for the board</span>
-  </div>
-  <div class="admin-card-body">
-    <div id="events-list-wrap" style="margin-bottom:20px;">
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;">Active Events</div>
-      <div id="events-list"><div class="loading-row">Loading...</div></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:16px;">
-      <div style="font-family:var(--font-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px;">Import Events via CSV</div>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-bottom:10px;line-height:1.7;">Paste CSV below. Format: <code style="color:var(--green)">date,label,type</code><br>date = YYYY-MM-DD &nbsp;|&nbsp; type = countdown or calendar</div>
-      <textarea id="eventsCSV" rows="8" placeholder="2026-06-13,Last Day of School,countdown" style="width:100%;font-family:var(--font-mono);font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px;color:var(--text);resize:vertical;outline:none;line-height:1.6;"></textarea>
-      <div style="display:flex;gap:10px;margin-top:10px;align-items:center;">
-        <button onclick="importEventsCSV()" style="background:var(--green);color:#fff;font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;border:none;border-radius:6px;padding:10px 20px;cursor:pointer;">Import</button>
-        <button onclick="clearEventsCSV()" style="background:var(--surface2);color:var(--text-mid);font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border:1px solid var(--border2);border-radius:6px;padding:10px 16px;cursor:pointer;">Clear</button>
-        <span id="importStatus" style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);"></span>
-      </div>
-    </div>
-  </div>
-</div>
 </body>
 </html>
