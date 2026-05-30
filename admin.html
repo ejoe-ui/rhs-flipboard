@@ -20,7 +20,6 @@
     --radius:       10px;
   }
 
-  /* ══ DARK MODE (default) ══ */
   [data-theme="dark"] {
     --green:      #00a86b;
     --green-dark: #007a4d;
@@ -41,7 +40,6 @@
     --toggle-fg:  #1a1a18;
   }
 
-  /* ══ LIGHT MODE ══ */
   [data-theme="light"] {
     --green:      #005640;
     --green-dark: #003d2e;
@@ -70,7 +68,6 @@
     transition: background 0.2s, color 0.2s;
   }
 
-  /* ══ HEADER ══ */
   #header {
     background: var(--header-bg); border-bottom: 2px solid var(--green);
     padding: 12px 16px 10px; position: sticky; top: 0; z-index: 100;
@@ -113,17 +110,14 @@
     background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
   }
 
-  /* ══ CONTENT ══ */
   #content { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
 
-  /* ══ SECTION LABEL ══ */
   .section-label {
     font-family: var(--font-mono); font-size: 9px; font-weight: 700;
     letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim);
     padding: 0 2px; margin-bottom: 6px;
   }
 
-  /* ══ CARD ══ */
   .card {
     background: var(--surface); border: 1px solid var(--border2);
     border-radius: var(--radius); overflow: hidden;
@@ -147,7 +141,6 @@
   }
   .card-body { padding: 12px 14px; }
 
-  /* ══ PENDING / APPROVED ══ */
   .pending-item {
     background: var(--surface2); border: 1px solid var(--border2);
     border-left: 3px solid var(--orange);
@@ -170,7 +163,6 @@
   .approved-meta   { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
   .expires-soon    { color: var(--orange); }
 
-  /* ══ BUTTONS ══ */
   .btn {
     font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 0.12em; text-transform: uppercase;
@@ -199,7 +191,6 @@
   }
   .expire-select:focus { border-color: var(--green); }
 
-  /* ══ FORMS ══ */
   .form-field {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 10px 12px;
@@ -216,7 +207,6 @@
   .form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
   .form-row .form-field { margin-bottom: 0; }
 
-  /* ══ TOGGLES ══ */
   .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .toggle-item {
     display: flex; align-items: center; justify-content: space-between;
@@ -232,7 +222,6 @@
   .toggle-switch input:checked + .toggle-slider { background: var(--green); }
   .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
 
-  /* ══ EMPTY / LOADING ══ */
   .empty-state { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; padding: 20px 0; }
   .loading-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px 0; }
   .loading-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: ldot 1.2s infinite ease-in-out; }
@@ -240,7 +229,6 @@
   .loading-dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes ldot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
 
-  /* ══ TOAST ══ */
   #toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--green); color: #fff;
@@ -253,13 +241,11 @@
   #toast.error { background: var(--red); }
   #toast.show  { opacity: 1; }
 
-  /* ══ STATS ══ */
   .stats-row { display: flex; gap: 8px; }
   .stat-block { flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; text-align: center; transition: background 0.2s; }
   .stat-num   { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
   .stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
 
-  /* ══ DISPLAY LINK ══ */
   .display-link {
     display: block; text-align: center; text-decoration: none;
     font-family: var(--font-mono); font-size: 11px; font-weight: 700;
@@ -270,7 +256,6 @@
   }
   .display-link:hover { border-color: var(--tan); }
 
-  /* ══ SLIDE EDITOR ══ */
   .slide-item {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;
@@ -299,13 +284,11 @@
   .slide-line-input::placeholder { color: var(--text-dim); }
   .char-count { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; margin-bottom: 6px; }
 
-  /* ══ BIRTHDAY LIST ══ */
   .bday-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
   .bday-row:last-child { border-bottom: none; }
   .bday-name { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); }
   .bday-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
 
-  /* ══ UPLOAD ══ */
   .upload-area {
     background: var(--surface2); border: 1px dashed var(--border2);
     border-radius: 8px; padding: 16px; text-align: center;
@@ -315,7 +298,6 @@
   .upload-area input { display: none; }
   .upload-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
-  /* ══ MODAL ══ */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
     z-index: 200; display: flex; align-items: flex-end;
@@ -335,7 +317,7 @@
   .modal-title  { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); padding: 0 16px 12px; border-bottom: 1px solid var(--border); }
   .modal-body   { padding: 14px 16px; }
 
-  /* ══ OBJECTIVES ══ */
+  /* ══ OBJECTIVES — updated styles ══ */
   .obj-period-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
   .obj-tab {
     font-family: var(--font-mono); font-size: 10px; font-weight: 700;
@@ -373,9 +355,16 @@
   }
   .obj-line-input:focus { border-color: var(--green); }
   .obj-line-input::placeholder { color: var(--text-dim); }
+  .obj-line-input.success-input { border-color: rgba(0,168,107,0.3); }
+  .obj-line-input.success-input:focus { border-color: var(--green); }
   .obj-bullet { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-dim); pointer-events: none; }
+  .obj-bullet.success { color: var(--green); }
   .obj-char-count { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; }
   .obj-char-count.over { color: var(--red); }
+
+  .obj-section-divider {
+    border: none; border-top: 1px solid var(--border2); margin: 4px 0;
+  }
 
   .obj-mode-row {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
@@ -427,11 +416,18 @@
     transition: background 0.2s, color 0.2s;
   }
   .obj-action-row { display: flex; gap: 8px; }
+
+  /* UDL hint box */
+  .udl-hint {
+    background: var(--green-dim); border: 1px solid var(--green);
+    border-radius: 6px; padding: 8px 12px;
+    font-family: var(--font-mono); font-size: 9px; color: var(--green);
+    letter-spacing: 0.08em; line-height: 1.6;
+  }
 </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
 <div id="header">
   <div class="h-left">
     <div class="h-badge" id="roomBadge">ROOM 27</div>
@@ -447,7 +443,6 @@
 </div>
 <div class="accent-bar"></div>
 
-<!-- ══ CONTENT ══ -->
 <div id="content">
 
   <!-- Stats -->
@@ -509,7 +504,7 @@
     </div>
   </div>
 
-  <!-- Period objectives -->
+  <!-- ══ PERIOD OBJECTIVES — updated ══ -->
   <div>
     <div class="section-label">📋 Period Objectives</div>
     <div class="card">
@@ -633,7 +628,7 @@
     </div>
   </div>
 
-  <!-- ══ FIX: Events card now inside #content with correct card classes ══ -->
+  <!-- Events & Countdowns -->
   <div>
     <div class="section-label">📅 Events &amp; Countdowns</div>
     <div class="card">
@@ -668,7 +663,7 @@
 
 </div><!-- /#content -->
 
-<!-- ══ SLIDE EDIT MODAL ══ -->
+<!-- Slide edit modal -->
 <div class="modal-overlay" id="slideModal" onclick="closeSlideModal(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -677,19 +672,11 @@
   </div>
 </div>
 
-<!-- ══ TOAST ══ -->
 <div id="toast"></div>
 
-<!-- ══ SCRIPTS ══ -->
 <script src="config.js"></script>
 <script src="cowboy-wire-core.js"></script>
 <script>
-/* ════════════════════════════════════════════════════════
-   ADMIN.HTML — Teacher Dashboard
-   Approval queue, live posts, teacher post,
-   screen toggles, honor roll upload, countdowns
-════════════════════════════════════════════════════════ */
-
 document.getElementById('roomBadge').textContent = 'ROOM ' + CLASSROOM_CONFIG.room;
 
 /* ════ THEME ════ */
@@ -756,12 +743,7 @@ function expiresClass(iso) {
 async function loadAll() {
   setSyncStatus('', 'Loading...');
   try {
-    await Promise.all([
-      loadPending(),
-      loadApproved(),
-      loadCountdowns(),
-      loadHonorRollCount(),
-    ]);
+    await Promise.all([loadPending(), loadApproved(), loadCountdowns(), loadHonorRollCount()]);
     await loadStats();
     setSyncStatus('live', 'Live');
   } catch(e) {
@@ -783,199 +765,120 @@ async function loadStats() {
 
 /* ════ PENDING QUEUE ════ */
 async function loadPending() {
-  const rows = await cwSupabaseFetch(
-    `cw_messages?room=eq.${CW.room}&status=eq.pending&order=created_at.asc`
-  );
+  const rows = await cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.pending&order=created_at.asc`);
   const el = document.getElementById('pendingQueue');
-
-  if (!rows || !rows.length) {
-    el.innerHTML = '<div class="empty-state">No pending posts</div>';
-    return;
-  }
-
+  if (!rows || !rows.length) { el.innerHTML = '<div class="empty-state">No pending posts</div>'; return; }
   el.innerHTML = rows.map(r => {
     const lines = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
     const sender = r.sender || 'Anonymous';
-    return `
-      <div class="pending-item" id="pending-${r.id}">
-        <div class="pending-sender">From ${sender}</div>
-        <div class="pending-lines">${lines}</div>
-        <div class="pending-meta">Submitted ${timeAgo(r.created_at)}</div>
-        <div class="pending-actions">
-          <select class="expire-select" id="expire-${r.id}">
-            <option value="24" selected>24 hours</option>
-            <option value="48">48 hours</option>
-            <option value="72">72 hours</option>
-          </select>
-          <button class="btn btn-approve" onclick="approvePost('${r.id}')">✓ Approve</button>
-          <button class="btn btn-deny"    onclick="denyPost('${r.id}')">✕ Deny</button>
-        </div>
-      </div>`;
+    return `<div class="pending-item" id="pending-${r.id}">
+      <div class="pending-sender">From ${sender}</div>
+      <div class="pending-lines">${lines}</div>
+      <div class="pending-meta">Submitted ${timeAgo(r.created_at)}</div>
+      <div class="pending-actions">
+        <select class="expire-select" id="expire-${r.id}">
+          <option value="24" selected>24 hours</option>
+          <option value="48">48 hours</option>
+          <option value="72">72 hours</option>
+        </select>
+        <button class="btn btn-approve" onclick="approvePost('${r.id}')">✓ Approve</button>
+        <button class="btn btn-deny"    onclick="denyPost('${r.id}')">✕ Deny</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
-/* ════ APPROVE ════ */
 async function approvePost(id) {
   const hours     = parseInt(document.getElementById('expire-' + id)?.value || '24');
   const expiresAt = new Date(Date.now() + hours * 3600000).toISOString();
   const btn       = document.querySelector(`#pending-${id} .btn-approve`);
   if (btn) { btn.disabled = true; btn.textContent = 'Approving...'; }
-
-  const res = await cwSupabasePatch('cw_messages', id, {
-    status:       'approved',
-    expires_at:   expiresAt,
-    expire_hours: hours,
-    active:       true,
-  });
-
-  if (res) {
-    document.getElementById('pending-' + id)?.remove();
-    showToast('✓ Post approved — live for ' + hours + 'h');
-    await loadAll();
-  } else {
-    showToast('Error approving post', true);
-    if (btn) { btn.disabled = false; btn.textContent = '✓ Approve'; }
-  }
+  const res = await cwSupabasePatch('cw_messages', id, { status:'approved', expires_at:expiresAt, expire_hours:hours, active:true });
+  if (res) { document.getElementById('pending-' + id)?.remove(); showToast('✓ Post approved — live for ' + hours + 'h'); await loadAll(); }
+  else { showToast('Error approving post', true); if (btn) { btn.disabled = false; btn.textContent = '✓ Approve'; } }
 }
 
-/* ════ DENY ════ */
 async function denyPost(id) {
   const btn = document.querySelector(`#pending-${id} .btn-deny`);
   if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
-
-  const res = await cwSupabasePatch('cw_messages', id, { status: 'denied', active: false });
-  if (res) {
-    document.getElementById('pending-' + id)?.remove();
-    showToast('Post denied and removed');
-    await loadStats();
-  } else {
-    showToast('Error denying post', true);
-    if (btn) { btn.disabled = false; btn.textContent = '✕ Deny'; }
-  }
+  const res = await cwSupabasePatch('cw_messages', id, { status:'denied', active:false });
+  if (res) { document.getElementById('pending-' + id)?.remove(); showToast('Post denied and removed'); await loadStats(); }
+  else { showToast('Error denying post', true); if (btn) { btn.disabled = false; btn.textContent = '✕ Deny'; } }
 }
 
 /* ════ APPROVED LIST ════ */
 async function loadApproved() {
   const now  = new Date().toISOString();
-  const rows = await cwSupabaseFetch(
-    `cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&order=created_at.desc`
-  );
+  const rows = await cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&order=created_at.desc`);
   const el = document.getElementById('approvedList');
-
-  if (!rows || !rows.length) {
-    el.innerHTML = '<div class="empty-state">No live posts right now</div>';
-    return;
-  }
-
+  if (!rows || !rows.length) { el.innerHTML = '<div class="empty-state">No live posts right now</div>'; return; }
   el.innerHTML = rows.map(r => {
-    const lines  = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
+    const lines = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
     const sender = r.sender || 'Anonymous';
     const expCls = expiresClass(r.expires_at);
-    return `
-      <div class="approved-item" id="approved-${r.id}">
-        <div class="approved-sender">From ${sender}</div>
-        <div class="approved-lines">${lines}</div>
-        <div class="approved-meta ${expCls}">${timeAgo(r.created_at)} · ${expiresIn(r.expires_at)}</div>
-        <button class="btn btn-kill" onclick="killPost('${r.id}')">⚡ Remove Now</button>
-      </div>`;
+    return `<div class="approved-item" id="approved-${r.id}">
+      <div class="approved-sender">From ${sender}</div>
+      <div class="approved-lines">${lines}</div>
+      <div class="approved-meta ${expCls}">${timeAgo(r.created_at)} · ${expiresIn(r.expires_at)}</div>
+      <button class="btn btn-kill" onclick="killPost('${r.id}')">⚡ Remove Now</button>
+    </div>`;
   }).join('');
 }
 
-/* ════ KILL POST ════ */
 async function killPost(id) {
   if (!confirm('Remove this post from the board immediately?')) return;
   const btn = document.querySelector(`#approved-${id} .btn-kill`);
   if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
-
-  const res = await cwSupabasePatch('cw_messages', id, {
-    status:     'removed',
-    active:     false,
-    expires_at: new Date().toISOString(),
-  });
-
+  const res = await cwSupabasePatch('cw_messages', id, { status:'removed', active:false, expires_at:new Date().toISOString() });
   if (res) {
     document.getElementById('approved-' + id)?.remove();
     showToast('Post removed from board');
     await loadStats();
     const el = document.getElementById('approvedList');
-    if (!el.querySelector('.approved-item')) {
-      el.innerHTML = '<div class="empty-state">No live posts right now</div>';
-    }
-  } else {
-    showToast('Error removing post', true);
-    if (btn) { btn.disabled = false; btn.textContent = '⚡ Remove Now'; }
-  }
+    if (!el.querySelector('.approved-item')) el.innerHTML = '<div class="empty-state">No live posts right now</div>';
+  } else { showToast('Error removing post', true); if (btn) { btn.disabled = false; btn.textContent = '⚡ Remove Now'; } }
 }
 
 /* ════ TEACHER DIRECT POST ════ */
 async function postTeacherMessage() {
-  const line1  = (document.getElementById('tLine1')?.value || '').trim().toUpperCase();
-  const line2  = (document.getElementById('tLine2')?.value || '').trim().toUpperCase();
-  const line3  = (document.getElementById('tLine3')?.value || '').trim().toUpperCase();
-  const hours  = parseInt(document.getElementById('tExpire')?.value || '24');
-  const btn    = document.querySelector('.btn-post');
-
-  if (!line1) {
-    document.getElementById('tLine1').focus();
-    showToast('Line 1 is required', true);
-    return;
-  }
-
+  const line1 = (document.getElementById('tLine1')?.value || '').trim().toUpperCase();
+  const line2 = (document.getElementById('tLine2')?.value || '').trim().toUpperCase();
+  const line3 = (document.getElementById('tLine3')?.value || '').trim().toUpperCase();
+  const hours = parseInt(document.getElementById('tExpire')?.value || '24');
+  const btn   = document.querySelector('.btn-post');
+  if (!line1) { document.getElementById('tLine1').focus(); showToast('Line 1 is required', true); return; }
   if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
-
   const expiresAt = new Date(Date.now() + hours * 3600000).toISOString();
-  const res = await cwSupabasePost('cw_messages', {
-    room:         CW.room,
-    sender:       CLASSROOM_CONFIG.teacher,
-    line1,
-    line2,
-    line3,
-    status:       'approved',
-    active:       true,
-    expires_at:   expiresAt,
-    expire_hours: hours,
-  });
-
+  const res = await cwSupabasePost('cw_messages', { room:CW.room, sender:CLASSROOM_CONFIG.teacher, line1, line2, line3, status:'approved', active:true, expires_at:expiresAt, expire_hours:hours });
   if (res) {
     document.getElementById('tLine1').value = '';
     document.getElementById('tLine2').value = '';
     document.getElementById('tLine3').value = '';
     showToast('✓ Posted — live for ' + hours + 'h');
     await loadAll();
-  } else {
-    showToast('Error posting message', true);
-  }
-
+  } else { showToast('Error posting message', true); }
   if (btn) { btn.disabled = false; btn.textContent = 'Post to Board Now'; }
 }
 
 /* ════ SCREEN TOGGLES ════ */
 const SCREEN_LABELS = {
-  calendar:  'Calendar',
-  schedule:  'Schedule',
-  birthday:  'Birthdays',
-  countdown: 'Countdowns',
-  weather:   'Weather',
-  menu:      'Menu',
-  facts:     'Facts',
-  passable:  'PassAble',
-  code:      'C.O.D.E',
-  honorRoll: 'Honor Roll',
-  quickMsg:  'Messages',
+  calendar:'Calendar', schedule:'Schedule', birthday:'Birthdays',
+  countdown:'Countdowns', weather:'Weather', menu:'Menu',
+  facts:'Facts', passable:'PassAble', code:'C.O.D.E',
+  honorRoll:'Honor Roll', quickMsg:'Messages',
 };
 
 function buildToggles() {
   const grid = document.getElementById('toggleGrid');
   grid.innerHTML = Object.entries(SCREEN_LABELS).map(([key, label]) => {
     const checked = CLASSROOM_CONFIG.screens[key] !== false ? 'checked' : '';
-    return `
-      <div class="toggle-item">
-        <span class="toggle-label">${label}</span>
-        <label class="toggle-switch">
-          <input type="checkbox" ${checked} onchange="toggleScreen('${key}', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>`;
+    return `<div class="toggle-item">
+      <span class="toggle-label">${label}</span>
+      <label class="toggle-switch">
+        <input type="checkbox" ${checked} onchange="toggleScreen('${key}', this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>`;
   }).join('');
 }
 
@@ -987,32 +890,20 @@ function toggleScreen(key, enabled) {
 /* ════ HONOR ROLL ════ */
 async function loadHonorRollCount() {
   const rows = await cwFetchHonorRoll();
-  document.getElementById('honorRollCount').textContent =
-    rows ? rows.length + ' students' : '0 students';
+  document.getElementById('honorRollCount').textContent = rows ? rows.length + ' students' : '0 students';
 }
 
 async function uploadHonorRoll(input) {
   const file = input.files[0];
   if (!file) return;
   document.getElementById('uploadLabel').textContent = 'Reading ' + file.name + '...';
-
   const text = await file.text();
   const rows = text.trim().split('\n').filter(r => r.trim());
-  if (rows.length < 2) {
-    showToast('CSV appears empty', true);
-    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
-    return;
-  }
-
-  const header  = rows[0].toLowerCase().replace(/\r/g,'').split(',').map(h => h.replace(/^"|"$/g,'').trim());
-  const nameIdx = header.findIndex(h => h === 'name');
-  const gradeIdx= header.findIndex(h => h === 'grade');
-  if (nameIdx < 0 || gradeIdx < 0) {
-    showToast('CSV needs Name and Grade columns', true);
-    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
-    return;
-  }
-
+  if (rows.length < 2) { showToast('CSV appears empty', true); document.getElementById('uploadLabel').textContent = 'Tap to select CSV file'; return; }
+  const header   = rows[0].toLowerCase().replace(/\r/g,'').split(',').map(h => h.replace(/^"|"$/g,'').trim());
+  const nameIdx  = header.findIndex(h => h === 'name');
+  const gradeIdx = header.findIndex(h => h === 'grade');
+  if (nameIdx < 0 || gradeIdx < 0) { showToast('CSV needs Name and Grade columns', true); document.getElementById('uploadLabel').textContent = 'Tap to select CSV file'; return; }
   const parsed = [];
   for (let i = 1; i < rows.length; i++) {
     const cols  = rows[i].replace(/\r/g,'').split(',');
@@ -1021,68 +912,34 @@ async function uploadHonorRoll(input) {
     const grade = clean(gradeIdx);
     if (name && grade) parsed.push({ room: CW.room, name, grade, active: true, quarter: 'Q3' });
   }
-
-  if (!parsed.length) {
-    showToast('No valid rows found', true);
-    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
-    return;
-  }
-
+  if (!parsed.length) { showToast('No valid rows found', true); document.getElementById('uploadLabel').textContent = 'Tap to select CSV file'; return; }
   document.getElementById('uploadLabel').textContent = 'Uploading ' + parsed.length + ' students...';
-
   try {
-    await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll?room=eq.${CW.room}`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal',
-      },
-      body: JSON.stringify({ active: false }),
-    });
-
-    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll`, {
-      method: 'POST',
-      headers: {
-        'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal',
-      },
-      body: JSON.stringify(parsed),
-    });
-
+    await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll?room=eq.${CW.room}`, { method:'PATCH', headers:{'apikey':CW.supabaseKey,'Authorization':`Bearer ${CW.supabaseKey}`,'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify({active:false}) });
+    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_honor_roll`, { method:'POST', headers:{'apikey':CW.supabaseKey,'Authorization':`Bearer ${CW.supabaseKey}`,'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(parsed) });
     if (res.ok || res.status === 201) {
       document.getElementById('uploadLabel').textContent = '✓ ' + parsed.length + ' students uploaded';
       document.getElementById('honorRollCount').textContent = parsed.length + ' students';
       showToast('✓ Honor roll updated — ' + parsed.length + ' students');
-    } else {
-      throw new Error('Upload failed');
-    }
-  } catch(e) {
-    showToast('Upload error — try again', true);
-    document.getElementById('uploadLabel').textContent = 'Tap to select CSV file';
-  }
+    } else { throw new Error('Upload failed'); }
+  } catch(e) { showToast('Upload error — try again', true); document.getElementById('uploadLabel').textContent = 'Tap to select CSV file'; }
 }
 
 /* ════ CUSTOM COUNTDOWNS ════ */
 async function loadCountdowns() {
-  const rows = await cwSupabaseFetch(
-    `cw_countdowns?room=eq.${CW.room}&active=eq.true&order=date.asc`
-  );
+  const rows = await cwSupabaseFetch(`cw_countdowns?room=eq.${CW.room}&active=eq.true&order=date.asc`);
   const el = document.getElementById('countdownList');
-  if (!rows || !rows.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:8px 0">No custom countdowns</div>';
-    return;
-  }
+  if (!rows || !rows.length) { el.innerHTML = '<div class="empty-state" style="padding:8px 0">No custom countdowns</div>'; return; }
   el.innerHTML = rows.map(r => {
     const days = cwDaysUntil(r.date);
     const label = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days + ' days';
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div>
-          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)">${r.emoji} ${r.label}</div>
-          <div style="font-family:var(--mono);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px">${r.date} · ${label}</div>
-        </div>
-        <button class="btn btn-kill" onclick="removeCountdown('${r.id}')">✕</button>
-      </div>`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text)">${r.emoji} ${r.label}</div>
+        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px">${r.date} · ${label}</div>
+      </div>
+      <button class="btn btn-kill" onclick="removeCountdown('${r.id}')">✕</button>
+    </div>`;
   }).join('');
 }
 
@@ -1090,34 +947,16 @@ async function addCountdown() {
   const label = (document.getElementById('cdLabel')?.value || '').trim().toUpperCase();
   const date  = document.getElementById('cdDate')?.value;
   const emoji = document.getElementById('cdEmoji')?.value || '📅';
-
-  if (!label || !date) {
-    showToast('Name and date required', true);
-    return;
-  }
-
-  const res = await cwSupabasePost('cw_countdowns', {
-    room: CW.room, label, date, emoji, active: true,
-  });
-
-  if (res) {
-    document.getElementById('cdLabel').value = '';
-    document.getElementById('cdDate').value  = '';
-    showToast('✓ Countdown added');
-    await loadCountdowns();
-  } else {
-    showToast('Error adding countdown', true);
-  }
+  if (!label || !date) { showToast('Name and date required', true); return; }
+  const res = await cwSupabasePost('cw_countdowns', { room:CW.room, label, date, emoji, active:true });
+  if (res) { document.getElementById('cdLabel').value = ''; document.getElementById('cdDate').value = ''; showToast('✓ Countdown added'); await loadCountdowns(); }
+  else { showToast('Error adding countdown', true); }
 }
 
 async function removeCountdown(id) {
   const res = await cwSupabasePatch('cw_countdowns', id, { active: false });
-  if (res) {
-    showToast('Countdown removed');
-    await loadCountdowns();
-  } else {
-    showToast('Error removing', true);
-  }
+  if (res) { showToast('Countdown removed'); await loadCountdowns(); }
+  else { showToast('Error removing', true); }
 }
 
 /* ════ SLIDE EDITOR ════ */
@@ -1132,66 +971,41 @@ let slideData  = [];
 let dragSrcIdx = null;
 
 async function loadSlides() {
-  const rows = await cwSupabaseFetch(
-    `cw_screens?room=eq.${CW.room}&order=sort_order.asc`
-  );
+  const rows = await cwSupabaseFetch(`cw_screens?room=eq.${CW.room}&order=sort_order.asc`);
   slideData = rows || [];
   renderSlideList();
 }
 
 function renderSlideList() {
   const el = document.getElementById('slideList');
-  if (!slideData.length) {
-    el.innerHTML = '<div class="empty-state">No screens yet</div>';
-    return;
-  }
+  if (!slideData.length) { el.innerHTML = '<div class="empty-state">No screens yet</div>'; return; }
   el.innerHTML = slideData.map((s, idx) => {
-    const isSlot   = s.is_slot && s.slot_type;
-    const label    = isSlot ? SLOT_LABELS[s.slot_type] || s.slot_type : 'Custom Screen';
-    const lines    = Array.isArray(s.lines) ? s.lines : JSON.parse(s.lines || '[]');
-    const preview  = lines.filter(l => l && l.trim()).slice(0,2).join(' · ') || '(empty)';
-    const enabled  = s.enabled !== false;
-    return `
-      <div class="slide-item${enabled ? '' : ' opacity-50'}"
-        draggable="true"
-        id="slide-${s.id}"
-        ondragstart="dragStart(event,${idx})"
-        ondragover="dragOver(event,${idx})"
-        ondrop="dragDrop(event,${idx})"
-        ondragend="dragEnd()">
-        <div class="slide-drag-handle">⠿</div>
-        <div class="slide-info">
-          <div class="slide-type${isSlot?' slot':''}">${isSlot ? '⚡ ' + label : '✏️ ' + label}</div>
-          <div class="slide-preview">${preview}</div>
-          <div class="slide-meta">Speed ${s.speed}s · Order ${idx + 1}</div>
-        </div>
-        <div class="slide-actions">
-          <span class="slide-toggle" onclick="toggleSlide('${s.id}',${!enabled})" title="${enabled?'Disable':'Enable'}">
-            ${enabled ? '🟢' : '⚫'}
-          </span>
-          ${!isSlot ? `<button class="btn btn-secondary" style="padding:5px 8px;font-size:10px" onclick="editSlide('${s.id}')">Edit</button>` : ''}
-          <button class="btn btn-kill" onclick="deleteSlide('${s.id}')">✕</button>
-        </div>
-      </div>`;
+    const isSlot  = s.is_slot && s.slot_type;
+    const label   = isSlot ? SLOT_LABELS[s.slot_type] || s.slot_type : 'Custom Screen';
+    const lines   = Array.isArray(s.lines) ? s.lines : JSON.parse(s.lines || '[]');
+    const preview = lines.filter(l => l && l.trim()).slice(0,2).join(' · ') || '(empty)';
+    const enabled = s.enabled !== false;
+    return `<div class="slide-item${enabled ? '' : ' opacity-50'}" draggable="true" id="slide-${s.id}"
+        ondragstart="dragStart(event,${idx})" ondragover="dragOver(event,${idx})"
+        ondrop="dragDrop(event,${idx})" ondragend="dragEnd()">
+      <div class="slide-drag-handle">⠿</div>
+      <div class="slide-info">
+        <div class="slide-type${isSlot?' slot':''}">${isSlot ? '⚡ ' + label : '✏️ ' + label}</div>
+        <div class="slide-preview">${preview}</div>
+        <div class="slide-meta">Speed ${s.speed}s · Order ${idx + 1}</div>
+      </div>
+      <div class="slide-actions">
+        <span class="slide-toggle" onclick="toggleSlide('${s.id}',${!enabled})" title="${enabled?'Disable':'Enable'}">${enabled ? '🟢' : '⚫'}</span>
+        ${!isSlot ? `<button class="btn btn-secondary" style="padding:5px 8px;font-size:10px" onclick="editSlide('${s.id}')">Edit</button>` : ''}
+        <button class="btn btn-kill" onclick="deleteSlide('${s.id}')">✕</button>
+      </div>
+    </div>`;
   }).join('');
 }
 
-function dragStart(e, idx) {
-  dragSrcIdx = idx;
-  e.currentTarget.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-}
-function dragOver(e, idx) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  document.querySelectorAll('.slide-item').forEach(el => el.classList.remove('drag-over'));
-  e.currentTarget.classList.add('drag-over');
-}
-function dragEnd() {
-  document.querySelectorAll('.slide-item').forEach(el => {
-    el.classList.remove('dragging','drag-over');
-  });
-}
+function dragStart(e, idx) { dragSrcIdx = idx; e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; }
+function dragOver(e, idx)  { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('.slide-item').forEach(el => el.classList.remove('drag-over')); e.currentTarget.classList.add('drag-over'); }
+function dragEnd()         { document.querySelectorAll('.slide-item').forEach(el => el.classList.remove('dragging','drag-over')); }
 async function dragDrop(e, targetIdx) {
   e.preventDefault();
   if (dragSrcIdx === null || dragSrcIdx === targetIdx) return;
@@ -1203,42 +1017,25 @@ async function dragDrop(e, targetIdx) {
 }
 
 async function saveSlideOrder() {
-  const updates = slideData.map((s, idx) =>
-    cwSupabasePatch('cw_screens', s.id, { sort_order: idx + 1 })
-  );
+  const updates = slideData.map((s, idx) => cwSupabasePatch('cw_screens', s.id, { sort_order: idx + 1 }));
   await Promise.all(updates);
   showToast('✓ Order saved');
 }
 
 async function toggleSlide(id, enabled) {
   const res = await cwSupabasePatch('cw_screens', id, { enabled });
-  if (res) {
-    const s = slideData.find(s => s.id === id);
-    if (s) s.enabled = enabled;
-    renderSlideList();
-    showToast((enabled ? '✓ Screen enabled' : 'Screen disabled'));
-  } else {
-    showToast('Error updating screen', true);
-  }
+  if (res) { const s = slideData.find(s => s.id === id); if (s) s.enabled = enabled; renderSlideList(); showToast(enabled ? '✓ Screen enabled' : 'Screen disabled'); }
+  else { showToast('Error updating screen', true); }
 }
 
 async function deleteSlide(id) {
   const s = slideData.find(s => s.id === id);
-  if (s?.is_slot) {
-    if (!confirm('This is a live data slot. Delete it?')) return;
-  } else {
-    if (!confirm('Delete this screen permanently?')) return;
-  }
+  if (s?.is_slot) { if (!confirm('This is a live data slot. Delete it?')) return; }
+  else { if (!confirm('Delete this screen permanently?')) return; }
   try {
-    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_screens?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` },
-    });
-    if (res.ok) {
-      slideData = slideData.filter(s => s.id !== id);
-      renderSlideList();
-      showToast('Screen deleted');
-    } else { throw new Error(); }
+    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_screens?id=eq.${id}`, { method:'DELETE', headers:{'apikey':CW.supabaseKey,'Authorization':`Bearer ${CW.supabaseKey}`} });
+    if (res.ok) { slideData = slideData.filter(s => s.id !== id); renderSlideList(); showToast('Screen deleted'); }
+    else { throw new Error(); }
   } catch(e) { showToast('Error deleting screen', true); }
 }
 
@@ -1251,43 +1048,28 @@ function editSlide(id) {
   document.getElementById('slideModalBody').innerHTML = `
     <div class="form-hint" style="margin-bottom:8px">Lines (28 characters max each)</div>
     ${lines.map((l, i) => `
-      <input class="slide-line-input" id="sline${i}" value="${(l||'').replace(/"/g,'&quot;')}"
-        maxlength="28" placeholder="Line ${i+1}"
+      <input class="slide-line-input" id="sline${i}" value="${(l||'').replace(/"/g,'&quot;')}" maxlength="28" placeholder="Line ${i+1}"
         oninput="document.getElementById('scount${i}').textContent=this.value.length+'/28'">
       <div class="char-count" id="scount${i}">${(l||'').length}/28</div>
     `).join('')}
     <div class="form-row" style="margin-top:4px">
       <div class="form-hint" style="margin:0">Speed (seconds)</div>
       <select class="expire-select" id="sSpeed">
-        ${[6,8,10,12,15,18,20,25,30].map(v =>
-          `<option value="${v}"${s.speed==v?' selected':''}>${v}s</option>`
-        ).join('')}
+        ${[6,8,10,12,15,18,20,25,30].map(v => `<option value="${v}"${s.speed==v?' selected':''}>${v}s</option>`).join('')}
       </select>
     </div>
     <button class="btn btn-approve" style="width:100%;margin-top:12px" onclick="saveSlide('${id}')">Save Screen</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="closeSlideModal()">Cancel</button>
-  `;
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="closeSlideModal()">Cancel</button>`;
   document.getElementById('slideModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 async function saveSlide(id) {
-  const lines = Array.from({length:7}, (_,i) =>
-    (document.getElementById('sline'+i)?.value || '').trim().toUpperCase()
-  );
+  const lines = Array.from({length:7}, (_,i) => (document.getElementById('sline'+i)?.value || '').trim().toUpperCase());
   const speed = parseInt(document.getElementById('sSpeed')?.value || '10');
-  const res = await cwSupabasePatch('cw_screens', id, {
-    lines: JSON.stringify(lines), speed,
-  });
-  if (res) {
-    const s = slideData.find(s => s.id === id);
-    if (s) { s.lines = lines; s.speed = speed; }
-    renderSlideList();
-    closeSlideModal();
-    showToast('✓ Screen saved');
-  } else {
-    showToast('Error saving screen', true);
-  }
+  const res = await cwSupabasePatch('cw_screens', id, { lines: JSON.stringify(lines), speed });
+  if (res) { const s = slideData.find(s => s.id === id); if (s) { s.lines = lines; s.speed = speed; } renderSlideList(); closeSlideModal(); showToast('✓ Screen saved'); }
+  else { showToast('Error saving screen', true); }
 }
 
 function openAddSlide() {
@@ -1296,52 +1078,30 @@ function openAddSlide() {
   document.getElementById('slideModalBody').innerHTML = `
     <div class="form-hint" style="margin-bottom:8px">Lines (28 characters max each)</div>
     ${emptyLines.map((_, i) => `
-      <input class="slide-line-input" id="sline${i}" value="" maxlength="28"
-        placeholder="Line ${i+1}"
+      <input class="slide-line-input" id="sline${i}" value="" maxlength="28" placeholder="Line ${i+1}"
         oninput="document.getElementById('scount${i}').textContent=this.value.length+'/28'">
       <div class="char-count" id="scount${i}">0/28</div>
     `).join('')}
     <div class="form-row" style="margin-top:4px">
       <div class="form-hint" style="margin:0">Speed (seconds)</div>
       <select class="expire-select" id="sSpeed">
-        ${[6,8,10,12,15,18,20,25,30].map(v =>
-          `<option value="${v}"${v===10?' selected':''}>${v}s</option>`
-        ).join('')}
+        ${[6,8,10,12,15,18,20,25,30].map(v => `<option value="${v}"${v===10?' selected':''}>${v}s</option>`).join('')}
       </select>
     </div>
     <button class="btn btn-approve" style="width:100%;margin-top:12px" onclick="createSlide()">Add Screen</button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="closeSlideModal()">Cancel</button>
-  `;
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="closeSlideModal()">Cancel</button>`;
   document.getElementById('slideModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 async function createSlide() {
-  const lines = Array.from({length:7}, (_,i) =>
-    (document.getElementById('sline'+i)?.value || '').trim().toUpperCase()
-  );
+  const lines = Array.from({length:7}, (_,i) => (document.getElementById('sline'+i)?.value || '').trim().toUpperCase());
   const speed = parseInt(document.getElementById('sSpeed')?.value || '10');
-  if (!lines.some(l => l.trim())) {
-    showToast('Add at least one line', true);
-    return;
-  }
+  if (!lines.some(l => l.trim())) { showToast('Add at least one line', true); return; }
   const maxOrder = slideData.length ? Math.max(...slideData.map(s => s.sort_order || 0)) : 0;
-  const res = await cwSupabasePost('cw_screens', {
-    room:       CW.room,
-    lines:      JSON.stringify(lines),
-    speed,
-    sort_order: maxOrder + 1,
-    enabled:    true,
-    is_slot:    false,
-  });
-  if (res && res[0]) {
-    slideData.push(res[0]);
-    renderSlideList();
-    closeSlideModal();
-    showToast('✓ Screen added');
-  } else {
-    showToast('Error adding screen', true);
-  }
+  const res = await cwSupabasePost('cw_screens', { room:CW.room, lines:JSON.stringify(lines), speed, sort_order:maxOrder+1, enabled:true, is_slot:false });
+  if (res && res[0]) { slideData.push(res[0]); renderSlideList(); closeSlideModal(); showToast('✓ Screen added'); }
+  else { showToast('Error adding screen', true); }
 }
 
 function closeSlideModal(e) {
@@ -1354,9 +1114,7 @@ function closeSlideModal(e) {
 let birthdayData = [];
 
 async function loadBirthdays() {
-  const rows = await cwSupabaseFetch(
-    `cw_birthdays?room=eq.${CW.room}&active=eq.true&order=month.asc,day.asc`
-  );
+  const rows = await cwSupabaseFetch(`cw_birthdays?room=eq.${CW.room}&active=eq.true&order=month.asc,day.asc`);
   birthdayData = rows || [];
   document.getElementById('birthdayCount').textContent = birthdayData.length + ' students';
   renderBirthdayList();
@@ -1364,16 +1122,10 @@ async function loadBirthdays() {
 
 function renderBirthdayList() {
   const el = document.getElementById('birthdayList');
-  if (!birthdayData.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:8px 0">No birthdays yet</div>';
-    return;
-  }
+  if (!birthdayData.length) { el.innerHTML = '<div class="empty-state" style="padding:8px 0">No birthdays yet</div>'; return; }
   el.innerHTML = birthdayData.map(b => `
     <div class="bday-row">
-      <div>
-        <div class="bday-name">${b.name}</div>
-        <div class="bday-date">${MON_NAMES[b.month]} ${b.day}</div>
-      </div>
+      <div><div class="bday-name">${b.name}</div><div class="bday-date">${MON_NAMES[b.month]} ${b.day}</div></div>
       <button class="btn btn-kill" onclick="removeBirthday('${b.id}')">✕</button>
     </div>`).join('');
 }
@@ -1382,16 +1134,8 @@ async function addBirthday() {
   const name  = (document.getElementById('bdName')?.value || '').trim().toUpperCase();
   const month = parseInt(document.getElementById('bdMonth')?.value || '0');
   const day   = parseInt(document.getElementById('bdDay')?.value || '0');
-
-  if (!name || !month || !day) {
-    showToast('Name, month, and day required', true);
-    return;
-  }
-
-  const res = await cwSupabasePost('cw_birthdays', {
-    room: CW.room, name, month, day, active: true,
-  });
-
+  if (!name || !month || !day) { showToast('Name, month, and day required', true); return; }
+  const res = await cwSupabasePost('cw_birthdays', { room:CW.room, name, month, day, active:true });
   if (res && res[0]) {
     birthdayData.push(res[0]);
     birthdayData.sort((a,b) => a.month - b.month || a.day - b.day);
@@ -1401,24 +1145,19 @@ async function addBirthday() {
     document.getElementById('birthdayCount').textContent = birthdayData.length + ' students';
     renderBirthdayList();
     showToast('✓ Birthday added');
-  } else {
-    showToast('Error adding birthday', true);
-  }
+  } else { showToast('Error adding birthday', true); }
 }
 
 async function removeBirthday(id) {
   const res = await cwSupabasePatch('cw_birthdays', id, { active: false });
-  if (res) {
-    birthdayData = birthdayData.filter(b => b.id !== id);
-    document.getElementById('birthdayCount').textContent = birthdayData.length + ' students';
-    renderBirthdayList();
-    showToast('Birthday removed');
-  } else {
-    showToast('Error removing birthday', true);
-  }
+  if (res) { birthdayData = birthdayData.filter(b => b.id !== id); document.getElementById('birthdayCount').textContent = birthdayData.length + ' students'; renderBirthdayList(); showToast('Birthday removed'); }
+  else { showToast('Error removing birthday', true); }
 }
 
-/* ════ OBJECTIVES ════ */
+/* ════════════════════════════════════════════════════════
+   PERIOD OBJECTIVES — simplified to 3 fields
+   Title (28) + Today's Objective (80) + You've got it when (80)
+════════════════════════════════════════════════════════ */
 const PERIODS = ['P1','P2','P3','P4','P5','P6','P7'];
 let objData         = {};
 let objActivePeriod = null;
@@ -1437,9 +1176,7 @@ function objStatus(obj) {
 }
 
 async function loadObjectives() {
-  const rows = await cwSupabaseFetch(
-    `cw_objectives?room=eq.${CW.room}&order=period.asc`
-  );
+  const rows = await cwSupabaseFetch(`cw_objectives?room=eq.${CW.room}&order=period.asc`);
   if (rows) rows.forEach(r => objData[r.period] = r);
 
   const now = new Date();
@@ -1484,35 +1221,53 @@ function renderObjectivesEditor(currentKey) {
 
   el.innerHTML = `
     <div class="obj-period-tabs">${tabs}</div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="form-hint" style="margin:0">${objActivePeriod} Objectives</div>
       <span class="obj-status-badge ${status}">${status==='live'?'● Live':status==='scheduled'?'📅 Scheduled':'○ Not set'}</span>
     </div>
+
+    <div class="udl-hint" style="margin-bottom:10px">
+      UDL best practice: State what students are doing today and what success looks like so they can self-assess.
+    </div>
+
     <div class="obj-form">
-      <div class="form-hint">Title (28 chars)</div>
+
+      <div class="form-hint">Period Title (28 chars)</div>
       <input class="obj-title-input" id="objTitle"
-        placeholder="${objActivePeriod} · LEARNING OBJECTIVES"
+        placeholder="${objActivePeriod} · TODAY'S LESSON"
         maxlength="28" value="${obj.title||''}"
         oninput="updateObjCharCount('objTitleCount', this.value, 28)">
       <div class="obj-char-count" id="objTitleCount">${(obj.title||'').length}/28</div>
 
-      <div class="form-hint">Objectives (25 chars each — bullet added automatically)</div>
-      ${[1,2,3,4,5,6].map(i => `
-        <div class="obj-line-wrap">
-          <span class="obj-bullet">▸</span>
-          <input class="obj-line-input" id="objLine${i}"
-            placeholder="Objective ${i}${i===1?' (required)':' (optional)'}"
-            maxlength="25" value="${obj['line'+i]||''}"
-            oninput="updateObjCharCount('objCount${i}', this.value, 25)">
-        </div>
-        <div class="obj-char-count" id="objCount${i}">${(obj['line'+i]||'').length}/25</div>
-      `).join('')}
+      <hr class="obj-section-divider">
+
+      <div class="form-hint">Today's Objective (80 chars)</div>
+      <div class="obj-line-wrap">
+        <span class="obj-bullet">▸</span>
+        <input class="obj-line-input" id="objLine1"
+          placeholder="What students are doing today — required"
+          maxlength="80" value="${obj.line1||''}"
+          oninput="updateObjCharCount('objCount1', this.value, 80)">
+      </div>
+      <div class="obj-char-count" id="objCount1">${(obj.line1||'').length}/80</div>
+
+      <hr class="obj-section-divider">
+
+      <div class="form-hint" style="color:var(--green)">You've got it when... (80 chars)</div>
+      <div class="obj-line-wrap">
+        <span class="obj-bullet success">✓</span>
+        <input class="obj-line-input success-input" id="objLine2"
+          placeholder="Success criteria students can self-check — optional"
+          maxlength="80" value="${obj.line2||''}"
+          oninput="updateObjCharCount('objCount2', this.value, 80)">
+      </div>
+      <div class="obj-char-count" id="objCount2">${(obj.line2||'').length}/80</div>
 
       <div class="obj-date-row">
         <span class="obj-date-label">Date</span>
         <input type="date" class="obj-date-input" id="objDate"
-          value="${obj.scheduled_date||today}"
-          min="${today}">
+          value="${obj.scheduled_date||today}" min="${today}">
         <span class="obj-date-hint">Today = live now · future date = pre-load</span>
       </div>
 
@@ -1535,6 +1290,7 @@ function renderObjectivesEditor(currentKey) {
         ${status!=='inactive'?`<button class="btn btn-kill" onclick="clearObjectives()">Stop Showing</button>`:''}
         <button class="btn btn-secondary" onclick="clearObjForm()">Clear Form</button>
       </div>
+
       ${status==='scheduled'?`<div style="font-family:var(--font-mono);font-size:9px;color:var(--orange);letter-spacing:0.1em;text-align:center;padding:4px 0">Scheduled for ${obj.scheduled_date} · Won't show until that date</div>`:''}
     </div>`;
 }
@@ -1561,20 +1317,19 @@ async function saveObjectives() {
   const period = objActivePeriod;
   const title  = (document.getElementById('objTitle')?.value || '').trim();
   const line1  = (document.getElementById('objLine1')?.value || '').trim();
-  if (!line1) { showToast('At least one objective required', true); return; }
+  const line2  = (document.getElementById('objLine2')?.value || '').trim();
+
+  if (!line1) { showToast("Today's Objective is required", true); return; }
 
   const body = {
     title,
-    line1,
-    line2: (document.getElementById('objLine2')?.value||'').trim(),
-    line3: (document.getElementById('objLine3')?.value||'').trim(),
-    line4: (document.getElementById('objLine4')?.value||'').trim(),
-    line5: (document.getElementById('objLine5')?.value||'').trim(),
-    line6: (document.getElementById('objLine6')?.value||'').trim(),
-    display_mode:   document.getElementById('objMode')?.value || 'always',
-    timed_minutes:  parseInt(document.getElementById('objTimedMinutes')?.value||'10'),
-    active: true,
-    updated_at: new Date().toISOString(),
+    line1,   // Today's Objective
+    line2,   // You've got it when...
+    line3: '', line4: '', line5: '', line6: '',
+    display_mode:  document.getElementById('objMode')?.value || 'always',
+    timed_minutes: parseInt(document.getElementById('objTimedMinutes')?.value || '10'),
+    active:        true,
+    updated_at:    new Date().toISOString(),
   };
 
   const existing = objData[period];
@@ -1599,20 +1354,15 @@ async function clearObjectives() {
   const existing = objData[period];
   if (!existing?.id) return;
   const res = await cwSupabasePatch('cw_objectives', existing.id, { active: false });
-  if (res) {
-    objData[period] = { ...existing, active: false };
-    showToast(period + ' objectives removed from board');
-    renderObjectivesEditor(null);
-  } else {
-    showToast('Error removing objectives', true);
-  }
+  if (res) { objData[period] = { ...existing, active: false }; showToast(period + ' objectives removed from board'); renderObjectivesEditor(null); }
+  else { showToast('Error removing objectives', true); }
 }
 
 function clearObjForm() {
-  ['objTitle','objLine1','objLine2','objLine3','objLine4','objLine5','objLine6']
-    .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['objTitleCount','objCount1','objCount2','objCount3','objCount4','objCount5','objCount6']
-    .forEach(id => { const el = document.getElementById(id); if(el) el.textContent='0/'+((id==='objTitleCount')?'28':'25'); });
+  ['objTitle','objLine1','objLine2'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('objTitleCount').textContent = '0/28';
+  document.getElementById('objCount1').textContent     = '0/80';
+  document.getElementById('objCount2').textContent     = '0/80';
 }
 
 /* ════ EVENTS & COUNTDOWNS ════ */
@@ -1621,15 +1371,9 @@ async function loadEventsList() {
   if (!wrap) return;
   try {
     const today = new Date().toISOString().split('T')[0];
-    const res = await fetch(
-      `${CW.supabaseUrl}/rest/v1/cw_events?select=id,date,label,type,active&order=date.asc`,
-      { headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` } }
-    );
+    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_events?select=id,date,label,type,active&order=date.asc`, { headers:{'apikey':CW.supabaseKey,'Authorization':`Bearer ${CW.supabaseKey}`} });
     const events = await res.json();
-    if (!events.length) {
-      wrap.innerHTML = '<div class="empty-state">No events yet</div>';
-      return;
-    }
+    if (!events.length) { wrap.innerHTML = '<div class="empty-state">No events yet</div>'; return; }
     const todayD = new Date(today);
     wrap.innerHTML = events.map(e => {
       const d = new Date(e.date + 'T00:00:00');
@@ -1640,21 +1384,16 @@ async function loadEventsList() {
         <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);min-width:80px;">${e.date}</span>
         <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text);flex:1;">${e.label}</span>
         <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);min-width:50px;text-align:right;">${dayStr}</span>
-        <button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;" title="Delete">×</button>
+        <button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
       </div>`;
     }).join('');
-  } catch(err) {
-    wrap.innerHTML = '<div class="empty-state" style="color:var(--red);">Failed to load events.</div>';
-  }
+  } catch(err) { wrap.innerHTML = '<div class="empty-state" style="color:var(--red);">Failed to load events.</div>'; }
 }
 
 async function deleteEvent(id) {
   if (!confirm('Delete this event?')) return;
   try {
-    await fetch(`${CW.supabaseUrl}/rest/v1/cw_events?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: { 'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}` }
-    });
+    await fetch(`${CW.supabaseUrl}/rest/v1/cw_events?id=eq.${id}`, { method:'DELETE', headers:{'apikey':CW.supabaseKey,'Authorization':`Bearer ${CW.supabaseKey}`} });
     loadEventsList();
   } catch(e) {}
 }
@@ -1672,33 +1411,22 @@ async function importEventsCSV() {
     const type = rest[rest.length - 1].match(/^(countdown|calendar|both)$/) ? rest.pop() : 'countdown';
     const label = rest.join(',').replace(/^"|"$/g, '').trim();
     if (!date.match(/^\d{4}-\d{2}-\d{2}$/) || !label) continue;
-    toInsert.push({ date, label, type, room: 'all', active: true });
+    toInsert.push({ date, label, type, room:'all', active:true });
   }
   if (!toInsert.length) { if (status) status.textContent = 'No valid rows found.'; return; }
   if (status) status.textContent = `Importing ${toInsert.length} events...`;
   try {
-    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_events`, {
-      method: 'POST',
-      headers: {
-        'apikey': CW.supabaseKey, 'Authorization': `Bearer ${CW.supabaseKey}`,
-        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify(toInsert)
-    });
+    const res = await fetch(`${CW.supabaseUrl}/rest/v1/cw_events`, { method:'POST', headers:{'apikey':CW.supabaseKey,'Authorization':`Bearer ${CW.supabaseKey}`,'Content-Type':'application/json','Prefer':'return=minimal'}, body:JSON.stringify(toInsert) });
     if (res.ok || res.status === 201) {
       if (status) { status.textContent = `✓ ${toInsert.length} events imported`; status.style.color = 'var(--green)'; }
       document.getElementById('eventsCSV').value = '';
       setTimeout(() => loadEventsList(), 500);
-    } else {
-      if (status) { status.textContent = 'Import failed.'; status.style.color = 'var(--red)'; }
-    }
-  } catch(e) {
-    if (status) { status.textContent = 'Network error.'; status.style.color = 'var(--red)'; }
-  }
+    } else { if (status) { status.textContent = 'Import failed.'; status.style.color = 'var(--red)'; } }
+  } catch(e) { if (status) { status.textContent = 'Network error.'; status.style.color = 'var(--red)'; } }
 }
 
 function clearEventsCSV() {
-  const ta     = document.getElementById('eventsCSV');
+  const ta = document.getElementById('eventsCSV');
   const status = document.getElementById('importStatus');
   if (ta) ta.value = '';
   if (status) { status.textContent = ''; status.style.color = ''; }
@@ -1710,7 +1438,7 @@ loadAll();
 loadSlides();
 loadBirthdays();
 loadObjectives();
-loadEventsList(); /* ← FIX: was missing from init */
+loadEventsList();
 setInterval(loadAll, 30000);
 setInterval(loadObjectives, 60000);
 </script>
