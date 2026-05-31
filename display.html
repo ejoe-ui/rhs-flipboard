@@ -50,81 +50,47 @@
   html, body { width: 100%; height: 100%; background: var(--board-bg); overflow: hidden; font-family: var(--font-ui); transition: background 0.3s; }
   body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px); pointer-events: none; z-index: 100; opacity: var(--scanline, 0); transition: opacity 0.4s; }
 
-  /* ══ HEADER ══ */
-  #header {
-    position: relative; width: 100%; height: 10vh;
-    min-height: 56px; max-height: 80px;
-    background: var(--header-bg);
-    border-bottom: 3px solid var(--green);
-    display: flex; align-items: center;
-    padding: 0 1.5vw; gap: 1.5vw;
-    z-index: 10; overflow: hidden; transition: border-color 0.3s;
-  }
+  #header { position: relative; width: 100%; height: 10vh; min-height: 56px; max-height: 80px; background: var(--header-bg); border-bottom: 3px solid var(--green); display: flex; align-items: center; padding: 0 1.5vw; gap: 1.5vw; z-index: 10; overflow: hidden; transition: border-color 0.3s; }
   .h-badge { background: var(--green); color: #fff; font-family: var(--font-ui); font-size: clamp(10px,1vw,16px); font-weight: 900; letter-spacing: 0.15em; padding: 5px 14px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; transition: background 0.3s; }
   .h-divider { flex: 1; min-width: 8px; height: 1px; background: linear-gradient(90deg,rgba(196,190,181,0.25),rgba(196,190,181,0.05)); }
   .h-school { color: var(--tan); font-family: var(--font-ui); font-size: clamp(10px,1.1vw,18px); letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .h-sync { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #333; transition: background 0.4s; flex-shrink: 0; }
-  .sync-dot.live  { background: var(--green); animation: blink 2.5s infinite; }
+  .sync-dot.live { background: var(--green); animation: blink 2.5s infinite; }
   .sync-dot.error { background: #882222; }
   .sync-label { color: #555; font-family: var(--font-retro); font-size: clamp(8px,0.65vw,11px); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
-
-  /* ══ PERIOD TIMER + PASS STATUS ══ */
   .h-period-timer { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; gap: 1px; }
   .h-period-label { font-family: var(--font-ui); font-size: clamp(8px,0.7vw,12px); letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; white-space: nowrap; font-weight: 700; }
-  .h-period-time  { font-family: var(--font-ui); font-size: clamp(10px,0.9vw,15px); letter-spacing: 0.1em; color: var(--tan); white-space: nowrap; font-weight: 700; }
+  .h-period-time { font-family: var(--font-ui); font-size: clamp(10px,0.9vw,15px); letter-spacing: 0.1em; color: var(--tan); white-space: nowrap; font-weight: 700; }
   .h-period-time.warning { color: #ff9900; }
-  .h-period-time.ending  { color: #cc4444; animation: blink 1s infinite; }
-
-  .h-pass-status {
-    font-family: var(--font-ui);
-    font-size: clamp(7px,0.65vw,11px);
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    padding: 2px 7px;
-    border-radius: 3px;
-    transition: background 0.4s, color 0.4s;
-  }
-  .h-pass-status.green  { background: #166534; color: #ffffff; }
-  .h-pass-status.yellow { background: #d97706; color: #ffffff; }
-  .h-pass-status.red    { background: #dc2626; color: #ffffff; }
-  .h-pass-status.blue   { background: #1d4ed8; color: #ffffff; }
+  .h-period-time.ending { color: #cc4444; animation: blink 1s infinite; }
+  .h-pass-status { font-family: var(--font-ui); font-size: clamp(7px,0.65vw,11px); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; padding: 2px 7px; border-radius: 3px; transition: background 0.4s, color 0.4s; }
+  .h-pass-status.green { background: #166534; color: #fff; }
+  .h-pass-status.yellow { background: #d97706; color: #fff; }
+  .h-pass-status.red { background: #dc2626; color: #fff; }
+  .h-pass-status.blue { background: #1d4ed8; color: #fff; }
   .h-pass-status.hidden { display: none; }
-
   .h-clock { color: #f0ebe0; font-family: var(--font-ui); font-size: clamp(18px,2.2vw,38px); font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; flex-shrink: 0; text-align: right; }
-
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
-  /* ══ BOARD ══ */
   #board-wrap { width: 100%; height: calc(100vh - 10vh - 3px); display: flex; flex-direction: column; padding: 1.2vh 1.5vw; gap: 0.5vh; }
   .tile-row { flex: 1; display: flex; gap: 0.3vw; align-items: stretch; }
   .tile { flex: 1; background: var(--tile-bg); border: 1px solid var(--tile-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
   .tile::after { content: ''; position: absolute; left: 4%; right: 4%; top: 50%; height: 1px; background: rgba(0,0,0,0.2); transform: translateY(-50%); z-index: 2; }
   .tile-char { font-size: clamp(24px,6.4vh,112px); font-weight: 900; color: var(--tile-text); line-height: 1; letter-spacing: -0.02em; user-select: none; position: relative; z-index: 3; font-family: var(--font-tile); transform: scaleX(var(--scaleX, 0.78)); transition: font-family 0s, color 0.3s; }
-
-  @keyframes flipDown {
-    0%   { transform:scaleY(1)    scaleX(var(--scaleX,0.78)); background:var(--tile-bg); }
-    25%  { transform:scaleY(0.3)  scaleX(var(--scaleX,0.78)); background:var(--flip-mid); }
-    45%  { transform:scaleY(0.02) scaleX(var(--scaleX,0.78)); background:var(--flip-mid); }
-    65%  { transform:scaleY(0.02) scaleX(var(--scaleX,0.78)); background:var(--flip-mid); }
-    85%  { transform:scaleY(0.4)  scaleX(var(--scaleX,0.78)); background:var(--tile-bg); }
-    100% { transform:scaleY(1)    scaleX(var(--scaleX,0.78)); background:var(--tile-bg); }
-  }
+  @keyframes flipDown { 0%{transform:scaleY(1) scaleX(var(--scaleX,0.78));background:var(--tile-bg)} 25%{transform:scaleY(0.3) scaleX(var(--scaleX,0.78));background:var(--flip-mid)} 45%{transform:scaleY(0.02) scaleX(var(--scaleX,0.78));background:var(--flip-mid)} 65%{transform:scaleY(0.02) scaleX(var(--scaleX,0.78));background:var(--flip-mid)} 85%{transform:scaleY(0.4) scaleX(var(--scaleX,0.78));background:var(--tile-bg)} 100%{transform:scaleY(1) scaleX(var(--scaleX,0.78));background:var(--tile-bg)} }
   .tile.flipping { animation: flipDown 0.65s cubic-bezier(0.4,0,0.2,1) forwards; }
   .tile-row:nth-child(odd) .tile { border-color: color-mix(in srgb, var(--tile-border) 80%, transparent); }
 
   #bottom-accent { position: fixed; bottom: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--green-dark) 0%, var(--green) 30%, var(--tan) 50%, var(--green) 70%, var(--green-dark) 100%); z-index: 10; }
 
-  /* ══ HONOR ROLL ══ */
-  #honor-ticker-wrap { position: fixed; bottom: 4px; left: 0; right: 0; height: 28px; background: rgba(0,0,0,0.82); border-top: 1px solid var(--green-dim); z-index: 9; overflow: hidden; display: none; align-items: center; }
+  #honor-ticker-wrap { position: fixed; bottom: 4px; left: 0; right: 0; height: 28px; background: rgba(0,0,0,0.82); border-top: 1px solid var(--green-dim); z-index: 9; overflow: hidden; display: none; align-items: center; transition: opacity 0.5s; }
   #honor-ticker-label { background: var(--green); color: #fff; font-family: var(--font-retro); font-size: 10px; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase; padding: 0 12px; height: 100%; display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; }
   #honor-ticker-track { flex:1; overflow:hidden; position:relative; height:100%; }
   #honor-ticker-inner { display: inline-flex; align-items: center; height: 100%; white-space: nowrap; animation: tickerScroll 400s linear infinite; will-change: transform; }
   @keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
-  .ticker-name  { font-size:11px; font-weight:700; color:var(--tan); letter-spacing:0.1em; text-transform:uppercase; padding:0 6px; }
-  .ticker-sep   { color:var(--green); font-size:10px; padding:0 4px; opacity:0.7; }
+  .ticker-name { font-size:11px; font-weight:700; color:var(--tan); letter-spacing:0.1em; text-transform:uppercase; padding:0 6px; }
+  .ticker-sep { color:var(--green); font-size:10px; padding:0 4px; opacity:0.7; }
   .ticker-grade { font-size:9px; color:#555; letter-spacing:0.12em; text-transform:uppercase; padding:0 2px 0 0; }
 
   #indicator-bar { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 7px; align-items: center; z-index: 50; }
@@ -138,6 +104,7 @@
 
   #sound-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,86,64,0.85); color: #fff; font-family: var(--font-retro); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; padding: 7px 18px; border-radius: 4px; cursor: pointer; z-index: 200; transition: opacity 0.5s; }
 
+  /* ══ MODE DIAL ══ */
   #dial-trigger { position: fixed; bottom: 0; right: 0; width: 80px; height: 80px; z-index: 60; cursor: pointer; }
   #dial-panel { position: fixed; bottom: 20px; right: 20px; background: #111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 18px; z-index: 60; opacity: 0; pointer-events: none; transform: translateY(8px) scale(0.96); transition: opacity 0.2s, transform 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 200px; }
   #dial-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
@@ -146,27 +113,84 @@
   .dial-knob-wrap { position: relative; width: 80px; height: 80px; cursor: pointer; }
   .dial-knob { width: 80px; height: 80px; border-radius: 50%; background: #1a1a1a; border: 2px solid #2a2a2a; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); position: relative; transition: transform 0.05s; }
   .dial-knob:active { transform: scale(0.96); }
-  .dial-needle { position: absolute; width: 3px; height: 18px; background: var(--green); border-radius: 2px; left: 50%; top: 6px; transform-origin: 50% 34px; transform: translateX(-50%) rotate(-135deg); transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s; box-shadow: 0 0 4px rgba(0,86,64,0.4); }
-  .dial-center-dot { position: absolute; width: 14px; height: 14px; background: #222; border: 1px solid #333; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+  .dial-needle { position: absolute; width: 3px; height: 18px; background: var(--green); border-radius: 2px; left: 50%; top: 6px; transform-origin: 50% 34px; transform: translateX(-50%) rotate(-135deg); transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1), background 0.3s; }
+  .dial-center-dot { position: absolute; width: 14px; height: 14px; background: #222; border: 1px solid #333; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
   .dial-positions { display: flex; gap: 6px; align-items: center; }
   .dial-pos { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-  .dial-pos-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a2a2a; border: 1px solid #333; transition: background 0.2s, transform 0.2s, box-shadow 0.2s; }
-  .dial-pos-dot.active { background: var(--green); border-color: var(--green); transform: scale(1.4); box-shadow: 0 0 4px rgba(0,86,64,0.5); }
+  .dial-pos-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a2a2a; border: 1px solid #333; transition: background 0.2s, transform 0.2s; }
+  .dial-pos-dot.active { background: var(--green); border-color: var(--green); transform: scale(1.4); }
   .dial-pos-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.1em; color: #333; text-transform: uppercase; transition: color 0.2s; }
   .dial-pos-label.active { color: var(--green); }
   .dial-divider { width: 1px; height: 16px; background: #2a2a2a; }
   #dial-hint { position: fixed; bottom: 12px; right: 16px; font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: #2a2a2a; z-index: 59; transition: color 0.2s; cursor: pointer; }
   #dial-hint:hover { color: #444; }
   body:hover #dial-hint { color: #2e2e2e; }
+
+  /* ══ TIMER — LOWER LEFT ══ */
+  #timer-trigger { position: fixed; bottom: 0; left: 0; width: 80px; height: 80px; z-index: 60; cursor: pointer; }
+  #timer-hint { position: fixed; bottom: 12px; left: 16px; font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: #2a2a2a; z-index: 59; cursor: pointer; opacity: 0; transition: opacity 0.3s, color 0.2s; }
+  body:hover #timer-hint { opacity: 1; color: #2e2e2e; }
+  #timer-hint:hover { color: var(--green) !important; }
+  #timer-hint.active { color: var(--green) !important; opacity: 1 !important; }
+
+  /* ══ TIMER OVERLAY ══ */
+  #timer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  #timer-overlay.open { opacity: 1; pointer-events: all; }
+  #timer-card { background: #111; border: 1px solid var(--green); border-radius: 12px; padding: 24px 28px; min-width: 320px; max-width: 400px; display: flex; flex-direction: column; gap: 16px; transform: translateY(12px); transition: transform 0.25s; }
+  #timer-overlay.open #timer-card { transform: translateY(0); }
+  .tc-title { font-family: var(--font-retro); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); display: flex; justify-content: space-between; align-items: center; }
+  .tc-close { color: #444; cursor: pointer; font-size: 16px; line-height: 1; transition: color 0.2s; }
+  .tc-close:hover { color: var(--tan); }
+  .tc-tabs { display: flex; gap: 6px; }
+  .tc-tab { flex: 1; padding: 6px; text-align: center; border-radius: 4px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; }
+  .tc-tab.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .tc-time { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .tc-time label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; }
+  .tc-input { width: 60px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 4px; color: var(--green); font-size: 22px; font-weight: 700; text-align: center; padding: 6px 4px; font-family: var(--font-retro); outline: none; transition: border-color 0.2s; }
+  .tc-input:focus { border-color: var(--green); }
+  .tc-sep { color: var(--green); font-size: 24px; font-weight: 700; font-family: var(--font-retro); }
+  .tc-sound { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .tc-sound-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; flex-shrink: 0; }
+  .tc-snd { flex: 1; min-width: 80px; padding: 5px 6px; border-radius: 3px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .tc-snd.active { border-color: var(--green); color: var(--green); background: #0d1f18; }
+  .tc-btns { display: flex; gap: 8px; }
+  .tc-btn { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .tc-btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .tc-btn.primary:hover { opacity: 0.85; }
+  .tc-btn:hover:not(.primary) { border-color: #444; color: #666; }
+
+  /* ══ TIMER RUNNING BAR ══ */
+  #timer-bar { position: fixed; bottom: 4px; left: 0; right: 0; height: 32px; background: rgba(0,0,0,0.92); border-top: 1px solid var(--green-dim); z-index: 9; display: none; align-items: center; padding: 0 16px; justify-content: space-between; opacity: 0; transition: opacity 0.4s; }
+  #timer-bar.visible { display: flex; }
+  #timer-bar.show { opacity: 1; }
+  .tb-label { font-family: var(--font-retro); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
+  .tb-btns { display: flex; gap: 6px; }
+  .tb-btn { padding: 4px 12px; border-radius: 3px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #555; font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; }
+  .tb-btn:hover { border-color: var(--green); color: var(--green); }
+  .tb-btn.danger { border-color: #4a1a1a; color: #664444; }
+  .tb-btn.danger:hover { border-color: #cc4400; color: #cc4400; }
+
+  /* ══ TIMER TILE BOARD ══ */
+  #timer-board { position: fixed; inset: 0; top: calc(10vh + 3px); z-index: 8; display: none; pointer-events: none; padding: 1.2vh 1.5vw 40px; gap: 0.5vh; flex-direction: column; background: var(--board-bg); opacity: 0; transition: opacity 0.4s; }
+  #timer-board.visible { display: flex; }
+  #timer-board.show { opacity: 1; }
+  .tt-row { flex: 1; display: flex; gap: 0.3vw; align-items: stretch; }
+  .tt { flex: 1; border-radius: 4px; background: var(--tile-bg); border: 1px solid var(--tile-border); transition: background 0.18s; }
+  .tt.on { background: var(--green); border-color: var(--green); }
+  .tt.warn { background: #cc4400; border-color: #cc4400; }
+  .tt.tan { background: var(--tan); border-color: var(--tan); }
+  .tt.flip { animation: ttFlip 0.32s ease forwards; }
+  @keyframes ttFlip { 0%{transform:scaleY(1)} 40%{transform:scaleY(0);opacity:.3} 100%{transform:scaleY(1)} }
+  @keyframes ttFlash { 0%,100%{background:var(--tile-bg);border-color:var(--tile-border)} 50%{background:var(--tan);border-color:var(--tan)} }
+  .tt.flash { animation: ttFlash 0.42s ease 3; }
 </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
 <div id="header">
   <div class="h-badge" id="roomBadge">RHS · ROOM 27</div>
   <div class="h-divider"></div>
-  <div class="h-school">COWBOY WIRE · RIVERDALE PONY EXPRESS</div>
+  <div class="h-school" id="headerTitle">COWBOY WIRE · RIVERDALE PONY EXPRESS</div>
   <div class="h-divider"></div>
   <div class="h-sync">
     <div class="sync-dot" id="syncDot"></div>
@@ -175,37 +199,69 @@
   <div class="h-divider" style="max-width:2vw"></div>
   <div class="h-period-timer" id="periodTimer" style="display:none">
     <div class="h-period-label" id="periodLabel"></div>
-    <div class="h-period-time"  id="periodTime"></div>
+    <div class="h-period-time" id="periodTime"></div>
     <div class="h-pass-status hidden" id="passStatusPill"></div>
   </div>
   <div class="h-divider" style="max-width:1vw"></div>
   <div class="h-clock" id="clock">--:-- --</div>
 </div>
 
-<!-- ══ BOARD ══ -->
 <div id="board-wrap"></div>
+<div id="timer-board"></div>
 
-<!-- ══ HONOR ROLL TICKER ══ -->
 <div id="honor-ticker-wrap">
   <div id="honor-ticker-label">&#127891; Honor Roll</div>
-  <div id="honor-ticker-track">
-    <div id="honor-ticker-inner"></div>
+  <div id="honor-ticker-track"><div id="honor-ticker-inner"></div></div>
+</div>
+
+<div id="timer-bar">
+  <div class="tb-label" id="tb-label">COUNTDOWN</div>
+  <div class="tb-btns">
+    <div class="tb-btn" id="tb-pause" onclick="timerPause()">PAUSE</div>
+    <div class="tb-btn" id="tb-reset" onclick="timerReset()">RESET</div>
+    <div class="tb-btn danger" onclick="timerEnd()">END TIMER</div>
   </div>
 </div>
 
-<!-- ══ BOTTOM ACCENT ══ -->
 <div id="bottom-accent"></div>
-
-<!-- ══ INDICATOR DOTS ══ -->
 <div id="indicator-bar"></div>
-
-<!-- ══ SOUND PROMPT ══ -->
 <div id="sound-prompt" onclick="enableSound(this)">▶ Click to enable flip sound</div>
 
-<!-- ══ MODE DIAL ══ -->
+<div id="timer-hint" onclick="openTimerOverlay()">⏱ TIMER</div>
+<div id="timer-trigger" onclick="openTimerOverlay()"></div>
+
+<div id="timer-overlay">
+  <div id="timer-card">
+    <div class="tc-title">
+      <span>Classroom Timer</span>
+      <span class="tc-close" onclick="closeTimerOverlay()">✕</span>
+    </div>
+    <div class="tc-tabs">
+      <div class="tc-tab active" id="tc-cd" onclick="tcMode('countdown')">Countdown</div>
+      <div class="tc-tab" id="tc-sw" onclick="tcMode('stopwatch')">Stopwatch</div>
+    </div>
+    <div class="tc-time" id="tc-time">
+      <label>Min</label>
+      <input class="tc-input" type="number" id="tc-min" value="12" min="0" max="99">
+      <div class="tc-sep">:</div>
+      <input class="tc-input" type="number" id="tc-sec" value="00" min="0" max="59">
+      <label>Sec</label>
+    </div>
+    <div class="tc-sound">
+      <span class="tc-sound-label">Sound:</span>
+      <div class="tc-snd active" id="tc-snd-westminster" onclick="tcSound('westminster')">🔔 Westminster</div>
+      <div class="tc-snd" id="tc-snd-ce" onclick="tcSound('ce')">🛸 Close Encounters</div>
+      <div class="tc-snd" id="tc-snd-off" onclick="tcSound('off')">🔇 Silent</div>
+    </div>
+    <div class="tc-btns">
+      <div class="tc-btn primary" onclick="timerStart()">Start</div>
+      <div class="tc-btn" onclick="closeTimerOverlay()">Cancel</div>
+    </div>
+  </div>
+</div>
+
 <div id="dial-hint" onclick="toggleDial()">◎ MODE</div>
 <div id="dial-trigger" onclick="toggleDial()"></div>
-
 <div id="dial-panel">
   <div class="dial-panel-title">Cowboy Wire · Display Mode</div>
   <div class="dial-mode-name" id="dialModeName">Retro · Dark</div>
@@ -222,598 +278,341 @@
   </div>
 </div>
 
-<!-- ══ SCRIPTS ══ -->
 <script src="config.js"></script>
 <script src="cowboy-wire-core.js"></script>
 <script>
-const ROWS         = CLASSROOM_CONFIG.display.rows;
-const COLS         = CLASSROOM_CONFIG.display.cols;
-const SYNC_SEC     = CLASSROOM_CONFIG.display.syncInterval;
-const SCRAMBLE_MS  = CLASSROOM_CONFIG.display.scrambleMs;
-const SCRAMBLE_STP = CLASSROOM_CONFIG.display.scrambleSteps;
-const CHARS        = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
+const ROWS=CLASSROOM_CONFIG.display.rows,COLS=CLASSROOM_CONFIG.display.cols,SYNC_SEC=CLASSROOM_CONFIG.display.syncInterval,SCRAMBLE_MS=CLASSROOM_CONFIG.display.scrambleMs,SCRAMBLE_STP=CLASSROOM_CONFIG.display.scrambleSteps,CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?:-/\'#@&%+';
+document.getElementById('roomBadge').textContent=CLASSROOM_CONFIG.badge;
+document.title='Cowboy Wire · '+CLASSROOM_CONFIG.badge;
+let messages=[],currentIdx=0,tiles=[],prevLines=Array.from({length:ROWS},()=>' '.repeat(COLS)),rotateTimer=null,syncTimer=null,calTimer=null;
 
-document.getElementById('roomBadge').textContent = CLASSROOM_CONFIG.badge;
-document.title = 'Cowboy Wire · ' + CLASSROOM_CONFIG.badge;
+const DISPLAY_SCHEDULES={regular:{periods:[{id:'1',label:'P1',start:'08:10',end:'09:02'},{id:'2',label:'P2',start:'09:06',end:'09:56'},{id:'brunch',label:'Brunch',start:'09:56',end:'10:11',break:true},{id:'3',label:'P3',start:'10:15',end:'11:05'},{id:'4',label:'P4',start:'11:09',end:'11:59'},{id:'lunch',label:'Lunch',start:'11:59',end:'12:33',break:true},{id:'5',label:'P5',start:'12:37',end:'13:27'},{id:'6',label:'P6',start:'13:31',end:'14:21'},{id:'7',label:'P7',start:'14:25',end:'15:15'}]},earlyRelease:{periods:[{id:'1',label:'P1',start:'08:10',end:'08:56'},{id:'2',label:'P2',start:'09:00',end:'09:41'},{id:'3',label:'P3',start:'09:45',end:'10:26'},{id:'4',label:'P4',start:'10:30',end:'11:11'},{id:'lunch',label:'Lunch',start:'11:11',end:'11:45',break:true},{id:'5',label:'P5',start:'11:49',end:'12:30'},{id:'6',label:'P6',start:'12:34',end:'13:15'},{id:'7',label:'P7',start:'13:19',end:'14:00'}]},blockWed:{periods:[{id:'1',label:'P1/2',start:'08:10',end:'09:57'},{id:'brunch',label:'Brunch',start:'09:57',end:'10:12',break:true},{id:'3',label:'P3/4',start:'10:16',end:'11:59'},{id:'lunch',label:'Lunch',start:'11:59',end:'12:33',break:true},{id:'5',label:'P5/6',start:'12:37',end:'14:20'},{id:'7',label:'P7',start:'14:24',end:'15:15'}]},blockThu:{periods:[{id:'2',label:'P1/2',start:'08:10',end:'09:57'},{id:'brunch',label:'Brunch',start:'09:57',end:'10:12',break:true},{id:'4',label:'P3/4',start:'10:16',end:'11:59'},{id:'lunch',label:'Lunch',start:'11:59',end:'12:33',break:true},{id:'6',label:'P5/6',start:'12:37',end:'14:20'},{id:'7',label:'P7',start:'14:24',end:'15:15'}]},minimum:{periods:[{id:'1',label:'P1',start:'08:10',end:'08:46'},{id:'2',label:'P2',start:'08:50',end:'09:23'},{id:'3',label:'P3',start:'09:27',end:'10:00'},{id:'4',label:'P4',start:'10:04',end:'10:37'},{id:'brunch',label:'Lunch',start:'10:37',end:'11:10',break:true},{id:'5',label:'P5',start:'11:14',end:'11:47'},{id:'6',label:'P6',start:'11:51',end:'12:24'},{id:'7',label:'P7',start:'12:28',end:'13:01'}]},activity:{periods:[{id:'1',label:'P1',start:'08:10',end:'08:56'},{id:'2',label:'P2',start:'09:00',end:'09:44'},{id:'brunch',label:'Brunch',start:'09:44',end:'09:59',break:true},{id:'3',label:'P3',start:'10:03',end:'10:47'},{id:'4',label:'P4',start:'10:51',end:'11:35'},{id:'5',label:'P5',start:'11:39',end:'12:23'},{id:'lunch',label:'Lunch',start:'12:23',end:'12:57',break:true},{id:'6',label:'P6',start:'13:01',end:'13:45'},{id:'7',label:'P7',start:'13:49',end:'14:33'}]},foggy:{periods:[{id:'1',label:'P1',start:'10:00',end:'10:44'},{id:'2',label:'P2',start:'10:48',end:'11:28'},{id:'3',label:'P3',start:'11:32',end:'12:12'},{id:'lunch',label:'Lunch',start:'12:12',end:'12:49',break:true},{id:'4',label:'P4',start:'12:53',end:'13:33'},{id:'5',label:'P5',start:'13:37',end:'14:17'},{id:'6',label:'P6',start:'14:21',end:'15:01'},{id:'7',label:'P7',start:'15:05',end:'15:45'}]},codeDay:{periods:[{id:'1',label:'P1',start:'08:10',end:'08:56'},{id:'2',label:'P2',start:'09:00',end:'09:44'},{id:'brunch',label:'Brunch',start:'09:44',end:'09:59',break:true},{id:'3',label:'P3',start:'10:03',end:'10:47'},{id:'4',label:'P4',start:'10:51',end:'11:35'},{id:'rally',label:'Rally',start:'11:39',end:'12:17',break:true},{id:'lunch',label:'Lunch',start:'12:17',end:'12:51',break:true},{id:'5',label:'P5',start:'12:55',end:'13:39'},{id:'6',label:'P6',start:'13:43',end:'14:27'},{id:'7',label:'P7',start:'14:31',end:'15:15'}]},
+// ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────────
+finals1:{periods:[{id:'1',label:'P1 Rev',start:'08:10',end:'08:48'},{id:'2',label:'P2 Rev',start:'08:52',end:'09:28'},{id:'3',label:'P3 Rev',start:'09:32',end:'10:08'},{id:'brunch',label:'Brunch',start:'10:08',end:'10:23',break:true},{id:'4',label:'P4 Rev',start:'10:27',end:'11:03'},{id:'5',label:'P5 Rev',start:'11:07',end:'11:43'},{id:'lunch',label:'Lunch',start:'11:43',end:'12:18',break:true},{id:'6',label:'P6 Rev',start:'12:22',end:'12:58'},{id:'final6',label:'Final P6',start:'13:02',end:'14:35'},{id:'7',label:'P7 Rev',start:'14:39',end:'15:15'}]},
+finals2:{periods:[{id:'1',label:'P1 Rev',start:'08:10',end:'08:54'},{id:'final1',label:'Final P1',start:'08:58',end:'10:31'},{id:'brunch',label:'Brunch',start:'10:31',end:'10:46',break:true},{id:'6',label:'P6 Rev',start:'10:50',end:'11:32'},{id:'2',label:'P2 Rev',start:'11:36',end:'12:18'},{id:'lunch',label:'Lunch',start:'12:18',end:'12:53',break:true},{id:'final2',label:'Final P2',start:'12:57',end:'14:30'},{id:'mtg',label:'Class Mtg',start:'14:34',end:'15:15',break:true}]},
+finals3:{periods:[{id:'3',label:'P3 Rev',start:'08:10',end:'08:40'},{id:'final3',label:'Final P3',start:'08:44',end:'10:17'},{id:'4',label:'P4 Rev',start:'10:21',end:'10:51'},{id:'lunch',label:'Lunch',start:'10:51',end:'11:24',break:true},{id:'final4',label:'Final P4',start:'11:28',end:'13:01'}]},
+finals4:{periods:[{id:'5',label:'P5 Rev',start:'08:10',end:'08:40'},{id:'final5',label:'Final P5',start:'08:44',end:'10:17'},{id:'7',label:'P7 Rev',start:'10:21',end:'10:51'},{id:'lunch',label:'Lunch',start:'10:51',end:'11:24',break:true},{id:'final7',label:'Final P7',start:'11:28',end:'13:01'}]}};
 
-let messages    = [];
-let currentIdx  = 0;
-let tiles       = [];
-let prevLines   = Array.from({length: ROWS}, () => ' '.repeat(COLS));
-let rotateTimer = null;
-let syncTimer   = null;
-let calTimer    = null;
+const NO_SCHOOL_DISPLAY=['2025-09-01','2025-11-11','2025-11-27','2025-11-28','2025-12-22','2025-12-23','2025-12-24','2025-12-25','2025-12-26','2025-12-29','2025-12-30','2025-12-31','2026-01-01','2026-01-02','2026-01-05','2026-01-06','2026-01-07','2026-01-08','2026-01-09','2026-01-12','2026-01-19','2026-02-09','2026-02-16','2026-03-30','2026-03-31','2026-04-01','2026-04-02','2026-04-03','2026-05-25'];
+function dToMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function dNowMins(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function dDateStr(d){return d.toISOString().split('T')[0];}
+function _displaySchoolDaysThisWeek(date){const day=date.getDay(),mon=new Date(date);mon.setDate(date.getDate()-(day===0?6:day-1));let c=0;for(let i=0;i<5;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);if(!NO_SCHOOL_DISPLAY.includes(dDateStr(d)))c++;}return c;}
 
-/* ════ PASS STATUS PILL ════ */
-const DISPLAY_SCHEDULES = {
-  regular: { periods: [
-    { id:'1', label:'P1', start:'08:10', end:'09:02' },
-    { id:'2', label:'P2', start:'09:06', end:'09:56' },
-    { id:'brunch', label:'Brunch', start:'09:56', end:'10:11', break:true },
-    { id:'3', label:'P3', start:'10:15', end:'11:05' },
-    { id:'4', label:'P4', start:'11:09', end:'11:59' },
-    { id:'lunch', label:'Lunch', start:'11:59', end:'12:33', break:true },
-    { id:'5', label:'P5', start:'12:37', end:'13:27' },
-    { id:'6', label:'P6', start:'13:31', end:'14:21' },
-    { id:'7', label:'P7', start:'14:25', end:'15:15' },
-  ]},
-  earlyRelease: { periods: [
-    { id:'1', label:'P1', start:'08:10', end:'08:56' },
-    { id:'2', label:'P2', start:'09:00', end:'09:41' },
-    { id:'3', label:'P3', start:'09:45', end:'10:26' },
-    { id:'4', label:'P4', start:'10:30', end:'11:11' },
-    { id:'lunch', label:'Lunch', start:'11:11', end:'11:45', break:true },
-    { id:'5', label:'P5', start:'11:49', end:'12:30' },
-    { id:'6', label:'P6', start:'12:34', end:'13:15' },
-    { id:'7', label:'P7', start:'13:19', end:'14:00' },
-  ]},
-  blockWed: { periods: [
-    { id:'1', label:'P1/2', start:'08:10', end:'09:57' },
-    { id:'brunch', label:'Brunch', start:'09:57', end:'10:12', break:true },
-    { id:'3', label:'P3/4', start:'10:16', end:'11:59' },
-    { id:'lunch', label:'Lunch', start:'11:59', end:'12:33', break:true },
-    { id:'5', label:'P5/6', start:'12:37', end:'14:20' },
-    { id:'7', label:'P7', start:'14:24', end:'15:15' },
-  ]},
-  blockThu: { periods: [
-    { id:'2', label:'P1/2', start:'08:10', end:'09:57' },
-    { id:'brunch', label:'Brunch', start:'09:57', end:'10:12', break:true },
-    { id:'4', label:'P3/4', start:'10:16', end:'11:59' },
-    { id:'lunch', label:'Lunch', start:'11:59', end:'12:33', break:true },
-    { id:'6', label:'P5/6', start:'12:37', end:'14:20' },
-    { id:'7', label:'P7', start:'14:24', end:'15:15' },
-  ]},
-  minimum: { periods: [
-    { id:'1', label:'P1', start:'08:10', end:'08:46' },
-    { id:'2', label:'P2', start:'08:50', end:'09:23' },
-    { id:'3', label:'P3', start:'09:27', end:'10:00' },
-    { id:'4', label:'P4', start:'10:04', end:'10:37' },
-    { id:'brunch', label:'Lunch', start:'10:37', end:'11:10', break:true },
-    { id:'5', label:'P5', start:'11:14', end:'11:47' },
-    { id:'6', label:'P6', start:'11:51', end:'12:24' },
-    { id:'7', label:'P7', start:'12:28', end:'13:01' },
-  ]},
-  activity: { periods: [
-    { id:'1', label:'P1', start:'08:10', end:'08:56' },
-    { id:'2', label:'P2', start:'09:00', end:'09:44' },
-    { id:'brunch', label:'Brunch', start:'09:44', end:'09:59', break:true },
-    { id:'3', label:'P3', start:'10:03', end:'10:47' },
-    { id:'4', label:'P4', start:'10:51', end:'11:35' },
-    { id:'5', label:'P5', start:'11:39', end:'12:23' },
-    { id:'lunch', label:'Lunch', start:'12:23', end:'12:57', break:true },
-    { id:'6', label:'P6', start:'13:01', end:'13:45' },
-    { id:'7', label:'P7', start:'13:49', end:'14:33' },
-  ]},
-  foggy: { periods: [
-    { id:'1', label:'P1', start:'10:00', end:'10:44' },
-    { id:'2', label:'P2', start:'10:48', end:'11:28' },
-    { id:'3', label:'P3', start:'11:32', end:'12:12' },
-    { id:'lunch', label:'Lunch', start:'12:12', end:'12:49', break:true },
-    { id:'4', label:'P4', start:'12:53', end:'13:33' },
-    { id:'5', label:'P5', start:'13:37', end:'14:17' },
-    { id:'6', label:'P6', start:'14:21', end:'15:01' },
-    { id:'7', label:'P7', start:'15:05', end:'15:45' },
-  ]},
-  codeDay: { periods: [
-    { id:'1', label:'P1', start:'08:10', end:'08:56' },
-    { id:'2', label:'P2', start:'09:00', end:'09:44' },
-    { id:'brunch', label:'Brunch', start:'09:44', end:'09:59', break:true },
-    { id:'3', label:'P3', start:'10:03', end:'10:47' },
-    { id:'4', label:'P4', start:'10:51', end:'11:35' },
-    { id:'rally', label:'Rally', start:'11:39', end:'12:17', break:true },
-    { id:'lunch', label:'Lunch', start:'12:17', end:'12:51', break:true },
-    { id:'5', label:'P5', start:'12:55', end:'13:39' },
-    { id:'6', label:'P6', start:'13:43', end:'14:27' },
-    { id:'7', label:'P7', start:'14:31', end:'15:15' },
-  ]},
-  // ── Finals Week — REMOVE AFTER JUNE 12, 2026 ────────────────────────────
-  finals1: { periods: [
-    { id:'1', label:'P1 Rev', start:'08:10', end:'08:48' },
-    { id:'2', label:'P2 Rev', start:'08:52', end:'09:28' },
-    { id:'3', label:'P3 Rev', start:'09:32', end:'10:08' },
-    { id:'brunch', label:'Brunch', start:'10:08', end:'10:23', break:true },
-    { id:'4', label:'P4 Rev', start:'10:27', end:'11:03' },
-    { id:'5', label:'P5 Rev', start:'11:07', end:'11:43' },
-    { id:'lunch', label:'Lunch', start:'11:43', end:'12:18', break:true },
-    { id:'6', label:'P6 Rev', start:'12:22', end:'12:58' },
-    { id:'final6', label:'Final P6', start:'13:02', end:'14:35' },
-    { id:'7', label:'P7 Rev', start:'14:39', end:'15:15' },
-  ]},
-  finals2: { periods: [
-    { id:'1', label:'P1 Rev', start:'08:10', end:'08:54' },
-    { id:'final1', label:'Final P1', start:'08:58', end:'10:31' },
-    { id:'brunch', label:'Brunch', start:'10:31', end:'10:46', break:true },
-    { id:'6', label:'P6 Rev', start:'10:50', end:'11:32' },
-    { id:'2', label:'P2 Rev', start:'11:36', end:'12:18' },
-    { id:'lunch', label:'Lunch', start:'12:18', end:'12:53', break:true },
-    { id:'final2', label:'Final P2', start:'12:57', end:'14:30' },
-    { id:'mtg', label:'Class Mtg', start:'14:34', end:'15:15', break:true },
-  ]},
-  finals3: { periods: [
-    { id:'3', label:'P3 Rev', start:'08:10', end:'08:40' },
-    { id:'final3', label:'Final P3', start:'08:44', end:'10:17' },
-    { id:'4', label:'P4 Rev', start:'10:21', end:'10:51' },
-    { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
-    { id:'final4', label:'Final P4', start:'11:28', end:'13:01' },
-  ]},
-  finals4: { periods: [
-    { id:'5', label:'P5 Rev', start:'08:10', end:'08:40' },
-    { id:'final5', label:'Final P5', start:'08:44', end:'10:17' },
-    { id:'7', label:'P7 Rev', start:'10:21', end:'10:51' },
-    { id:'lunch', label:'Lunch', start:'10:51', end:'11:24', break:true },
-    { id:'final7', label:'Final P7', start:'11:28', end:'13:01' },
-  ]},
-};
-
-const NO_SCHOOL_DISPLAY = [
-  '2025-09-01','2025-11-11','2025-11-27','2025-11-28',
-  '2025-12-22','2025-12-23','2025-12-24','2025-12-25','2025-12-26',
-  '2025-12-29','2025-12-30','2025-12-31',
-  '2026-01-01','2026-01-02','2026-01-05','2026-01-06',
-  '2026-01-07','2026-01-08','2026-01-09','2026-01-12',
-  '2026-01-19','2026-02-09','2026-02-16',
-  '2026-03-30','2026-03-31','2026-04-01','2026-04-02','2026-04-03',
-  '2026-05-25',
-];
-
-function dToMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
-function dNowMins() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
-function dDateStr(d) { return d.toISOString().split('T')[0]; }
-
-function _displaySchoolDaysThisWeek(date) {
-  const day=date.getDay(), monday=new Date(date);
-  monday.setDate(date.getDate()-(day===0?6:day-1));
-  let count=0;
-  for(let i=0;i<5;i++){const d=new Date(monday);d.setDate(monday.getDate()+i);if(!NO_SCHOOL_DISPLAY.includes(dDateStr(d)))count++;}
-  return count;
-}
-
-function getDisplaySchedule() {
-  const now = new Date(), ds = dDateStr(now), dow = now.getDay();
-  if (dow===0||dow===6||NO_SCHOOL_DISPLAY.includes(ds)) return null;
+function getDisplaySchedule(){
+  const now=new Date(),ds=dDateStr(now),dow=now.getDay();
+  if(dow===0||dow===6||NO_SCHOOL_DISPLAY.includes(ds))return null;
   // ── Finals hardcode — REMOVE AFTER JUNE 12, 2026 ────────────────────────
-  const FINALS_MAP = {'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
-  if (FINALS_MAP[ds]) return DISPLAY_SCHEDULES[FINALS_MAP[ds]];
-  const titles = (window._cwCalEvents||[]).filter(e => e.start && e.start.substring(0,10)===ds).map(e=>(e.title||'').toLowerCase());
-  const has = kw => titles.some(t=>t.includes(kw));
-  if (has('foggy')||has('late arrival')) return DISPLAY_SCHEDULES.foggy;
-  if (has('minimum')) return DISPLAY_SCHEDULES.minimum;
-  if (has('code day')) return DISPLAY_SCHEDULES.codeDay;
-  if (has('activity')) return DISPLAY_SCHEDULES.activity;
-  if (has('block')) return dow===3 ? DISPLAY_SCHEDULES.blockWed : DISPLAY_SCHEDULES.blockThu;
-  if (has('early release')) return DISPLAY_SCHEDULES.earlyRelease;
-  if (_displaySchoolDaysThisWeek(now)<=4) return DISPLAY_SCHEDULES.regular;
-  if (dow===1) return DISPLAY_SCHEDULES.earlyRelease;
-  if (dow===3) return DISPLAY_SCHEDULES.blockWed;
-  if (dow===4) return DISPLAY_SCHEDULES.blockThu;
+  const FM={'2026-06-08':'finals1','2026-06-09':'finals2','2026-06-10':'finals3','2026-06-11':'finals4','2026-06-12':'minimum'};
+  if(FM[ds])return DISPLAY_SCHEDULES[FM[ds]];
+  const titles=(window._cwCalEvents||[]).filter(e=>e.start&&e.start.substring(0,10)===ds).map(e=>(e.title||'').toLowerCase()),has=kw=>titles.some(t=>t.includes(kw));
+  if(has('foggy')||has('late arrival'))return DISPLAY_SCHEDULES.foggy;
+  if(has('minimum'))return DISPLAY_SCHEDULES.minimum;
+  if(has('code day'))return DISPLAY_SCHEDULES.codeDay;
+  if(has('activity'))return DISPLAY_SCHEDULES.activity;
+  if(has('block'))return dow===3?DISPLAY_SCHEDULES.blockWed:DISPLAY_SCHEDULES.blockThu;
+  if(has('early release'))return DISPLAY_SCHEDULES.earlyRelease;
+  if(_displaySchoolDaysThisWeek(now)<=4)return DISPLAY_SCHEDULES.regular;
+  if(dow===1)return DISPLAY_SCHEDULES.earlyRelease;
+  if(dow===3)return DISPLAY_SCHEDULES.blockWed;
+  if(dow===4)return DISPLAY_SCHEDULES.blockThu;
   return DISPLAY_SCHEDULES.regular;
 }
 
-function updatePassStatusPill() {
-  const pill = document.getElementById('passStatusPill');
-  if (!pill) return;
-  const schedule = getDisplaySchedule();
-  if (!schedule) { pill.className = 'h-pass-status hidden'; return; }
-  const nm = dNowMins();
-  for (const p of schedule.periods) {
-    const s = dToMins(p.start), e = dToMins(p.end);
-    if (nm >= s && nm < e) {
-      if (p.break) {
-        const next = schedule.periods[schedule.periods.indexOf(p)+1];
-        pill.className = 'h-pass-status blue';
-        pill.textContent = `⏸ ${p.label}${next ? ' · '+(dToMins(next.start)-nm)+' min' : ''}`;
-        return;
-      }
-      const left = e - nm, sinceStart = nm - s;
-      if (sinceStart < 15) {
-        pill.className = 'h-pass-status red';
-        pill.textContent = `🔴 Hold · OK in ${15-sinceStart}m`;
-      } else if (left <= 15) {
-        pill.className = 'h-pass-status red';
-        pill.textContent = `🔴 Last ${left} min`;
-      } else if (left <= 20) {
-        pill.className = 'h-pass-status yellow';
-        pill.textContent = `🟡 Last chance · ${left} min`;
-      } else {
-        pill.className = 'h-pass-status green';
-        pill.textContent = `🟢 OK · ${left} min`;
-      }
+function updatePassStatusPill(){
+  const pill=document.getElementById('passStatusPill');if(!pill)return;
+  const schedule=getDisplaySchedule();if(!schedule){pill.className='h-pass-status hidden';return;}
+  const nm=dNowMins();
+  for(const p of schedule.periods){
+    const s=dToMins(p.start),e=dToMins(p.end);
+    if(nm>=s&&nm<e){
+      if(p.break){const next=schedule.periods[schedule.periods.indexOf(p)+1];pill.className='h-pass-status blue';pill.textContent=`⏸ ${p.label}${next?' · '+(dToMins(next.start)-nm)+' min':''}`;return;}
+      const left=e-nm,sinceStart=nm-s;
+      if(sinceStart<15){pill.className='h-pass-status red';pill.textContent=`🔴 Hold · OK in ${15-sinceStart}m`;}
+      else if(left<=15){pill.className='h-pass-status red';pill.textContent=`🔴 Last ${left} min`;}
+      else if(left<=20){pill.className='h-pass-status yellow';pill.textContent=`🟡 Last chance · ${left} min`;}
+      else{pill.className='h-pass-status green';pill.textContent=`🟢 OK · ${left} min`;}
       return;
     }
   }
-  pill.className = 'h-pass-status hidden';
+  pill.className='h-pass-status hidden';
 }
 
-/* ════ BOARD ════ */
-function buildBoard() {
-  const wrap = document.getElementById('board-wrap');
-  wrap.innerHTML = ''; tiles = [];
-  for (let r = 0; r < ROWS; r++) {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'tile-row';
-    const rowTiles = [];
-    for (let c = 0; c < COLS; c++) {
-      const tileEl = document.createElement('div'); tileEl.className = 'tile';
-      const charEl = document.createElement('span'); charEl.className = 'tile-char'; charEl.textContent = '';
-      tileEl.appendChild(charEl); rowEl.appendChild(tileEl);
-      rowTiles.push({ el: tileEl, charEl });
-    }
-    wrap.appendChild(rowEl); tiles.push(rowTiles);
-  }
+function buildBoard(){
+  const wrap=document.getElementById('board-wrap');wrap.innerHTML='';tiles=[];
+  for(let r=0;r<ROWS;r++){const rowEl=document.createElement('div');rowEl.className='tile-row';const rowTiles=[];for(let c=0;c<COLS;c++){const tileEl=document.createElement('div');tileEl.className='tile';const charEl=document.createElement('span');charEl.className='tile-char';charEl.textContent='';tileEl.appendChild(charEl);rowEl.appendChild(tileEl);rowTiles.push({el:tileEl,charEl});}wrap.appendChild(rowEl);tiles.push(rowTiles);}
 }
 
-function padCenter(text, cols) {
-  text = (text || '').toUpperCase().substring(0, cols);
-  const total = cols - text.length, left = Math.floor(total / 2);
-  return ' '.repeat(left) + text + ' '.repeat(total - left);
+function padCenter(text,cols){text=(text||'').toUpperCase().substring(0,cols);const total=cols-text.length,left=Math.floor(total/2);return' '.repeat(left)+text+' '.repeat(total-left);}
+function padLeft(text,cols){text=(text||'').toUpperCase().substring(0,cols);return text+' '.repeat(Math.max(0,cols-text.length));}
+
+function animateTile(tile,finalChar,delay){
+  return new Promise(resolve=>{setTimeout(()=>{let step=0;const iv=setInterval(()=>{const rnd=CHARS[Math.floor(Math.random()*CHARS.length)];tile.charEl.textContent=rnd;tile.el.style.background=step%2===0?'#0f2a1a':'#162c1e';tile.charEl.style.color=step%2===0?'#00cc66':'#C4BEB5';step++;if(step>=SCRAMBLE_STP){clearInterval(iv);const ch=(finalChar||' ').trim();tile.charEl.textContent=ch;tile.charEl.style.color='var(--tile-text)';tile.el.style.background='var(--tile-bg)';tile.el.classList.add('flipping');tile.el.addEventListener('animationend',()=>{tile.el.classList.remove('flipping');resolve();},{once:true});}},SCRAMBLE_MS);},delay);});
 }
 
-function padLeft(text, cols) {
-  text = (text || '').toUpperCase().substring(0, cols);
-  return text + ' '.repeat(Math.max(0, cols - text.length));
-}
-
-function animateTile(tile, finalChar, delay) {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      let step = 0;
-      const iv = setInterval(() => {
-        const rnd = CHARS[Math.floor(Math.random() * CHARS.length)];
-        tile.charEl.textContent = rnd;
-        tile.el.style.background = step % 2 === 0 ? '#0f2a1a' : '#162c1e';
-        tile.charEl.style.color  = step % 2 === 0 ? '#00cc66' : '#C4BEB5';
-        step++;
-        if (step >= SCRAMBLE_STP) {
-          clearInterval(iv);
-          const ch = (finalChar || ' ').trim();
-          tile.charEl.textContent = ch;
-          tile.charEl.style.color = 'var(--tile-text)';
-          tile.el.style.background = 'var(--tile-bg)';
-          tile.el.classList.add('flipping');
-          tile.el.addEventListener('animationend', () => { tile.el.classList.remove('flipping'); resolve(); }, { once: true });
-        }
-      }, SCRAMBLE_MS);
-    }, delay);
-  });
-}
-
-function showMessage(idx) {
-  if (!messages.length) return;
-  idx = ((idx % messages.length) + messages.length) % messages.length;
-  currentIdx = idx;
-  const msg = messages[idx];
-  const useLeft = msg._leftAlign || msg._isObjectivesSlot;
-  const newLines = Array.from({length: ROWS}, (_, r) => useLeft ? padLeft(msg.lines[r] || '', COLS) : padCenter(msg.lines[r] || '', COLS));
+function showMessage(idx){
+  if(!messages.length)return;
+  idx=((idx%messages.length)+messages.length)%messages.length;currentIdx=idx;
+  const msg=messages[idx],useLeft=msg._leftAlign||msg._isObjectivesSlot;
+  const newLines=Array.from({length:ROWS},(_,r)=>useLeft?padLeft(msg.lines[r]||'',COLS):padCenter(msg.lines[r]||'',COLS));
   updateDots();
-  let changedTiles = 0;
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (newLines[r][c] !== prevLines[r][c]) changedTiles++;
-  if (changedTiles > 0) playFlipSound(changedTiles);
-  for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (newLines[r][c] !== prevLines[r][c]) animateTile(tiles[r][c], newLines[r][c], Math.random() * 1200);
-  prevLines = newLines;
-  scheduleNext(msg.speed || 8);
+  let changedTiles=0;for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(newLines[r][c]!==prevLines[r][c])changedTiles++;
+  if(changedTiles>0)playFlipSound(changedTiles);
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(newLines[r][c]!==prevLines[r][c])animateTile(tiles[r][c],newLines[r][c],Math.random()*1200);
+  prevLines=newLines;scheduleNext(msg.speed||8);
 }
 
-function scheduleNext(speedSec) { clearTimeout(rotateTimer); if (messages.length > 1) rotateTimer = setTimeout(() => showMessage(currentIdx + 1), (speedSec || 8) * 1000); }
-function nextMsg() { clearTimeout(rotateTimer); showMessage(currentIdx + 1); }
-function prevMsg() { clearTimeout(rotateTimer); showMessage(currentIdx - 1); }
+function scheduleNext(speedSec){clearTimeout(rotateTimer);if(messages.length>1)rotateTimer=setTimeout(()=>showMessage(currentIdx+1),(speedSec||8)*1000);}
+function nextMsg(){clearTimeout(rotateTimer);showMessage(currentIdx+1);}
+function prevMsg(){clearTimeout(rotateTimer);showMessage(currentIdx-1);}
+function buildDots(){const bar=document.getElementById('indicator-bar');bar.innerHTML='';const count=Math.min(messages.length,16);for(let i=0;i<count;i++){const d=document.createElement('div');d.className='ind-dot';bar.appendChild(d);}if(messages.length>16){const s=document.createElement('span');s.style.cssText='color:#333;font-size:10px;letter-spacing:0.1em';s.textContent='+'+(messages.length-16);bar.appendChild(s);}updateDots();}
+function updateDots(){document.querySelectorAll('.ind-dot').forEach((d,i)=>{d.className='ind-dot'+(i===currentIdx?' active':'');});}
+function updateClock(){const now=new Date();let h=now.getHours();const m=now.getMinutes().toString().padStart(2,'0'),ap=h>=12?'PM':'AM';h=h%12||12;document.getElementById('clock').textContent=`${h}:${m} ${ap}`;}
+function updatePeriodTimer(){const wrap=document.getElementById('periodTimer'),label=document.getElementById('periodLabel'),time=document.getElementById('periodTime');if(!wrap||!label||!time)return;const data=cwBuildPeriodTimerData(window._cwCalEvents||[]);if(!data){wrap.style.display='none';return;}if(data.inPeriod){label.textContent=data.label;time.textContent=data.timeStr+' LEFT';time.className='h-period-time '+(data.status!=='normal'?data.status:'');}else{label.textContent=data.label;time.textContent='IN '+data.minsAway+' MIN';time.className='h-period-time';}wrap.style.display='flex';updatePassStatusPill();}
+function setSyncStatus(state,label){const dot=document.getElementById('syncDot');dot.className='sync-dot'+(state==='live'?' live':state==='error'?' error':'');document.getElementById('syncLabel').textContent=label;}
 
-function buildDots() {
-  const bar = document.getElementById('indicator-bar'); bar.innerHTML = '';
-  const count = Math.min(messages.length, 16);
-  for (let i = 0; i < count; i++) { const d = document.createElement('div'); d.className = 'ind-dot'; bar.appendChild(d); }
-  if (messages.length > 16) { const s = document.createElement('span'); s.style.cssText = 'color:#333;font-size:10px;letter-spacing:0.1em'; s.textContent = '+' + (messages.length - 16); bar.appendChild(s); }
-  updateDots();
-}
+const SLOT_TOKENS={'[CALENDAR]':{_isCalendarPlaceholder:true,speed:15},'[SCHEDULE]':{_isSchedulePlaceholder:true,speed:15},'[BIRTHDAY]':{_isBirthdayPlaceholder:true,speed:12},'[COUNTDOWN]':{_isCountdownPlaceholder:true,speed:15},'[QUICKMSG]':{_isQuickMsgPlaceholder:true,speed:15},'[FACTS]':{_isFactsPlaceholder:true,speed:18},'[PASSABLE]':{_isPassablePlaceholder:true,speed:20},'[WEATHER]':{_isWeatherPlaceholder:true,speed:18},'[CODE]':{_isCodePlaceholder:true,speed:10},'[MENU]':{_isMenuPlaceholder:true,speed:15}};
 
-function updateDots() { document.querySelectorAll('.ind-dot').forEach((d, i) => { d.className = 'ind-dot' + (i === currentIdx ? ' active' : ''); }); }
+function parseCSV(csv){const rows=csv.trim().split('\n').filter(r=>r.trim());if(rows.length<2)return null;const header=rows[0].toLowerCase().replace(/\r/g,'').split(',').map(h=>h.replace(/^"|"$/g,'').trim());const sIdx=header.findIndex(h=>h==='screen'),tIdx=header.findIndex(h=>h==='text'),spIdx=header.findIndex(h=>h==='speed');if(sIdx<0||tIdx<0)return null;const screens={};for(let i=1;i<rows.length;i++){const cols=rows[i].replace(/\r/g,'').split(',');const clean=c=>c>=0?(cols[c]||'').replace(/^"|"$/g,'').trim():'';const scr=clean(sIdx),text=clean(tIdx).toUpperCase(),sp=spIdx>=0?parseFloat(clean(spIdx))||null:null;if(!scr)continue;if(!screens[scr])screens[scr]={lines:[],speed:8};screens[scr].lines.push(text);if(sp)screens[scr].speed=sp;}return Object.values(screens).map(s=>{const first=s.lines.find(l=>l.trim())||'';if(SLOT_TOKENS[first])return{lines:Array(7).fill(''),speed:s.speed||SLOT_TOKENS[first].speed,...SLOT_TOKENS[first]};return s;}).filter(s=>{const isSlot=Object.values(SLOT_TOKENS).some(t=>Object.keys(t).some(k=>s[k]));return isSlot||s.lines[0];})||null;}
 
-function updateClock() {
-  const now = new Date(); let h = now.getHours();
-  const m = now.getMinutes().toString().padStart(2,'0'), ap = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  document.getElementById('clock').textContent = `${h}:${m} ${ap}`;
-}
+async function fetchSheet(url){try{const res=await fetch(url,{cache:'no-store',mode:'cors'});if(res.ok){const parsed=parseCSV(await res.text());if(parsed)return parsed;}}catch(e){}return new Promise(resolve=>{const id=(url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)||[])[1];const gid=(url.match(/gid=(\d+)/)||['','0'])[1];if(!id){resolve(null);return;}const cb='_gviz_'+Date.now(),src=document.createElement('script');let done=false;const finish=(val)=>{if(done)return;done=true;clearTimeout(timer);delete window[cb];src.remove();resolve(val);};const timer=setTimeout(()=>finish(null),8000);window[cb]=(data)=>{try{finish(parseGviz(data));}catch(e){finish(null);}};src.src=`https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&tq=select+*&gid=${gid}&cb=${cb}`;src.onerror=()=>finish(null);document.head.appendChild(src);});}
 
-function updatePeriodTimer() {
-  const wrap = document.getElementById('periodTimer'), label = document.getElementById('periodLabel'), time = document.getElementById('periodTime');
-  if (!wrap || !label || !time) return;
-  const data = cwBuildPeriodTimerData(window._cwCalEvents || []);
-  if (!data) { wrap.style.display = 'none'; return; }
-  if (data.inPeriod) {
-    label.textContent = data.label;
-    time.textContent  = data.timeStr + ' LEFT';
-    time.className    = 'h-period-time ' + (data.status !== 'normal' ? data.status : '');
-  } else {
-    label.textContent = data.label;
-    time.textContent  = 'IN ' + data.minsAway + ' MIN';
-    time.className    = 'h-period-time';
-  }
-  wrap.style.display = 'flex';
-  updatePassStatusPill();
-}
+function parseGviz(data){if(!data?.table)return null;const cols=data.table.cols||[],rows=data.table.rows||[];const hdr=cols.map(c=>(c.label||'').toLowerCase().trim());const sIdx=hdr.findIndex(h=>h==='screen'),tIdx=hdr.findIndex(h=>h==='text'),spIdx=hdr.findIndex(h=>h==='speed');if(sIdx<0||tIdx<0)return null;const screens={};for(const row of rows){const c=row.c||[],val=i=>i>=0&&c[i]?.v!=null?String(c[i].v).trim():'';const scr=val(sIdx),txt=val(tIdx).toUpperCase(),sp=spIdx>=0?parseFloat(val(spIdx))||null:null;if(!scr)continue;if(!screens[scr])screens[scr]={lines:[],speed:8};screens[scr].lines.push(txt);if(sp)screens[scr].speed=sp;}return Object.values(screens).map(s=>{const first=s.lines.find(l=>l.trim())||'';if(SLOT_TOKENS[first])return{lines:Array(7).fill(''),speed:s.speed||SLOT_TOKENS[first].speed,...SLOT_TOKENS[first]};return s;}).filter(s=>{const isSlot=Object.values(SLOT_TOKENS).some(t=>Object.keys(t).some(k=>s[k]));return isSlot||s.lines[0];})||null;}
 
-function setSyncStatus(state, label) {
-  const dot = document.getElementById('syncDot');
-  dot.className = 'sync-dot' + (state === 'live' ? ' live' : state === 'error' ? ' error' : '');
-  document.getElementById('syncLabel').textContent = label;
-}
+function smartMerge(fresh){return fresh.map(item=>{for(const[key,flags]of Object.entries(CW_SLOT_MAP)){if(item[flags.ph]){const existing=messages.find(m=>m[flags.ph]||m[flags.sl]);return existing||item;}}return item;});}
 
-const SLOT_TOKENS = {
-  '[CALENDAR]':  { _isCalendarPlaceholder:  true, speed: 15 },
-  '[SCHEDULE]':  { _isSchedulePlaceholder:  true, speed: 15 },
-  '[BIRTHDAY]':  { _isBirthdayPlaceholder:  true, speed: 12 },
-  '[COUNTDOWN]': { _isCountdownPlaceholder: true, speed: 15 },
-  '[QUICKMSG]':  { _isQuickMsgPlaceholder:  true, speed: 15 },
-  '[FACTS]':     { _isFactsPlaceholder:     true, speed: 18 },
-  '[PASSABLE]':  { _isPassablePlaceholder:  true, speed: 20 },
-  '[WEATHER]':   { _isWeatherPlaceholder:   true, speed: 18 },
-  '[CODE]':      { _isCodePlaceholder:      true, speed: 10 },
-  '[MENU]':      { _isMenuPlaceholder:      true, speed: 15 },
-};
-
-function parseCSV(csv) {
-  const rows = csv.trim().split('\n').filter(r => r.trim());
-  if (rows.length < 2) return null;
-  const header = rows[0].toLowerCase().replace(/\r/g,'').split(',').map(h => h.replace(/^"|"$/g,'').trim());
-  const sIdx = header.findIndex(h => h === 'screen'), tIdx = header.findIndex(h => h === 'text'), spIdx = header.findIndex(h => h === 'speed');
-  if (sIdx < 0 || tIdx < 0) return null;
-  const screens = {};
-  for (let i = 1; i < rows.length; i++) {
-    const cols = rows[i].replace(/\r/g,'').split(',');
-    const clean = c => c >= 0 ? (cols[c]||'').replace(/^"|"$/g,'').trim() : '';
-    const scr = clean(sIdx), text = clean(tIdx).toUpperCase(), sp = spIdx >= 0 ? parseFloat(clean(spIdx)) || null : null;
-    if (!scr) continue;
-    if (!screens[scr]) screens[scr] = { lines: [], speed: 8 };
-    screens[scr].lines.push(text);
-    if (sp) screens[scr].speed = sp;
-  }
-  return Object.values(screens).map(s => {
-    const first = s.lines.find(l => l.trim()) || '';
-    if (SLOT_TOKENS[first]) return { lines: Array(7).fill(''), speed: s.speed || SLOT_TOKENS[first].speed, ...SLOT_TOKENS[first] };
-    return s;
-  }).filter(s => { const isSlot = Object.values(SLOT_TOKENS).some(t => Object.keys(t).some(k => s[k])); return isSlot || s.lines[0]; }) || null;
-}
-
-async function fetchSheet(url) {
-  try {
-    const res = await fetch(url, { cache: 'no-store', mode: 'cors' });
-    if (res.ok) { const parsed = parseCSV(await res.text()); if (parsed) return parsed; }
-  } catch(e) {}
-  return new Promise(resolve => {
-    const id = (url.match(/spreadsheets\/d\/([a-zA-Z0-9_-]+)/) || [])[1];
-    const gid = (url.match(/gid=(\d+)/) || ['','0'])[1];
-    if (!id) { resolve(null); return; }
-    const cb = '_gviz_' + Date.now(), src = document.createElement('script');
-    let done = false;
-    const finish = (val) => { if (done) return; done = true; clearTimeout(timer); delete window[cb]; src.remove(); resolve(val); };
-    const timer = setTimeout(() => finish(null), 8000);
-    window[cb] = (data) => { try { finish(parseGviz(data)); } catch(e) { finish(null); } };
-    src.src = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json&tq=select+*&gid=${gid}&cb=${cb}`;
-    src.onerror = () => finish(null);
-    document.head.appendChild(src);
-  });
-}
-
-function parseGviz(data) {
-  if (!data?.table) return null;
-  const cols = data.table.cols || [], rows = data.table.rows || [];
-  const hdr = cols.map(c => (c.label||'').toLowerCase().trim());
-  const sIdx = hdr.findIndex(h => h === 'screen'), tIdx = hdr.findIndex(h => h === 'text'), spIdx = hdr.findIndex(h => h === 'speed');
-  if (sIdx < 0 || tIdx < 0) return null;
-  const screens = {};
-  for (const row of rows) {
-    const c = row.c || [], val = i => i >= 0 && c[i]?.v != null ? String(c[i].v).trim() : '';
-    const scr = val(sIdx), txt = val(tIdx).toUpperCase(), sp = spIdx >= 0 ? parseFloat(val(spIdx)) || null : null;
-    if (!scr) continue;
-    if (!screens[scr]) screens[scr] = { lines:[], speed:8 };
-    screens[scr].lines.push(txt);
-    if (sp) screens[scr].speed = sp;
-  }
-  return Object.values(screens).map(s => {
-    const first = s.lines.find(l => l.trim()) || '';
-    if (SLOT_TOKENS[first]) return { lines: Array(7).fill(''), speed: s.speed || SLOT_TOKENS[first].speed, ...SLOT_TOKENS[first] };
-    return s;
-  }).filter(s => { const isSlot = Object.values(SLOT_TOKENS).some(t => Object.keys(t).some(k => s[k])); return isSlot || s.lines[0]; }) || null;
-}
-
-function smartMerge(fresh) {
-  return fresh.map(item => {
-    for (const [key, flags] of Object.entries(CW_SLOT_MAP)) {
-      if (item[flags.ph]) { const existing = messages.find(m => m[flags.ph] || m[flags.sl]); return existing || item; }
-    }
-    return item;
-  });
-}
-
-async function startBoard(data) {
-  messages  = data;
-  prevLines = Array.from({length: ROWS}, () => '\x00'.repeat(COLS));
-  buildDots();
-  setSyncStatus('', 'LOADING...');
-  await cwRefreshAllSlots(messages, buildDots);
-  // Finals inject on init — REMOVE AFTER JUNE 12, 2026
-  const finalsScreens = cwBuildFinalsScreensForToday();
-  if (finalsScreens.length) {
-    const schedIdx = cwFindSlotIdx(messages, 'schedule');
-    const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
-    messages.splice(insertAt, 0, ...finalsScreens);
-    buildDots();
-  }
-  showMessage(0);
-  setSyncStatus('live', 'LIVE · SYNCS EVERY ' + SYNC_SEC + 'S');
-
+async function startBoard(data){
+  messages=data;prevLines=Array.from({length:ROWS},()=>'\x00'.repeat(COLS));buildDots();setSyncStatus('','LOADING...');
+  await cwRefreshAllSlots(messages,buildDots);
+  // Finals inject — REMOVE AFTER JUNE 12, 2026
+  const finalsScreens=cwBuildFinalsScreensForToday();
+  if(finalsScreens.length){const schedIdx=cwFindSlotIdx(messages,'schedule');const insertAt=schedIdx>=0?schedIdx+1:1;messages.splice(insertAt,0,...finalsScreens);buildDots();}
+  showMessage(0);setSyncStatus('live','LIVE · SYNCS EVERY '+SYNC_SEC+'S');
   clearInterval(syncTimer);
-  syncTimer = setInterval(async () => {
-    const fresh = await cwFetchScreens();
-    if (fresh) {
-      const savedLine = messages[currentIdx]?.lines?.[0] || '';
-      messages = smartMerge(fresh);
-      const ni = messages.findIndex(m => m.lines?.[0] === savedLine);
-      if (ni >= 0) currentIdx = ni;
-      buildDots();
-      await cwRefreshAllSlots(messages, buildDots);
-      await cwFetchObjectives();
-      cwRefreshObjectives(messages, buildDots);
-      const t = new Date(); let h = t.getHours() % 12 || 12;
-      setSyncStatus('live', `SYNCED ${h}:${t.getMinutes().toString().padStart(2,'0')}`);
-    } else {
-      setSyncStatus('error', 'SYNC FAILED · RETRY SOON');
-    }
-  }, SYNC_SEC * 1000);
-
+  syncTimer=setInterval(async()=>{const fresh=await cwFetchScreens();if(fresh){const savedLine=messages[currentIdx]?.lines?.[0]||'';messages=smartMerge(fresh);const ni=messages.findIndex(m=>m.lines?.[0]===savedLine);if(ni>=0)currentIdx=ni;buildDots();await cwRefreshAllSlots(messages,buildDots);await cwFetchObjectives();cwRefreshObjectives(messages,buildDots);const t=new Date();let h=t.getHours()%12||12;setSyncStatus('live',`SYNCED ${h}:${t.getMinutes().toString().padStart(2,'0')}`);}else{setSyncStatus('error','SYNC FAILED · RETRY SOON');}},SYNC_SEC*1000);
   clearInterval(calTimer);
-  calTimer = setInterval(async () => {
-    const events = await cwFetchCalendar();
-    if (cwFindSlotIdx(messages,'calendar') >= 0) cwInjectSlot(messages,'calendar', cwBuildCalendarScreen(events), buildDots);
-    cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(events), buildDots);
-  }, 5 * 60 * 1000);
+  calTimer=setInterval(async()=>{const events=await cwFetchCalendar();if(cwFindSlotIdx(messages,'calendar')>=0)cwInjectSlot(messages,'calendar',cwBuildCalendarScreen(events),buildDots);cwInjectSlot(messages,'schedule',cwBuildScheduleScreen(events),buildDots);},5*60*1000);
 }
 
-// Finals refresh every 60s — REMOVE AFTER JUNE 12, 2026
-setInterval(() => {
-  const screens = cwBuildFinalsScreensForToday();
-  if (!screens.length) return;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i]._isFinalsSlot) messages.splice(i, 1);
-  }
-  const schedIdx = cwFindSlotIdx(messages, 'schedule');
-  const insertAt = schedIdx >= 0 ? schedIdx + 1 : 1;
-  messages.splice(insertAt, 0, ...screens);
-  buildDots();
-}, 60 * 1000);
+// Finals refresh — REMOVE AFTER JUNE 12, 2026
+setInterval(()=>{const screens=cwBuildFinalsScreensForToday();if(!screens.length)return;for(let i=messages.length-1;i>=0;i--){if(messages[i]._isFinalsSlot)messages.splice(i,1);}const schedIdx=cwFindSlotIdx(messages,'schedule');const insertAt=schedIdx>=0?schedIdx+1:1;messages.splice(insertAt,0,...screens);buildDots();},60*1000);
 
-setInterval(() => { cwInjectSlot(messages,'schedule', cwBuildScheduleScreen(window._cwCalEvents||[]), buildDots); cwRefreshObjectives(messages, buildDots); }, 60 * 1000);
-setInterval(async () => { if (cwFindSlotIdx(messages,'passable') < 0) return; const passes = await cwFetchPassable(); cwInjectSlot(messages,'passable', passes?.length ? cwBuildPassableScreen(passes) : null, buildDots); }, 30 * 1000);
-setInterval(async () => {
-  if (cwFindSlotIdx(messages,'quickMsg') < 0) return;
-  const msgs = await cwFetchAllApprovedMessages();
-  for (let i = messages.length - 1; i >= 0; i--) { if (messages[i]._isQuickMsgSlot && i !== cwFindSlotIdx(messages,'quickMsg')) messages.splice(i, 1); }
-  if (!msgs || !msgs.length) { cwInjectSlot(messages,'quickMsg', null, buildDots); return; }
-  cwInjectSlot(messages,'quickMsg', cwBuildQuickMsgScreen(msgs[0]), buildDots);
-  if (msgs.length > 1) { const slotIdx = cwFindSlotIdx(messages,'quickMsg'); const extras = msgs.slice(1).map(m => cwBuildQuickMsgScreen(m)).filter(Boolean); if (slotIdx >= 0 && extras.length) { messages.splice(slotIdx + 1, 0, ...extras); buildDots(); } }
-}, 30 * 1000);
-setInterval(async () => { if (cwFindSlotIdx(messages,'weather') < 0) return; const data = await cwFetchWeather(); cwInjectSlot(messages,'weather', cwBuildWeatherScreen(data), buildDots); }, 30 * 60 * 1000);
-
+setInterval(()=>{cwInjectSlot(messages,'schedule',cwBuildScheduleScreen(window._cwCalEvents||[]),buildDots);cwRefreshObjectives(messages,buildDots);},60*1000);
+setInterval(async()=>{if(cwFindSlotIdx(messages,'passable')<0)return;const passes=await cwFetchPassable();cwInjectSlot(messages,'passable',passes?.length?cwBuildPassableScreen(passes):null,buildDots);},30*1000);
+setInterval(async()=>{if(cwFindSlotIdx(messages,'quickMsg')<0)return;const msgs=await cwFetchAllApprovedMessages();for(let i=messages.length-1;i>=0;i--){if(messages[i]._isQuickMsgSlot&&i!==cwFindSlotIdx(messages,'quickMsg'))messages.splice(i,1);}if(!msgs||!msgs.length){cwInjectSlot(messages,'quickMsg',null,buildDots);return;}cwInjectSlot(messages,'quickMsg',cwBuildQuickMsgScreen(msgs[0]),buildDots);if(msgs.length>1){const slotIdx=cwFindSlotIdx(messages,'quickMsg');const extras=msgs.slice(1).map(m=>cwBuildQuickMsgScreen(m)).filter(Boolean);if(slotIdx>=0&&extras.length){messages.splice(slotIdx+1,0,...extras);buildDots();}}},30*1000);
+setInterval(async()=>{if(cwFindSlotIdx(messages,'weather')<0)return;const data=await cwFetchWeather();cwInjectSlot(messages,'weather',cwBuildWeatherScreen(data),buildDots);},30*60*1000);
 // ── FIX: Countdown now merges cw_events + hardcoded + custom ─────────────────
-setInterval(async () => {
-  if (cwFindSlotIdx(messages,'countdown') < 0) return;
-  const [, cwEvents] = await Promise.all([cwFetchCustomCountdowns(), cwFetchEvents(CW.room)]);
-  cwInjectSlot(messages, 'countdown', cwBuildMergedCountdownScreen(cwEvents), buildDots);
-}, 10 * 60 * 1000);
+setInterval(async()=>{if(cwFindSlotIdx(messages,'countdown')<0)return;const[,cwEvents]=await Promise.all([cwFetchCustomCountdowns(),cwFetchEvents(CW.room)]);cwInjectSlot(messages,'countdown',cwBuildMergedCountdownScreen(cwEvents),buildDots);},10*60*1000);
+setInterval(()=>{if(cwFindSlotIdx(messages,'code')<0)return;cwInjectSlot(messages,'code',cwBuildCodeScreen(),buildDots);},10*1000);
 
-setInterval(() => { if (cwFindSlotIdx(messages,'code') < 0) return; cwInjectSlot(messages,'code', cwBuildCodeScreen(), buildDots); }, 10 * 1000);
-
-async function initHonorRoll() {
-  if (!CLASSROOM_CONFIG.screens.honorRoll) return;
-  const rows = await cwFetchHonorRoll();
-  if (!rows || !rows.length) return;
-  const html = cwBuildHonorRollHTML(rows);
-  if (!html) return;
-  document.getElementById('honor-ticker-inner').innerHTML = html;
-  const wrap = document.getElementById('honor-ticker-wrap');
-  wrap.style.display = 'flex';
-  const board = document.getElementById('board-wrap');
-  if (board) { const cur = parseInt(getComputedStyle(board).paddingBottom) || 0; board.style.paddingBottom = (cur + 32) + 'px'; }
+async function initHonorRoll(){
+  if(!CLASSROOM_CONFIG.screens.honorRoll)return;
+  const rows=await cwFetchHonorRoll();if(!rows||!rows.length)return;
+  const html=cwBuildHonorRollHTML(rows);if(!html)return;
+  document.getElementById('honor-ticker-inner').innerHTML=html;
+  const wrap=document.getElementById('honor-ticker-wrap');wrap.style.display='flex';
+  const board=document.getElementById('board-wrap');if(board){const cur=parseInt(getComputedStyle(board).paddingBottom)||0;board.style.paddingBottom=(cur+32)+'px';}
 }
 
-/* ════ SOUND ════ */
-const SOUND_PROFILES = ['OFF','CLASSIC','JADE','DIGITAL'];
-let soundIdx = 1, audioCtx = null;
-try { const saved = localStorage.getItem('cw-sound-profile'); if (saved && SOUND_PROFILES.includes(saved)) soundIdx = SOUND_PROFILES.indexOf(saved); } catch(e) {}
+/* ════ FLIP SOUND ════ */
+const SOUND_PROFILES=['OFF','CLASSIC','JADE','DIGITAL'];
+let soundIdx=1,audioCtx=null;
+try{const saved=localStorage.getItem('cw-sound-profile');if(saved&&SOUND_PROFILES.includes(saved))soundIdx=SOUND_PROFILES.indexOf(saved);}catch(e){}
+function getAudioCtx(){if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}}return audioCtx?.state==='suspended'?null:audioCtx;}
+function enableSound(el){if(!audioCtx)try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}if(audioCtx?.state==='suspended')audioCtx.resume();if(soundIdx===0){soundIdx=1;updateSoundBtn();}if(el){el.style.opacity='0';setTimeout(()=>el.remove(),600);}playFlipSound(5);}
+function cycleSoundProfile(){if(audioCtx?.state==='suspended')audioCtx.resume();soundIdx=(soundIdx+1)%SOUND_PROFILES.length;try{localStorage.setItem('cw-sound-profile',SOUND_PROFILES[soundIdx]);}catch(e){}updateSoundBtn();if(SOUND_PROFILES[soundIdx]!=='OFF')playFlipSound(6);}
+function updateSoundBtn(){const btn=document.getElementById('soundToggleBtn');if(!btn)return;const labels={OFF:'🔇 OFF',CLASSIC:'🔊 CLASSIC',JADE:'⌨️ JADE CRISP',DIGITAL:'💾 DIGITAL'};btn.textContent=labels[SOUND_PROFILES[soundIdx]];btn.style.opacity=soundIdx===0?'0.4':'0.8';btn.style.borderColor=soundIdx===0?'#333':'var(--green)';btn.style.color=soundIdx===0?'#555':'var(--green)';}
+function playClassicClick(ctx,time,vol){const buf=ctx.createBuffer(1,Math.floor(ctx.sampleRate*0.09),ctx.sampleRate);const data=buf.getChannelData(0);for(let i=0;i<data.length;i++){const t=i/data.length;data[i]=((Math.random()*2-1)*0.65+Math.sin(2*Math.PI*160*i/ctx.sampleRate)*0.35)*Math.pow(1-t,2.8);}const src=ctx.createBufferSource();src.buffer=buf;const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=800;f.Q.value=1.2;const g=ctx.createGain();g.gain.value=vol||0.18;src.connect(f);f.connect(g);g.connect(ctx.destination);src.start(time);}
+function playClassicSound(n){const ctx=getAudioCtx();if(!ctx)return;const now=ctx.currentTime,clicks=Math.min(Math.max(Math.floor(n*0.5),4),20);for(let i=0;i<clicks;i++)playClassicClick(ctx,now+(i/clicks)*2.8,0.08+Math.sin(i/clicks*Math.PI)*0.14);}
+function playJadeCrisp(n){const ctx=getAudioCtx();if(!ctx)return;const now=ctx.currentTime,freq=1800,decay=0.015,clean=2.8,vol=0.26,spread=Math.min(n*0.008,1.8),count=Math.min(Math.max(Math.floor(n*0.6),4),60);for(let i=0;i<count;i++){const jitter=(Math.random()-0.5)*0.04,t=now+(i/count)*spread+Math.max(0,jitter),v=vol*(0.75+Math.random()*0.25);const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='square';osc.frequency.setValueAtTime(freq,t);osc.frequency.exponentialRampToValueAtTime(freq*0.45,t+decay);gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(v,t+0.0003);gain.gain.exponentialRampToValueAtTime(0.001,t+decay*1.5);const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=clean;osc.connect(f);f.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+decay*2);const rt=t+decay*2.5,osc2=ctx.createOscillator(),g2=ctx.createGain();osc2.type='square';osc2.frequency.setValueAtTime(freq*0.55,rt);osc2.frequency.exponentialRampToValueAtTime(freq*0.2,rt+decay);g2.gain.setValueAtTime(0,rt);g2.gain.linearRampToValueAtTime(v*0.45,rt+0.0003);g2.gain.exponentialRampToValueAtTime(0.001,rt+decay);const f2=ctx.createBiquadFilter();f2.type='bandpass';f2.frequency.value=freq*0.55;f2.Q.value=clean*0.8;osc2.connect(f2);f2.connect(g2);g2.connect(ctx.destination);osc2.start(rt);osc2.stop(rt+decay*1.5);}}
+function playDigitalBeep(ctx,time,vol,freq){const osc=ctx.createOscillator();const g=ctx.createGain();osc.type='square';osc.frequency.value=freq||880;g.gain.setValueAtTime(0,time);g.gain.linearRampToValueAtTime(vol||0.12,time+0.004);g.gain.setValueAtTime(vol||0.12,time+0.028);g.gain.linearRampToValueAtTime(0,time+0.034);const f=ctx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq||880;f.Q.value=3;osc.connect(f);f.connect(g);g.connect(ctx.destination);osc.start(time);osc.stop(time+0.05);}
+function playDigitalSound(n){const ctx=getAudioCtx();if(!ctx)return;const now=ctx.currentTime,beeps=Math.min(Math.max(Math.floor(n*0.4),3),16);const freqs=[1100,990,880,770,990,1100,880,770];for(let i=0;i<beeps;i++)playDigitalBeep(ctx,now+(i/beeps)*2.8,0.08+Math.sin(i/beeps*Math.PI)*0.07,freqs[i%freqs.length]);}
+function playFlipSound(n){const profile=SOUND_PROFILES[soundIdx];if(profile==='OFF')return;const ctx=getAudioCtx();if(!ctx)return;if(ctx.state==='suspended'){ctx.resume();return;}if(profile==='CLASSIC')playClassicSound(n);if(profile==='JADE')playJadeCrisp(n);if(profile==='DIGITAL')playDigitalSound(n);}
 
-function getAudioCtx() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; } } return audioCtx?.state === 'suspended' ? null : audioCtx; }
-function enableSound(el) { if (!audioCtx) try { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e) {} if (audioCtx?.state === 'suspended') audioCtx.resume(); if (soundIdx === 0) { soundIdx = 1; updateSoundBtn(); } if (el) { el.style.opacity='0'; setTimeout(()=>el.remove(),600); } playFlipSound(5); }
-function cycleSoundProfile() { if (audioCtx?.state === 'suspended') audioCtx.resume(); soundIdx = (soundIdx + 1) % SOUND_PROFILES.length; try { localStorage.setItem('cw-sound-profile', SOUND_PROFILES[soundIdx]); } catch(e) {} updateSoundBtn(); if (SOUND_PROFILES[soundIdx] !== 'OFF') playFlipSound(6); }
-function updateSoundBtn() { const btn = document.getElementById('soundToggleBtn'); if (!btn) return; const labels = { OFF:'🔇 OFF', CLASSIC:'🔊 CLASSIC', JADE:'⌨️ JADE CRISP', DIGITAL:'💾 DIGITAL' }; btn.textContent = labels[SOUND_PROFILES[soundIdx]]; btn.style.opacity = soundIdx === 0 ? '0.4' : '0.8'; btn.style.borderColor = soundIdx === 0 ? '#333' : 'var(--green)'; btn.style.color = soundIdx === 0 ? '#555' : 'var(--green)'; }
+/* ════ TIMER BELL SOUNDS ════ */
+function bellNote(c,freq,t,dur,vol){
+  vol=vol||0.42;
+  const osc=c.createOscillator(),gain=c.createGain();
+  osc.type='sine';osc.frequency.setValueAtTime(freq,t);
+  gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(vol,t+0.012);gain.gain.exponentialRampToValueAtTime(0.001,t+dur+0.35);
+  osc.connect(gain);gain.connect(c.destination);osc.start(t);osc.stop(t+dur+0.4);
+  const osc2=c.createOscillator(),g2=c.createGain();
+  osc2.type='sine';osc2.frequency.setValueAtTime(freq*2,t);
+  g2.gain.setValueAtTime(0,t);g2.gain.linearRampToValueAtTime(vol*0.22,t+0.012);g2.gain.exponentialRampToValueAtTime(0.001,t+dur*0.45);
+  osc2.connect(g2);g2.connect(c.destination);osc2.start(t);osc2.stop(t+dur*0.5);
+}
+const E=659.25,C=523.25,D=587.33,G=392.00,ND=0.42,LG=0.75,GP=0.07;
+const BELL_SEQS={
+  westminster:[{f:E,d:ND},{f:D,d:ND},{f:C,d:ND},{f:G,d:LG},{f:G,d:ND},{f:D,d:ND},{f:E,d:ND},{f:C,d:LG}],
+  ce:[{f:587.33,d:0.42},{f:659.25,d:0.42},{f:523.25,d:0.42},{f:261.63,d:0.52},{f:392.00,d:0.85}],
+};
+function playTimerBell(key){
+  if(key==='off')return;
+  let c=audioCtx;if(!c){try{c=new(window.AudioContext||window.webkitAudioContext)();audioCtx=c;}catch(e){return;}}
+  if(c.state==='suspended')c.resume();
+  const seq=BELL_SEQS[key]||BELL_SEQS.westminster;
+  let t=c.currentTime+0.08;
+  seq.forEach((note,i)=>{
+    if(i>0)t+=GP;
+    if(key==='westminster'&&i===4)t+=0.35;
+    bellNote(c,note.f,t,note.d);
+    t+=note.d;
+  });
+}
 
-function playClassicClick(ctx, time, vol) { const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate*0.09), ctx.sampleRate); const data = buf.getChannelData(0); for (let i=0;i<data.length;i++) { const t = i/data.length; data[i] = ((Math.random()*2-1)*0.65 + Math.sin(2*Math.PI*160*i/ctx.sampleRate)*0.35) * Math.pow(1-t,2.8); } const src = ctx.createBufferSource(); src.buffer = buf; const f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=800; f.Q.value=1.2; const g = ctx.createGain(); g.gain.value = vol||0.18; src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(time); }
-function playClassicSound(n) { const ctx=getAudioCtx(); if(!ctx)return; const now=ctx.currentTime, clicks=Math.min(Math.max(Math.floor(n*0.5),4),20); for(let i=0;i<clicks;i++) playClassicClick(ctx, now+(i/clicks)*2.8, 0.08+Math.sin(i/clicks*Math.PI)*0.14); }
-function playJadeCrisp(n) { const ctx = getAudioCtx(); if (!ctx) return; const now=ctx.currentTime, freq=1800, decay=0.015, clean=2.8, vol=0.26, spread=Math.min(n*0.008,1.8), count=Math.min(Math.max(Math.floor(n*0.6),4),60); for (let i=0;i<count;i++) { const jitter=(Math.random()-0.5)*0.04, t=now+(i/count)*spread+Math.max(0,jitter), v=vol*(0.75+Math.random()*0.25); const osc=ctx.createOscillator(), gain=ctx.createGain(); osc.type='square'; osc.frequency.setValueAtTime(freq,t); osc.frequency.exponentialRampToValueAtTime(freq*0.45,t+decay); gain.gain.setValueAtTime(0,t); gain.gain.linearRampToValueAtTime(v,t+0.0003); gain.gain.exponentialRampToValueAtTime(0.001,t+decay*1.5); const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq; f.Q.value=clean; osc.connect(f); f.connect(gain); gain.connect(ctx.destination); osc.start(t); osc.stop(t+decay*2); const rt=t+decay*2.5, osc2=ctx.createOscillator(), g2=ctx.createGain(); osc2.type='square'; osc2.frequency.setValueAtTime(freq*0.55,rt); osc2.frequency.exponentialRampToValueAtTime(freq*0.2,rt+decay); g2.gain.setValueAtTime(0,rt); g2.gain.linearRampToValueAtTime(v*0.45,rt+0.0003); g2.gain.exponentialRampToValueAtTime(0.001,rt+decay); const f2=ctx.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value=freq*0.55; f2.Q.value=clean*0.8; osc2.connect(f2); f2.connect(g2); g2.connect(ctx.destination); osc2.start(rt); osc2.stop(rt+decay*1.5); } }
-function playDigitalBeep(ctx,time,vol,freq) { const osc=ctx.createOscillator(); const g=ctx.createGain(); osc.type='square'; osc.frequency.value=freq||880; g.gain.setValueAtTime(0,time); g.gain.linearRampToValueAtTime(vol||0.12,time+0.004); g.gain.setValueAtTime(vol||0.12,time+0.028); g.gain.linearRampToValueAtTime(0,time+0.034); const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq||880; f.Q.value=3; osc.connect(f); f.connect(g); g.connect(ctx.destination); osc.start(time); osc.stop(time+0.05); }
-function playDigitalSound(n) { const ctx=getAudioCtx(); if(!ctx)return; const now=ctx.currentTime, beeps=Math.min(Math.max(Math.floor(n*0.4),3),16); const freqs=[1100,990,880,770,990,1100,880,770]; for(let i=0;i<beeps;i++) playDigitalBeep(ctx, now+(i/beeps)*2.8, 0.08+Math.sin(i/beeps*Math.PI)*0.07, freqs[i%freqs.length]); }
-function playFlipSound(n) { const profile = SOUND_PROFILES[soundIdx]; if (profile==='OFF') return; const ctx=getAudioCtx(); if(!ctx) return; if (ctx.state==='suspended') { ctx.resume(); return; } if (profile==='CLASSIC') playClassicSound(n); if (profile==='JADE') playJadeCrisp(n); if (profile==='DIGITAL') playDigitalSound(n); }
+/* ════ TIMER DIGIT / LETTER MAPS ════ */
+const TD={'0':[[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],'1':[[0,1,0],[1,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],'2':[[1,1,1],[0,0,1],[0,0,1],[1,1,1],[1,0,0],[1,0,0],[1,1,1]],'3':[[1,1,1],[0,0,1],[0,0,1],[1,1,1],[0,0,1],[0,0,1],[1,1,1]],'4':[[1,0,1],[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1],[0,0,1]],'5':[[1,1,1],[1,0,0],[1,0,0],[1,1,1],[0,0,1],[0,0,1],[1,1,1]],'6':[[1,1,1],[1,0,0],[1,0,0],[1,1,1],[1,0,1],[1,0,1],[1,1,1]],'7':[[1,1,1],[0,0,1],[0,0,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],'8':[[1,1,1],[1,0,1],[1,0,1],[1,1,1],[1,0,1],[1,0,1],[1,1,1]],'9':[[1,1,1],[1,0,1],[1,0,1],[1,1,1],[0,0,1],[0,0,1],[1,1,1]],':':[[0,0,0],[0,1,0],[0,1,0],[0,0,0],[0,1,0],[0,1,0],[0,0,0]]};
+const TL={'T':[[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0]],'I':[[1,1,1],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[0,1,0],[1,1,1]],'M':[[1,0,1],[1,1,1],[1,1,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1]],'E':[[1,1,1],[1,0,0],[1,0,0],[1,1,0],[1,0,0],[1,0,0],[1,1,1]],'S':[[1,1,1],[1,0,0],[1,0,0],[1,1,1],[0,0,1],[0,0,1],[1,1,1]],'U':[[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,0,1],[1,1,1]],'P':[[1,1,1],[1,0,1],[1,0,1],[1,1,1],[1,0,0],[1,0,0],[1,0,0]],"'":[[0,1,0],[0,1,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]],' ':[[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]};
+
+/* ════ TIMER STATE ════ */
+let tMode='countdown',tSound='westminster',tRunning=false,tSecs=0,tInterval=null,swSecs=0,ttiles=[],tPrevDisp='',tActive=false;
+try{const s=localStorage.getItem('cw-timer-sound');if(s&&['westminster','ce','off'].includes(s))tSound=s;}catch(e){}
+
+function buildTimerBoard(){
+  const board=document.getElementById('timer-board');board.innerHTML='';ttiles=[];
+  for(let r=0;r<ROWS;r++){const row=document.createElement('div');row.className='tt-row';const rt=[];for(let c=0;c<COLS;c++){const t=document.createElement('div');t.className='tt';row.appendChild(t);rt.push(t);}board.appendChild(row);ttiles.push(rt);}
+}
+
+function setTT(r,c,cls,anim){
+  if(r<0||r>=ROWS||c<0||c>=COLS)return;
+  const t=ttiles[r][c];
+  const prev=t.className;
+  t.className='tt '+cls;
+  if(anim&&prev!==t.className){t.classList.add('flip');setTimeout(()=>t.classList.remove('flip'),320);}
+}
+
+function drawTC(ch,col,cls,anim,map){
+  const pat=(map||TD)[ch];if(!pat)return col+4;
+  const w=pat[0].length;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)setTT(r,col+c,pat[r][c]?cls:'',anim);
+  return col+w+1;
+}
+
+function renderTimer(secs,warn,anim){
+  const m=Math.floor(secs/60),s=secs%60;
+  const str=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  if(str===tPrevDisp&&!anim)return;
+  const cls=warn?'warn':'on';
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)setTT(r,c,'',false);
+  [1,5,9,13,17].forEach((pos,i)=>drawTC([str[0],str[1],':',str[3],str[4]][i],pos,cls,anim,TD));
+  tPrevDisp=str;
+}
+
+function renderTimesUp(){
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ttiles[r][c].className='tt flash';}
+  setTimeout(()=>{
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)setTT(r,c,'',false);
+    let col=1;
+    for(const ch of "TIME'S UP")col=drawTC(ch,col,'tan',true,TL);
+  },1350);
+}
+
+/* ── Overlay controls ── */
+function openTimerOverlay(){if(tActive)return;document.getElementById('timer-overlay').classList.add('open');}
+function closeTimerOverlay(){document.getElementById('timer-overlay').classList.remove('open');}
+
+function tcMode(m){
+  tMode=m;
+  document.getElementById('tc-cd').className='tc-tab'+(m==='countdown'?' active':'');
+  document.getElementById('tc-sw').className='tc-tab'+(m==='stopwatch'?' active':'');
+  const ti=document.getElementById('tc-time');ti.style.opacity=m==='stopwatch'?'0.3':'1';ti.style.pointerEvents=m==='stopwatch'?'none':'all';
+}
+
+function tcSound(s){
+  tSound=s;try{localStorage.setItem('cw-timer-sound',s);}catch(e){}
+  ['westminster','ce','off'].forEach(k=>{const el=document.getElementById('tc-snd-'+k);if(el)el.className='tc-snd'+(k===s?' active':'');});
+}
+
+function timerStart(){
+  closeTimerOverlay();buildTimerBoard();
+  if(tMode==='countdown'){const m=parseInt(document.getElementById('tc-min').value)||0,s=parseInt(document.getElementById('tc-sec').value)||0;tSecs=m*60+s;if(tSecs<=0)return;}
+  else{swSecs=0;tSecs=0;}
+  tActive=true;tRunning=true;tPrevDisp='';
+  const hint=document.getElementById('timer-hint');hint.classList.add('active');hint.textContent='⏱ RUNNING';
+  document.getElementById('headerTitle').textContent='COWBOY WIRE · CLASSROOM TIMER';
+  const hw=document.getElementById('honor-ticker-wrap');hw.style.opacity='0';setTimeout(()=>{hw.style.display='none';},500);
+  const board=document.getElementById('timer-board');board.classList.add('visible');setTimeout(()=>board.classList.add('show'),20);
+  const bar=document.getElementById('timer-bar');bar.classList.add('visible');setTimeout(()=>bar.classList.add('show'),20);
+  document.getElementById('tb-label').textContent=tMode==='countdown'?'COUNTDOWN':'STOPWATCH';
+  document.getElementById('tb-pause').textContent='PAUSE';document.getElementById('tb-pause').style.display='';
+  if(tMode==='countdown'){
+    renderTimer(tSecs,false,true);
+    tInterval=setInterval(()=>{tSecs--;const warn=tSecs<=60;renderTimer(tSecs,warn,true);document.getElementById('tb-label').textContent=warn?'LESS THAN 1 MINUTE':'COUNTDOWN';if(tSecs<=0){clearInterval(tInterval);tRunning=false;document.getElementById('tb-pause').style.display='none';document.getElementById('tb-label').textContent="TIME'S UP";renderTimesUp();playTimerBell(tSound);}},1000);
+  }else{
+    renderTimer(0,false,true);
+    tInterval=setInterval(()=>{swSecs++;renderTimer(swSecs,false,true);},1000);
+  }
+}
+
+function timerPause(){
+  if(!tActive)return;
+  if(tRunning){clearInterval(tInterval);tRunning=false;document.getElementById('tb-pause').textContent='RESUME';document.getElementById('tb-label').textContent='PAUSED';}
+  else{
+    tRunning=true;document.getElementById('tb-pause').textContent='PAUSE';
+    document.getElementById('tb-label').textContent=tMode==='countdown'?'COUNTDOWN':'STOPWATCH';
+    if(tMode==='countdown'){tInterval=setInterval(()=>{tSecs--;const warn=tSecs<=60;renderTimer(tSecs,warn,true);if(tSecs<=0){clearInterval(tInterval);tRunning=false;document.getElementById('tb-pause').style.display='none';document.getElementById('tb-label').textContent="TIME'S UP";renderTimesUp();playTimerBell(tSound);}},1000);}
+    else{tInterval=setInterval(()=>{swSecs++;renderTimer(swSecs,false,true);},1000);}
+  }
+}
+
+function timerReset(){
+  clearInterval(tInterval);tRunning=false;tPrevDisp='';swSecs=0;
+  const m=parseInt(document.getElementById('tc-min').value)||0,s=parseInt(document.getElementById('tc-sec').value)||0;
+  tSecs=tMode==='countdown'?m*60+s:0;
+  document.getElementById('tb-pause').textContent='PAUSE';document.getElementById('tb-pause').style.display='';
+  document.getElementById('tb-label').textContent=tMode==='countdown'?'COUNTDOWN':'STOPWATCH';
+  renderTimer(tSecs,false,true);tRunning=true;
+  if(tMode==='countdown'){tInterval=setInterval(()=>{tSecs--;const warn=tSecs<=60;renderTimer(tSecs,warn,true);if(tSecs<=0){clearInterval(tInterval);tRunning=false;document.getElementById('tb-pause').style.display='none';document.getElementById('tb-label').textContent="TIME'S UP";renderTimesUp();playTimerBell(tSound);}},1000);}
+  else{tInterval=setInterval(()=>{swSecs++;renderTimer(swSecs,false,true);},1000);}
+}
+
+function timerEnd(){
+  clearInterval(tInterval);tActive=false;tRunning=false;tPrevDisp='';swSecs=0;
+  const hint=document.getElementById('timer-hint');hint.classList.remove('active');hint.textContent='⏱ TIMER';
+  document.getElementById('headerTitle').textContent='COWBOY WIRE · RIVERDALE PONY EXPRESS';
+  const board=document.getElementById('timer-board');board.classList.remove('show');setTimeout(()=>board.classList.remove('visible'),400);
+  const bar=document.getElementById('timer-bar');bar.classList.remove('show');setTimeout(()=>bar.classList.remove('visible'),400);
+  document.getElementById('tb-pause').style.display='';document.getElementById('tb-pause').textContent='PAUSE';
+  const hw=document.getElementById('honor-ticker-wrap');
+  if(document.getElementById('honor-ticker-inner').innerHTML.trim()){hw.style.display='flex';setTimeout(()=>{hw.style.opacity='1';},50);}
+}
 
 /* ════ KEYBOARD ════ */
-document.addEventListener('keydown', e => {
-  if (e.key==='ArrowRight'||e.key==='Enter'||e.key===' ') { e.preventDefault(); nextMsg(); }
-  if (e.key==='ArrowLeft') { e.preventDefault(); prevMsg(); }
-  if (e.key==='f'||e.key==='F') document.documentElement.requestFullscreen?.();
-  if (e.key==='Escape') document.exitFullscreen?.();
-  if (e.key==='m'||e.key==='M') dialNext();
+document.addEventListener('keydown',e=>{
+  if(tActive){if(e.key==='Escape')timerEnd();return;}
+  if(e.key==='ArrowRight'||e.key==='Enter'||e.key===' '){e.preventDefault();nextMsg();}
+  if(e.key==='ArrowLeft'){e.preventDefault();prevMsg();}
+  if(e.key==='f'||e.key==='F')document.documentElement.requestFullscreen?.();
+  if(e.key==='Escape')document.exitFullscreen?.();
+  if(e.key==='m'||e.key==='M')dialNext();
 });
-window.addEventListener('click', () => { if (typeof enableSound==='function') { const sp = document.getElementById('sound-prompt'); if (sp) enableSound(sp); } }, { once: true });
+window.addEventListener('click',()=>{if(typeof enableSound==='function'){const sp=document.getElementById('sound-prompt');if(sp)enableSound(sp);}},{once:true});
+document.addEventListener('click',e=>{if(document.getElementById('timer-overlay').classList.contains('open')&&!e.target.closest('#timer-card')&&!e.target.closest('#timer-trigger')&&!e.target.closest('#timer-hint'))closeTimerOverlay();});
 
 /* ════ MODE DIAL ════ */
-const DISPLAY_MODES = [
-  { key: 'retro-dark',   label: 'Retro · Dark',   angle: -135 },
-  { key: 'retro-light',  label: 'Retro · Light',  angle: -45  },
-  { key: 'modern-dark',  label: 'Modern · Dark',  angle:  45  },
-  { key: 'modern-light', label: 'Modern · Light', angle:  135 },
-];
-let dialModeIdx = 0, dialOpen = false;
-(function() { const saved = localStorage.getItem('cw-display-mode') || 'retro-dark'; const idx = DISPLAY_MODES.findIndex(m => m.key === saved); dialModeIdx = idx >= 0 ? idx : 0; applyDisplayMode(dialModeIdx, false); })();
-function buildDialPositions() {
-  const wrap = document.getElementById('dialPositions'); if (!wrap) return; wrap.innerHTML = '';
-  DISPLAY_MODES.forEach((m, i) => {
-    if (i > 0) { const div = document.createElement('div'); div.className = 'dial-divider'; wrap.appendChild(div); }
-    const pos = document.createElement('div'); pos.className = 'dial-pos'; pos.onclick = (e) => { e.stopPropagation(); setDialMode(i); };
-    const dot = document.createElement('div'); dot.className = 'dial-pos-dot' + (i === dialModeIdx ? ' active' : ''); dot.id = 'dpos-' + i;
-    const lbl = document.createElement('div'); lbl.className = 'dial-pos-label' + (i === dialModeIdx ? ' active' : ''); lbl.id = 'dlbl-' + i; lbl.textContent = m.label.split(' · ')[1];
-    pos.appendChild(dot); pos.appendChild(lbl); wrap.appendChild(pos);
-  });
-}
-function applyDisplayMode(idx, animate) {
-  const mode = DISPLAY_MODES[idx]; document.documentElement.setAttribute('data-theme', mode.key); localStorage.setItem('cw-display-mode', mode.key); localStorage.setItem('cw-theme', mode.key);
-  const needle = document.getElementById('dialNeedle'), name = document.getElementById('dialModeName');
-  if (needle) { if (animate === false) { needle.style.transition = 'none'; needle.style.transform = `translateX(-50%) rotate(${mode.angle}deg)`; setTimeout(() => { needle.style.transition = ''; }, 50); } else { needle.style.transform = `translateX(-50%) rotate(${mode.angle}deg)`; } }
-  if (name) name.textContent = mode.label;
-  DISPLAY_MODES.forEach((_, i) => { const dot = document.getElementById('dpos-' + i); const lbl = document.getElementById('dlbl-' + i); if (dot) dot.className = 'dial-pos-dot' + (i === idx ? ' active' : ''); if (lbl) lbl.className = 'dial-pos-label' + (i === idx ? ' active' : ''); });
-}
-function setDialMode(idx) { dialModeIdx = idx; applyDisplayMode(idx, true); prevLines = Array.from({length: ROWS}, () => '\x00'.repeat(COLS)); if (messages.length) showMessage(currentIdx); }
-function dialNext() { setDialMode((dialModeIdx + 1) % DISPLAY_MODES.length); }
-function toggleDial() { dialOpen = !dialOpen; const panel = document.getElementById('dial-panel'); if (panel) panel.classList.toggle('open', dialOpen); }
-document.addEventListener('click', e => { if (dialOpen && !e.target.closest('#dial-panel') && !e.target.closest('#dial-trigger') && !e.target.closest('#dial-hint')) { dialOpen = false; const panel = document.getElementById('dial-panel'); if (panel) panel.classList.remove('open'); } });
+const DISPLAY_MODES=[{key:'retro-dark',label:'Retro · Dark',angle:-135},{key:'retro-light',label:'Retro · Light',angle:-45},{key:'modern-dark',label:'Modern · Dark',angle:45},{key:'modern-light',label:'Modern · Light',angle:135}];
+let dialModeIdx=0,dialOpen=false;
+(function(){const saved=localStorage.getItem('cw-display-mode')||'retro-dark';const idx=DISPLAY_MODES.findIndex(m=>m.key===saved);dialModeIdx=idx>=0?idx:0;applyDisplayMode(dialModeIdx,false);})();
+function buildDialPositions(){const wrap=document.getElementById('dialPositions');if(!wrap)return;wrap.innerHTML='';DISPLAY_MODES.forEach((m,i)=>{if(i>0){const div=document.createElement('div');div.className='dial-divider';wrap.appendChild(div);}const pos=document.createElement('div');pos.className='dial-pos';pos.onclick=(e)=>{e.stopPropagation();setDialMode(i);};const dot=document.createElement('div');dot.className='dial-pos-dot'+(i===dialModeIdx?' active':'');dot.id='dpos-'+i;const lbl=document.createElement('div');lbl.className='dial-pos-label'+(i===dialModeIdx?' active':'');lbl.id='dlbl-'+i;lbl.textContent=m.label.split(' · ')[1];pos.appendChild(dot);pos.appendChild(lbl);wrap.appendChild(pos);});}
+function applyDisplayMode(idx,animate){const mode=DISPLAY_MODES[idx];document.documentElement.setAttribute('data-theme',mode.key);localStorage.setItem('cw-display-mode',mode.key);localStorage.setItem('cw-theme',mode.key);const needle=document.getElementById('dialNeedle'),name=document.getElementById('dialModeName');if(needle){if(animate===false){needle.style.transition='none';needle.style.transform=`translateX(-50%) rotate(${mode.angle}deg)`;setTimeout(()=>{needle.style.transition='';},50);}else{needle.style.transform=`translateX(-50%) rotate(${mode.angle}deg)`;}}if(name)name.textContent=mode.label;DISPLAY_MODES.forEach((_,i)=>{const dot=document.getElementById('dpos-'+i);const lbl=document.getElementById('dlbl-'+i);if(dot)dot.className='dial-pos-dot'+(i===idx?' active':'');if(lbl)lbl.className='dial-pos-label'+(i===idx?' active':'');});}
+function setDialMode(idx){dialModeIdx=idx;applyDisplayMode(idx,true);prevLines=Array.from({length:ROWS},()=>'\x00'.repeat(COLS));if(messages.length)showMessage(currentIdx);}
+function dialNext(){setDialMode((dialModeIdx+1)%DISPLAY_MODES.length);}
+function toggleDial(){dialOpen=!dialOpen;const panel=document.getElementById('dial-panel');if(panel)panel.classList.toggle('open',dialOpen);}
+document.addEventListener('click',e=>{if(dialOpen&&!e.target.closest('#dial-panel')&&!e.target.closest('#dial-trigger')&&!e.target.closest('#dial-hint')){dialOpen=false;const panel=document.getElementById('dial-panel');if(panel)panel.classList.remove('open');}});
 
 /* ════ INIT ════ */
-(async () => {
-  buildBoard(); updateClock();
-  setInterval(updateClock, 10000);
-  setInterval(updatePeriodTimer, 1000);
-  setInterval(updatePassStatusPill, 30000);
-  updatePeriodTimer(); updateSoundBtn(); buildDialPositions();
-  setTimeout(() => { const sp = document.getElementById('sound-prompt'); if (sp) { sp.style.opacity='0'; setTimeout(()=>sp.remove(),600); } }, 8000);
+(async()=>{
+  buildBoard();buildTimerBoard();updateClock();
+  setInterval(updateClock,10000);setInterval(updatePeriodTimer,1000);setInterval(updatePassStatusPill,30000);
+  updatePeriodTimer();updateSoundBtn();buildDialPositions();
+  const savedTSound=localStorage.getItem('cw-timer-sound');
+  if(savedTSound&&['westminster','ce','off'].includes(savedTSound)){tSound=savedTSound;tcSound(savedTSound);}
+  setTimeout(()=>{const sp=document.getElementById('sound-prompt');if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),600);}},8000);
   setSyncStatus('','CONNECTING...');
-  const data = await cwFetchScreens();
-  if (data) {
-    await startBoard(data);
-  } else {
-    setSyncStatus('error','CONNECTION UNAVAILABLE');
-    messages = [{ lines: ['COWBOY WIRE', CLASSROOM_CONFIG.badge, '', 'CONNECTING...', '', 'PLEASE WAIT', 'RIVERDALE HIGH SCHOOL'], speed: 10 }];
-    buildDots(); showMessage(0);
-    setTimeout(async () => { const retry = await cwFetchScreens(); if (retry) startBoard(retry); }, 15000);
-  }
-  setTimeout(initHonorRoll, 2000);
-  setInterval(initHonorRoll, 30 * 60 * 1000);
+  const data=await cwFetchScreens();
+  if(data){await startBoard(data);}
+  else{setSyncStatus('error','CONNECTION UNAVAILABLE');messages=[{lines:['COWBOY WIRE',CLASSROOM_CONFIG.badge,'','CONNECTING...','','PLEASE WAIT','RIVERDALE HIGH SCHOOL'],speed:10}];buildDots();showMessage(0);setTimeout(async()=>{const retry=await cwFetchScreens();if(retry)startBoard(retry);},15000);}
+  setTimeout(initHonorRoll,2000);setInterval(initHonorRoll,30*60*1000);
 })();
 </script>
 </body>
