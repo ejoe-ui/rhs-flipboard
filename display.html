@@ -496,14 +496,18 @@ function renderTimer(secs,warn,anim){
   if(str===tPrevDisp&&!anim)return;
   const cls=warn?'warn':'on';
 
-  // Build target state — suppress leading zero in minutes tens position
-  const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
-  const positions=[1,5,9,13,17];
-  const chars=[mStr[0],mStr[1],':',sStr[0],sStr[1]];
+  // Build chars and positions — skip leading zero in tens-of-minutes
+  const skipLeadingZero=mStr[0]==='0';
+  const chars=skipLeadingZero
+    ?[mStr[1],':',sStr[0],sStr[1]]
+    :[mStr[0],mStr[1],':',sStr[0],sStr[1]];
+  const positions=skipLeadingZero
+    ?[5,9,13,17]
+    :[1,5,9,13,17];
 
+  // Build target state
+  const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
   chars.forEach((ch,i)=>{
-    // Skip tens-of-minutes if it's '0' — leave those tiles black
-    if(i===0&&ch==='0')return;
     const pat=TD[ch];if(!pat)return;
     const w=pat[0].length,col=positions[i];
     for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)if(r<ROWS&&col+c<COLS)target[r][col+c]=pat[r][c]?cls:'';
@@ -549,7 +553,7 @@ function renderTimesUp(){
 
     // Scroll offset starts at -COLS (message fully off left) and scrolls right
     let offset=0;
-    const speed=200;
+    const speed=400;
 
     function renderFrame(){
       for(let r=0;r<ROWS;r++){
