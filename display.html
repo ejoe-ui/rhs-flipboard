@@ -493,10 +493,10 @@ function renderTimer(secs,warn,anim){
   const mStr=String(m).padStart(2,'0');
   const sStr=String(s).padStart(2,'0');
   const str=mStr+':'+sStr;
-  if(str===tPrevDisp&&!anim)return;
+  const cacheKey=str+(warn?'w':'g');
+  if(cacheKey===tPrevDisp&&!anim)return;
   const cls=warn?'warn':'on';
 
-  // Build chars and positions — skip leading zero in tens-of-minutes
   const skipLeadingZero=mStr[0]==='0';
   const chars=skipLeadingZero
     ?[mStr[1],':',sStr[0],sStr[1]]
@@ -505,12 +505,13 @@ function renderTimer(secs,warn,anim){
     ?[5,9,13,17]
     :[1,5,9,13,17];
 
-  // Build target state
+  // Build target state — all off by default
   const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
   chars.forEach((ch,i)=>{
     const pat=TD[ch];if(!pat)return;
     const w=pat[0].length,col=positions[i];
-    for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)if(r<ROWS&&col+c<COLS)target[r][col+c]=pat[r][c]?cls:'';
+    for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)
+      if(r<ROWS&&col+c<COLS)target[r][col+c]=pat[r][c]?cls:'';
   });
 
   // Only update tiles that changed
@@ -527,7 +528,7 @@ function renderTimer(secs,warn,anim){
       }
     }
   }
-  tPrevDisp=str;
+  tPrevDisp=cacheKey;
 }
 
 function renderTimesUp(){
