@@ -497,13 +497,21 @@ function renderTimer(secs,warn,anim){
   if(cacheKey===tPrevDisp&&!anim)return;
   const cls=warn?'warn':'on';
 
-  const skipLeadingZero=mStr[0]==='0';
-  const chars=skipLeadingZero
-    ?[mStr[1],':',sStr[0],sStr[1]]
-    :[mStr[0],mStr[1],':',sStr[0],sStr[1]];
-  const positions=skipLeadingZero
-    ?[5,9,13,17]
-    :[1,5,9,13,17];
+  const skipBothMins=m===0;
+  const skipLeadingZero=!skipBothMins&&mStr[0]==='0';
+
+  let chars,positions;
+  if(skipBothMins){
+    // Just seconds, no colon, centered — positions 11 and 15
+    chars=[sStr[0],sStr[1]];
+    positions=[11,15];
+  } else if(skipLeadingZero){
+    chars=[mStr[1],':',sStr[0],sStr[1]];
+    positions=[5,9,13,17];
+  } else {
+    chars=[mStr[0],mStr[1],':',sStr[0],sStr[1]];
+    positions=[1,5,9,13,17];
+  }
 
   // Build target state — all off by default
   const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
