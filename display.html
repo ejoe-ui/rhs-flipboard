@@ -524,9 +524,39 @@ function renderTimer(secs,warn,anim){
 function renderTimesUp(){
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ttiles[r][c].className='tt flash';}
   setTimeout(()=>{
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)setTT(r,c,'',false);
-    let col=1;
-    for(const ch of "TIME'S UP")col=drawTC(ch,col,'tan',true,TL);
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ttiles[r][c].className='tt';ttiles[r][c].dataset.state='';}
+
+    // Draw a single character starting at a row offset and col
+    function drawAt(ch,rowOffset,col,cls,map){
+      const pat=(map||TL)[ch];if(!pat)return col+2;
+      const w=pat[0].length;
+      const patRows=pat.length;
+      for(let r=0;r<patRows;r++)for(let c=0;c<w;c++){
+        const tr=r+rowOffset;
+        if(tr<ROWS&&col+c<COLS){
+          ttiles[tr][col+c].className='tt'+(pat[r][c]?' '+cls:'');
+          ttiles[tr][col+c].dataset.state=pat[r][c]?cls:'';
+        }
+      }
+      return col+w+1;
+    }
+
+    // LINE 1: TIME'S — measure width first to center it
+    // T(3)+1+I(3)+1+M(3)+1+E(3)+1+'(1)+1+S(3) = 20 cols
+    const line1="TIME'S", line2="UP";
+    function measureLine(str){let w=0;for(const ch of str){const p=TL[ch];if(p)w+=p[0].length+1;}return w-1;}
+    const w1=measureLine(line1), w2=measureLine(line2);
+    const start1=Math.floor((COLS-w1)/2);
+    const start2=Math.floor((COLS-w2)/2);
+
+    // Draw line 1 on rows 0-2 (top 3 rows)
+    let col=start1;
+    for(const ch of line1)col=drawAt(ch,0,col,'tan',TL);
+
+    // Draw line 2 on rows 4-6 (bottom 3 rows)
+    col=start2;
+    for(const ch of line2)col=drawAt(ch,4,col,'tan',TL);
+
   },1350);
 }
 
