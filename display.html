@@ -526,37 +526,62 @@ function renderTimesUp(){
   setTimeout(()=>{
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ttiles[r][c].className='tt';ttiles[r][c].dataset.state='';}
 
-    // Draw a single character starting at a row offset and col
-    function drawAt(ch,rowOffset,col,cls,map){
-      const pat=(map||TL)[ch];if(!pat)return col+2;
+    // Build full message bitmap wider than the grid
+    const msg="  TIME'S UP  ";
+    const bitmap=[];
+    for(let r=0;r<ROWS;r++)bitmap.push([]);
+    let bmpCols=0;
+    for(const ch of msg){
+      const pat=TL[ch];
+      if(!pat){for(let r=0;r<ROWS;r++)bitmap[r].push(0);bmpCols++;continue;}
       const w=pat[0].length;
-      const patRows=pat.length;
-      for(let r=0;r<patRows;r++)for(let c=0;c<w;c++){
-        const tr=r+rowOffset;
-        if(tr<ROWS&&col+c<COLS){
-          ttiles[tr][col+c].className='tt'+(pat[r][c]?' '+cls:'');
-          ttiles[tr][col+c].dataset.state=pat[r][c]?cls:'';
+      for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)bitmap[r].push(pat[r][c]?1:0);
+      // gap col
+      for(let r=0;r<ROWS;r++)bitmap[r].push(0);
+      bmpCols+=w+1;
+    }
+    const totalCols=bmpCols;
+
+    // Scroll offset starts at -COLS (message fully off left) and scrolls right
+    let offset=0;
+    const speed=60;
+
+    function renderFrame(){
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          const src=c+offset;
+          const on=src>=0&&src<totalCols&&bitmap[r][src]===1;
+          const newCls=on?'tan':'';
+          const cur=ttiles[r][c];
+          if(cur.dataset.state!==newCls){
+            cur.className='tt'+(newCls?' '+newCls:'');
+            cur.dataset.state=newCls;
+            if(on){cur.classList.add('flip');setTimeout(()=>cur.classList.remove('flip'),320);}
+          }
         }
       }
-      return col+w+1;
     }
 
-    // LINE 1: TIME'S — measure width first to center it
-    // T(3)+1+I(3)+1+M(3)+1+E(3)+1+'(1)+1+S(3) = 20 cols
-    const line1="TIME'S", line2="UP";
-    function measureLine(str){let w=0;for(const ch of str){const p=TL[ch];if(p)w+=p[0].length+1;}return w-1;}
-    const w1=measureLine(line1), w2=measureLine(line2);
-    const start1=Math.floor((COLS-w1)/2);
-    const start2=Math.floor((COLS-w2)/2);
-
-    // Draw line 1 on rows 0-2 (top 3 rows)
-    let col=start1;
-    for(const ch of line1)col=drawAt(ch,0,col,'tan',TL);
-
-    // Draw line 2 on rows 4-6 (bottom 3 rows)
-    col=start2;
-    for(const ch of line2)col=drawAt(ch,4,col,'tan',TL);
-
+    renderFrame();
+    const scrollInterval=setInterval(()=>{
+      offset++;
+      renderFrame();
+      // Stop when message has scrolled fully off right side
+      if(offset>=totalCols+COLS){
+        clearInterval(scrollInterval);
+        // Loop back and scroll again
+        offset=0;
+        renderFrame();
+        const loopInterval=setInterval(()=>{
+          offset++;
+          renderFrame();
+          if(offset>=totalCols+COLS){offset=0;}
+        },speed);
+        // Store so timerEnd can clear it
+        window._timesUpLoop=loopInterval;
+      }
+    },speed);
+    window._timesUpScroll=scrollInterval;
   },1350);
 }
 
@@ -620,7 +645,10 @@ function timerReset(){
 }
 
 function timerEnd(){
-  clearInterval(tInterval);tActive=false;tRunning=false;tPrevDisp='';swSecs=0;
+  clearInterval(tInterval);
+  if(window._timesUpScroll){clearInterval(window._timesUpScroll);window._timesUpScroll=null;}
+  if(window._timesUpLoop){clearInterval(window._timesUpLoop);window._timesUpLoop=null;}
+  tActive=false;tRunning=false;tPrevDisp='';swSecs=0;
   const hint=document.getElementById('timer-hint');hint.classList.remove('active');hint.textContent='⏱ TIMER';
   document.getElementById('headerTitle').textContent='COWBOY WIRE · RIVERDALE PONY EXPRESS';
   const board=document.getElementById('timer-board');board.classList.remove('show');setTimeout(()=>board.classList.remove('visible'),400);
