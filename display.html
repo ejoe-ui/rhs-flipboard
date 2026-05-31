@@ -160,7 +160,7 @@
   .tc-btn:hover:not(.primary) { border-color: #444; color: #666; }
 
   /* ══ TIMER RUNNING BAR ══ */
-  #timer-bar { position: fixed; bottom: 4px; left: 0; right: 0; height: 32px; background: rgba(0,0,0,0.92); border-top: 1px solid var(--green-dim); z-index: 9; display: none; align-items: center; padding: 0 16px; justify-content: space-between; opacity: 0; transition: opacity 0.4s; }
+  #timer-bar { position: fixed; bottom: 4px; left: 0; right: 0; height: 32px; background: rgba(0,0,0,0.92); border-top: 1px solid var(--green-dim); z-index: 9; display: none; align-items: center; padding: 0 16px; justify-content: flex-start; gap: 16px; opacity: 0; transition: opacity 0.4s; }
   #timer-bar.visible { display: flex; }
   #timer-bar.show { opacity: 1; }
   .tb-label { font-family: var(--font-retro); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); }
@@ -469,8 +469,8 @@ let tMode='countdown',tSound='westminster',tRunning=false,tSecs=0,tInterval=null
 try{const s=localStorage.getItem('cw-timer-sound');if(s&&['westminster','ce','off'].includes(s))tSound=s;}catch(e){}
 
 function buildTimerBoard(){
-  const board=document.getElementById('timer-board');board.innerHTML='';ttiles=[];
-  for(let r=0;r<ROWS;r++){const row=document.createElement('div');row.className='tt-row';const rt=[];for(let c=0;c<COLS;c++){const t=document.createElement('div');t.className='tt';row.appendChild(t);rt.push(t);}board.appendChild(row);ttiles.push(rt);}
+  const board=document.getElementById('timer-board');board.innerHTML='';ttiles=[];tPrevDisp='';
+  for(let r=0;r<ROWS;r++){const row=document.createElement('div');row.className='tt-row';const rt=[];for(let c=0;c<COLS;c++){const t=document.createElement('div');t.className='tt';t.dataset.state='';row.appendChild(t);rt.push(t);}board.appendChild(row);ttiles.push(rt);}
 }
 
 function setTT(r,c,cls,anim){
@@ -493,8 +493,31 @@ function renderTimer(secs,warn,anim){
   const str=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
   if(str===tPrevDisp&&!anim)return;
   const cls=warn?'warn':'on';
-  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)setTT(r,c,'',false);
-  [1,5,9,13,17].forEach((pos,i)=>drawTC([str[0],str[1],':',str[3],str[4]][i],pos,cls,anim,TD));
+
+  // Build target state map — which tiles should be on vs off
+  const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
+  const positions=[1,5,9,13,17];
+  const chars=[str[0],str[1],':',str[3],str[4]];
+  chars.forEach((ch,i)=>{
+    const pat=TD[ch];if(!pat)return;
+    const w=pat[0].length,col=positions[i];
+    for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)if(r<ROWS&&col+c<COLS)target[r][col+c]=pat[r][c]?cls:'';
+  });
+
+  // Only update tiles that changed
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const newCls=target[r][c];
+      const cur=ttiles[r][c];
+      const curCls=cur.dataset.state||'';
+      if(newCls!==curCls){
+        const shouldAnim=anim&&(newCls!==''||curCls!=='');
+        cur.className='tt'+(newCls?' '+newCls:'');
+        cur.dataset.state=newCls;
+        if(shouldAnim){cur.classList.add('flip');setTimeout(()=>cur.classList.remove('flip'),320);}
+      }
+    }
+  }
   tPrevDisp=str;
 }
 
