@@ -490,15 +490,20 @@ function drawTC(ch,col,cls,anim,map){
 
 function renderTimer(secs,warn,anim){
   const m=Math.floor(secs/60),s=secs%60;
-  const str=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const mStr=String(m).padStart(2,'0');
+  const sStr=String(s).padStart(2,'0');
+  const str=mStr+':'+sStr;
   if(str===tPrevDisp&&!anim)return;
   const cls=warn?'warn':'on';
 
-  // Build target state map — which tiles should be on vs off
+  // Build target state — suppress leading zero in minutes tens position
   const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
   const positions=[1,5,9,13,17];
-  const chars=[str[0],str[1],':',str[3],str[4]];
+  const chars=[mStr[0],mStr[1],':',sStr[0],sStr[1]];
+
   chars.forEach((ch,i)=>{
+    // Skip tens-of-minutes if it's '0' — leave those tiles black
+    if(i===0&&ch==='0')return;
     const pat=TD[ch];if(!pat)return;
     const w=pat[0].length,col=positions[i];
     for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)if(r<ROWS&&col+c<COLS)target[r][col+c]=pat[r][c]?cls:'';
@@ -544,7 +549,7 @@ function renderTimesUp(){
 
     // Scroll offset starts at -COLS (message fully off left) and scrolls right
     let offset=0;
-    const speed=60;
+    const speed=200;
 
     function renderFrame(){
       for(let r=0;r<ROWS;r++){
