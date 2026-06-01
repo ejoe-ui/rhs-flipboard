@@ -74,16 +74,16 @@
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
   /* ══ NOISE METER ══ */
-  #noise-meter { display: none; align-items: flex-end; gap: 2px; flex-shrink: 0; height: 32px; padding: 0 2px; cursor: pointer; position: relative; }
+  #noise-meter { display: none; align-items: center; gap: 3px; flex-shrink: 0; height: 32px; padding: 0 4px; cursor: pointer; position: relative; }
   #noise-meter.active { display: flex; }
-  #noise-meter .nm-bar { width: 5px; border-radius: 2px 2px 0 0; background: #1e1e1e; transition: height 0.08s ease, background 0.15s ease; min-height: 2px; }
+  #noise-meter .nm-bar { width: 6px; height: 20px; border-radius: 2px; background: #222; transition: background 0.1s ease; }
   #noise-meter .nm-bar.on-green { background: var(--green); }
   #noise-meter .nm-bar.on-yellow { background: #d97706; }
   #noise-meter .nm-bar.on-red { background: #dc2626; }
   #noise-meter-label { font-family: var(--font-retro); font-size: 7px; letter-spacing: 0.15em; text-transform: uppercase; color: #2a2a2a; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 
   /* ══ NOISE METER PANEL ══ */
-  #noise-panel { position: fixed; top: calc(10vh + 8px); right: 20px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; z-index: 70; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.97); transition: opacity 0.2s, transform 0.2s; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+  #noise-panel { position: fixed; top: calc(10vh + 8px); left: 20px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; z-index: 70; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.97); transition: opacity 0.2s, transform 0.2s; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
   #noise-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
   .np-title { font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #444; }
   .np-presets { display: flex; gap: 5px; }
@@ -219,14 +219,6 @@
 
 <div id="header">
   <div class="h-badge" id="roomBadge">RHS · ROOM 27</div>
-  <div class="h-divider"></div>
-  <div class="h-school" id="headerTitle">COWBOY WIRE · RIVERDALE PONY EXPRESS</div>
-  <div class="h-divider"></div>
-  <div class="h-sync">
-    <div class="sync-dot" id="syncDot"></div>
-    <span class="sync-label" id="syncLabel">Starting...</span>
-  </div>
-  <div class="h-divider" style="max-width:2vw"></div>
 
   <!-- ══ NOISE METER ══ -->
   <div id="noise-meter" title="Noise level — click to adjust" onclick="toggleNoisePanel()">
@@ -239,6 +231,14 @@
     <div class="nm-bar" id="nm6"></div>
     <div class="nm-bar" id="nm7"></div>
   </div>
+  <div class="h-divider"></div>
+  <div class="h-school" id="headerTitle">COWBOY WIRE · RIVERDALE PONY EXPRESS</div>
+  <div class="h-divider"></div>
+  <div class="h-sync">
+    <div class="sync-dot" id="syncDot"></div>
+    <span class="sync-label" id="syncLabel">Starting...</span>
+  </div>
+  <div class="h-divider" style="max-width:2vw"></div>
 
   <div class="h-divider" style="max-width:1vw"></div>
   <div class="h-period-timer" id="periodTimer" style="display:none">
@@ -583,7 +583,7 @@ function nmStop(){
   // Reset bars to off
   for(let i=0;i<8;i++){
     const b=document.getElementById('nm'+i);
-    if(b){ b.style.height='2px'; b.className='nm-bar'; }
+    if(b){ b.className='nm-bar'; }
   }
 }
 
@@ -607,15 +607,11 @@ function nmTick(){
     if(!b) continue;
     const threshold = (i+1) * 12.5;
     const on = level >= threshold;
-    const maxH = 28, minH = 2;
-    if(on){
-      const h = minH + ((i/7) * (maxH - minH));
-      b.style.height = h + 'px';
+      if(on){
       if(level >= nmRed) b.className = 'nm-bar on-red';
       else if(level >= nmYellow) b.className = 'nm-bar on-yellow';
       else b.className = 'nm-bar on-green';
     } else {
-      b.style.height = minH + 'px';
       b.className = 'nm-bar';
     }
   }
