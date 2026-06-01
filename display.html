@@ -73,6 +73,29 @@
   .h-clock { color: #f0ebe0; font-family: var(--font-ui); font-size: clamp(18px,2.2vw,38px); font-weight: 700; letter-spacing: 0.08em; white-space: nowrap; flex-shrink: 0; text-align: right; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
+  /* ══ NOISE METER ══ */
+  #noise-meter { display: none; align-items: flex-end; gap: 2px; flex-shrink: 0; height: 32px; padding: 0 2px; cursor: pointer; position: relative; }
+  #noise-meter.active { display: flex; }
+  #noise-meter .nm-bar { width: 5px; border-radius: 2px 2px 0 0; background: #1e1e1e; transition: height 0.08s ease, background 0.15s ease; min-height: 2px; }
+  #noise-meter .nm-bar.on-green { background: var(--green); }
+  #noise-meter .nm-bar.on-yellow { background: #d97706; }
+  #noise-meter .nm-bar.on-red { background: #dc2626; }
+  #noise-meter-label { font-family: var(--font-retro); font-size: 7px; letter-spacing: 0.15em; text-transform: uppercase; color: #2a2a2a; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
+
+  /* ══ NOISE METER PANEL ══ */
+  #noise-panel { position: fixed; top: calc(10vh + 8px); right: 20px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; z-index: 70; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.97); transition: opacity 0.2s, transform 0.2s; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+  #noise-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
+  .np-title { font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #444; }
+  .np-presets { display: flex; gap: 5px; }
+  .np-preset { flex: 1; padding: 5px 4px; border-radius: 3px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .np-preset.active { border-color: var(--green); color: var(--green); background: #0d1f18; }
+  .np-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .np-row-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #444; white-space: nowrap; }
+  .np-slider { flex: 1; accent-color: var(--green); cursor: pointer; }
+  .np-val { font-family: var(--font-retro); font-size: 9px; color: var(--green); width: 28px; text-align: right; }
+  .np-toggle { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #555; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .np-toggle.on { background: var(--green); border-color: var(--green); color: #fff; }
+
   #board-wrap { width: 100%; height: calc(100vh - 10vh - 3px); display: flex; flex-direction: column; padding: 1.2vh 1.5vw; gap: 0.5vh; }
   .tile-row { flex: 1; display: flex; gap: 0.3vw; align-items: stretch; }
   .tile { flex: 1; background: var(--tile-bg); border: 1px solid var(--tile-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: background 0.3s, border-color 0.3s; }
@@ -101,6 +124,13 @@
   .dial-sound-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; }
   #soundToggleBtn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
   #soundToggleBtn:hover { border-color: var(--green); color: var(--green); }
+
+  /* Noise meter toggle row in dial panel */
+  .dial-noise-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding-top: 10px; border-top: 1px solid #1e1e1e; gap: 8px; }
+  .dial-noise-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; }
+  #noiseToggleBtn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  #noiseToggleBtn:hover { border-color: var(--green); color: var(--green); }
+  #noiseToggleBtn.on { border-color: var(--green); color: var(--green); background: #0d1f18; }
 
   #sound-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,86,64,0.85); color: #fff; font-family: var(--font-retro); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; padding: 7px 18px; border-radius: 4px; cursor: pointer; z-index: 200; transition: opacity 0.5s; }
 
@@ -197,6 +227,20 @@
     <span class="sync-label" id="syncLabel">Starting...</span>
   </div>
   <div class="h-divider" style="max-width:2vw"></div>
+
+  <!-- ══ NOISE METER ══ -->
+  <div id="noise-meter" title="Noise level — click to adjust" onclick="toggleNoisePanel()">
+    <div class="nm-bar" id="nm0"></div>
+    <div class="nm-bar" id="nm1"></div>
+    <div class="nm-bar" id="nm2"></div>
+    <div class="nm-bar" id="nm3"></div>
+    <div class="nm-bar" id="nm4"></div>
+    <div class="nm-bar" id="nm5"></div>
+    <div class="nm-bar" id="nm6"></div>
+    <div class="nm-bar" id="nm7"></div>
+  </div>
+
+  <div class="h-divider" style="max-width:1vw"></div>
   <div class="h-period-timer" id="periodTimer" style="display:none">
     <div class="h-period-label" id="periodLabel"></div>
     <div class="h-period-time" id="periodTime"></div>
@@ -204,6 +248,27 @@
   </div>
   <div class="h-divider" style="max-width:1vw"></div>
   <div class="h-clock" id="clock">--:-- --</div>
+</div>
+
+<!-- ══ NOISE PANEL ══ -->
+<div id="noise-panel">
+  <div class="np-title">🎙 Noise Meter</div>
+  <div class="np-presets">
+    <div class="np-preset active" id="np-quiet" onclick="nmPreset('quiet')">Quiet</div>
+    <div class="np-preset" id="np-normal" onclick="nmPreset('normal')">Normal</div>
+    <div class="np-preset" id="np-loud" onclick="nmPreset('loud')">Loud Room</div>
+  </div>
+  <div class="np-row">
+    <span class="np-row-label">🟡 Yellow at</span>
+    <input class="np-slider" type="range" id="nm-yellow-slider" min="10" max="80" value="35" oninput="nmSliderChange()">
+    <span class="np-val" id="nm-yellow-val">35</span>
+  </div>
+  <div class="np-row">
+    <span class="np-row-label">🔴 Red at</span>
+    <input class="np-slider" type="range" id="nm-red-slider" min="20" max="95" value="65" oninput="nmSliderChange()">
+    <span class="np-val" id="nm-red-val">65</span>
+  </div>
+  <button class="np-toggle on" id="nm-toggle-btn" onclick="toggleNoiseMeter()">🎙 Meter ON — Click to disable</button>
 </div>
 
 <div id="board-wrap"></div>
@@ -275,6 +340,10 @@
   <div class="dial-sound-row">
     <span class="dial-sound-label">Sound</span>
     <button id="soundToggleBtn" onclick="cycleSoundProfile()">🔊 CLASSIC</button>
+  </div>
+  <div class="dial-noise-row">
+    <span class="dial-noise-label">Noise Meter</span>
+    <button id="noiseToggleBtn" onclick="toggleNoiseMeter()">📊 OFF</button>
   </div>
 </div>
 
@@ -401,7 +470,6 @@ setInterval(()=>{cwInjectSlot(messages,'schedule',cwBuildScheduleScreen(window._
 setInterval(async()=>{if(cwFindSlotIdx(messages,'passable')<0)return;const passes=await cwFetchPassable();cwInjectSlot(messages,'passable',passes?.length?cwBuildPassableScreen(passes):null,buildDots);},30*1000);
 setInterval(async()=>{if(cwFindSlotIdx(messages,'quickMsg')<0)return;const msgs=await cwFetchAllApprovedMessages();for(let i=messages.length-1;i>=0;i--){if(messages[i]._isQuickMsgSlot&&i!==cwFindSlotIdx(messages,'quickMsg'))messages.splice(i,1);}if(!msgs||!msgs.length){cwInjectSlot(messages,'quickMsg',null,buildDots);return;}cwInjectSlot(messages,'quickMsg',cwBuildQuickMsgScreen(msgs[0]),buildDots);if(msgs.length>1){const slotIdx=cwFindSlotIdx(messages,'quickMsg');const extras=msgs.slice(1).map(m=>cwBuildQuickMsgScreen(m)).filter(Boolean);if(slotIdx>=0&&extras.length){messages.splice(slotIdx+1,0,...extras);buildDots();}}},30*1000);
 setInterval(async()=>{if(cwFindSlotIdx(messages,'weather')<0)return;const data=await cwFetchWeather();cwInjectSlot(messages,'weather',cwBuildWeatherScreen(data),buildDots);},30*60*1000);
-// ── FIX: Countdown now merges cw_events + hardcoded + custom ─────────────────
 setInterval(async()=>{if(cwFindSlotIdx(messages,'countdown')<0)return;const[,cwEvents]=await Promise.all([cwFetchCustomCountdowns(),cwFetchEvents(CW.room)]);cwInjectSlot(messages,'countdown',cwBuildMergedCountdownScreen(cwEvents),buildDots);},10*60*1000);
 setInterval(()=>{if(cwFindSlotIdx(messages,'code')<0)return;cwInjectSlot(messages,'code',cwBuildCodeScreen(),buildDots);},10*1000);
 
@@ -413,6 +481,175 @@ async function initHonorRoll(){
   const wrap=document.getElementById('honor-ticker-wrap');wrap.style.display='flex';
   const board=document.getElementById('board-wrap');if(board){const cur=parseInt(getComputedStyle(board).paddingBottom)||0;board.style.paddingBottom=(cur+32)+'px';}
 }
+
+/* ════ NOISE METER ════ */
+let nmOn=false,nmStream=null,nmAnalyser=null,nmAnimFrame=null,nmAudioCtx=null;
+let nmYellow=35,nmRed=65,nmPresetKey='quiet';
+
+const NM_PRESETS={
+  quiet:  {yellow:30, red:55},
+  normal: {yellow:40, red:68},
+  loud:   {yellow:55, red:80},
+};
+
+// Load saved state
+try {
+  const saved = JSON.parse(localStorage.getItem('cw-noise-meter')||'{}');
+  if(saved.on !== undefined) nmOn = !!saved.on;
+  if(saved.yellow) nmYellow = saved.yellow;
+  if(saved.red) nmRed = saved.red;
+  if(saved.preset) nmPresetKey = saved.preset;
+} catch(e) {}
+
+function nmSave(){
+  try { localStorage.setItem('cw-noise-meter', JSON.stringify({on:nmOn,yellow:nmYellow,red:nmRed,preset:nmPresetKey})); } catch(e) {}
+}
+
+function nmPreset(key){
+  nmPresetKey = key;
+  const p = NM_PRESETS[key];
+  nmYellow = p.yellow;
+  nmRed = p.red;
+  document.getElementById('nm-yellow-slider').value = nmYellow;
+  document.getElementById('nm-red-slider').value = nmRed;
+  document.getElementById('nm-yellow-val').textContent = nmYellow;
+  document.getElementById('nm-red-val').textContent = nmRed;
+  ['quiet','normal','loud'].forEach(k => {
+    document.getElementById('np-'+k).className = 'np-preset' + (k===key?' active':'');
+  });
+  nmSave();
+}
+
+function nmSliderChange(){
+  nmYellow = parseInt(document.getElementById('nm-yellow-slider').value);
+  nmRed = parseInt(document.getElementById('nm-red-slider').value);
+  document.getElementById('nm-yellow-val').textContent = nmYellow;
+  document.getElementById('nm-red-val').textContent = nmRed;
+  // Clear preset active state since user customized
+  ['quiet','normal','loud'].forEach(k => document.getElementById('np-'+k).className='np-preset');
+  nmPresetKey = 'custom';
+  nmSave();
+}
+
+function nmUpdateUI(){
+  const meter = document.getElementById('noise-meter');
+  const btn = document.getElementById('nm-toggle-btn');
+  const dialBtn = document.getElementById('noiseToggleBtn');
+  if(nmOn){
+    meter.classList.add('active');
+    btn.className = 'np-toggle on';
+    btn.textContent = '🎙 Meter ON — Click to disable';
+    if(dialBtn){ dialBtn.className='on'; dialBtn.textContent='📊 ON'; }
+  } else {
+    meter.classList.remove('active');
+    btn.className = 'np-toggle';
+    btn.textContent = '📊 Enable Noise Meter';
+    if(dialBtn){ dialBtn.className=''; dialBtn.textContent='📊 OFF'; }
+  }
+  // Sync slider values to UI
+  document.getElementById('nm-yellow-slider').value = nmYellow;
+  document.getElementById('nm-red-slider').value = nmRed;
+  document.getElementById('nm-yellow-val').textContent = nmYellow;
+  document.getElementById('nm-red-val').textContent = nmRed;
+  ['quiet','normal','loud'].forEach(k => {
+    document.getElementById('np-'+k).className = 'np-preset' + (k===nmPresetKey?' active':'');
+  });
+}
+
+async function nmStart(){
+  if(nmStream) return;
+  try {
+    nmStream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    nmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = nmAudioCtx.createMediaStreamSource(nmStream);
+    nmAnalyser = nmAudioCtx.createAnalyser();
+    nmAnalyser.fftSize = 256;
+    nmAnalyser.smoothingTimeConstant = 0.75;
+    source.connect(nmAnalyser);
+    nmTick();
+  } catch(e) {
+    console.warn('[CW] Noise meter mic denied:', e);
+    nmOn = false;
+    nmSave();
+    nmUpdateUI();
+  }
+}
+
+function nmStop(){
+  if(nmAnimFrame){ cancelAnimationFrame(nmAnimFrame); nmAnimFrame=null; }
+  if(nmStream){ nmStream.getTracks().forEach(t=>t.stop()); nmStream=null; }
+  if(nmAudioCtx){ nmAudioCtx.close(); nmAudioCtx=null; }
+  nmAnalyser = null;
+  // Reset bars to off
+  for(let i=0;i<8;i++){
+    const b=document.getElementById('nm'+i);
+    if(b){ b.style.height='2px'; b.className='nm-bar'; }
+  }
+}
+
+function nmTick(){
+  if(!nmAnalyser){ return; }
+  const data = new Uint8Array(nmAnalyser.frequencyBinCount);
+  nmAnalyser.getByteFrequencyData(data);
+
+  // RMS of lower 2/3 of spectrum (voice range)
+  const slice = Math.floor(data.length * 0.67);
+  let sum = 0;
+  for(let i=0;i<slice;i++) sum += data[i]*data[i];
+  const rms = Math.sqrt(sum/slice);
+
+  // Map 0-255 RMS to 0-100 level
+  const level = Math.min(100, Math.round((rms / 255) * 100 * 2.2));
+
+  // Draw 8 bars — each bar represents 12.5% of level
+  for(let i=0;i<8;i++){
+    const b = document.getElementById('nm'+i);
+    if(!b) continue;
+    const threshold = (i+1) * 12.5;
+    const on = level >= threshold;
+    const maxH = 28, minH = 2;
+    if(on){
+      const h = minH + ((i/7) * (maxH - minH));
+      b.style.height = h + 'px';
+      if(level >= nmRed) b.className = 'nm-bar on-red';
+      else if(level >= nmYellow) b.className = 'nm-bar on-yellow';
+      else b.className = 'nm-bar on-green';
+    } else {
+      b.style.height = minH + 'px';
+      b.className = 'nm-bar';
+    }
+  }
+
+  nmAnimFrame = requestAnimationFrame(nmTick);
+}
+
+async function toggleNoiseMeter(){
+  nmOn = !nmOn;
+  nmSave();
+  nmUpdateUI();
+  if(nmOn) await nmStart();
+  else nmStop();
+}
+
+let noisePanelOpen = false;
+function toggleNoisePanel(){
+  noisePanelOpen = !noisePanelOpen;
+  document.getElementById('noise-panel').classList.toggle('open', noisePanelOpen);
+}
+
+// Close noise panel on outside click
+document.addEventListener('click', e => {
+  if(noisePanelOpen && !e.target.closest('#noise-panel') && !e.target.closest('#noise-meter')){
+    noisePanelOpen = false;
+    document.getElementById('noise-panel').classList.remove('open');
+  }
+});
+
+// Init noise meter on load
+(function(){
+  nmUpdateUI();
+  if(nmOn) nmStart();
+})();
 
 /* ════ FLIP SOUND ════ */
 const SOUND_PROFILES=['OFF','CLASSIC','JADE','DIGITAL'];
@@ -502,7 +739,6 @@ function renderTimer(secs,warn,anim){
 
   let chars,positions;
   if(skipBothMins){
-    // Just seconds, no colon, centered — positions 11 and 15
     chars=[sStr[0],sStr[1]];
     positions=[11,15];
   } else if(skipLeadingZero){
@@ -513,7 +749,6 @@ function renderTimer(secs,warn,anim){
     positions=[1,5,9,13,17];
   }
 
-  // Build target state — all off by default
   const target=Array.from({length:ROWS},()=>new Array(COLS).fill(''));
   chars.forEach((ch,i)=>{
     const pat=TD[ch];if(!pat)return;
@@ -522,7 +757,6 @@ function renderTimer(secs,warn,anim){
       if(r<ROWS&&col+c<COLS)target[r][col+c]=pat[r][c]?cls:'';
   });
 
-  // Only update tiles that changed
   for(let r=0;r<ROWS;r++){
     for(let c=0;c<COLS;c++){
       const newCls=target[r][c];
@@ -543,8 +777,6 @@ function renderTimesUp(){
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ttiles[r][c].className='tt flash';}
   setTimeout(()=>{
     for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){ttiles[r][c].className='tt';ttiles[r][c].dataset.state='';}
-
-    // Build full message bitmap wider than the grid
     const msg="  TIME'S UP  ";
     const bitmap=[];
     for(let r=0;r<ROWS;r++)bitmap.push([]);
@@ -554,16 +786,12 @@ function renderTimesUp(){
       if(!pat){for(let r=0;r<ROWS;r++)bitmap[r].push(0);bmpCols++;continue;}
       const w=pat[0].length;
       for(let r=0;r<ROWS;r++)for(let c=0;c<w;c++)bitmap[r].push(pat[r][c]?1:0);
-      // gap col
       for(let r=0;r<ROWS;r++)bitmap[r].push(0);
       bmpCols+=w+1;
     }
     const totalCols=bmpCols;
-
-    // Scroll offset starts at -COLS (message fully off left) and scrolls right
     let offset=0;
     const speed=400;
-
     function renderFrame(){
       for(let r=0;r<ROWS;r++){
         for(let c=0;c<COLS;c++){
@@ -579,15 +807,12 @@ function renderTimesUp(){
         }
       }
     }
-
     renderFrame();
     const scrollInterval=setInterval(()=>{
       offset++;
       renderFrame();
-      // Stop when message has scrolled fully off right side
       if(offset>=totalCols+COLS){
         clearInterval(scrollInterval);
-        // Loop back and scroll again
         offset=0;
         renderFrame();
         const loopInterval=setInterval(()=>{
@@ -595,7 +820,6 @@ function renderTimesUp(){
           renderFrame();
           if(offset>=totalCols+COLS){offset=0;}
         },speed);
-        // Store so timerEnd can clear it
         window._timesUpLoop=loopInterval;
       }
     },speed);
@@ -603,7 +827,6 @@ function renderTimesUp(){
   },1350);
 }
 
-/* ── Overlay controls ── */
 function openTimerOverlay(){if(tActive)return;document.getElementById('timer-overlay').classList.add('open');}
 function closeTimerOverlay(){document.getElementById('timer-overlay').classList.remove('open');}
 
