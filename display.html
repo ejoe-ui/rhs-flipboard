@@ -83,16 +83,16 @@
   #noise-meter-label { font-family: var(--font-retro); font-size: 7px; letter-spacing: 0.15em; text-transform: uppercase; color: #2a2a2a; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); white-space: nowrap; }
 
   /* ══ NOISE METER PANEL ══ */
-  #noise-panel { position: fixed; top: calc(10vh + 8px); left: 20px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; z-index: 70; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.97); transition: opacity 0.2s, transform 0.2s; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
+  #noise-panel { position: fixed; top: calc(10vh + 8px); left: 20px; background: #1e1e1e; border: 1px solid #444; border-radius: 10px; padding: 14px 16px; z-index: 70; opacity: 0; pointer-events: none; transform: translateY(-6px) scale(0.97); transition: opacity 0.2s, transform 0.2s; min-width: 220px; display: flex; flex-direction: column; gap: 10px; }
   #noise-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
-  .np-title { font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #444; }
+  .np-title { font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #888; }
   .np-presets { display: flex; gap: 5px; }
-  .np-preset { flex: 1; padding: 5px 4px; border-radius: 3px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .np-preset { flex: 1; padding: 5px 4px; border-radius: 3px; border: 1px solid #444; background: #2a2a2a; color: #aaa; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
   .np-preset.active { border-color: var(--green); color: var(--green); background: #0d1f18; }
   .np-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .np-row-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #444; white-space: nowrap; }
+  .np-row-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; white-space: nowrap; }
   .np-slider { flex: 1; accent-color: var(--green); cursor: pointer; }
-  .np-val { font-family: var(--font-retro); font-size: 9px; color: var(--green); width: 28px; text-align: right; }
+  .np-val { font-family: var(--font-retro); font-size: 9px; color: #ccc; width: 28px; text-align: right; }
   .np-toggle { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #555; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
   .np-toggle.on { background: var(--green); border-color: var(--green); color: #fff; }
 
@@ -121,14 +121,14 @@
   .ind-dot.active { background: var(--green); }
 
   .dial-sound-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding-top: 10px; border-top: 1px solid #1e1e1e; gap: 8px; }
-  .dial-sound-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; }
-  #soundToggleBtn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .dial-sound-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; }
+  #soundToggleBtn { background: #2a2a2a; border: 1px solid #555; color: #aaa; font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
   #soundToggleBtn:hover { border-color: var(--green); color: var(--green); }
 
   /* Noise meter toggle row in dial panel */
   .dial-noise-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding-top: 10px; border-top: 1px solid #1e1e1e; gap: 8px; }
-  .dial-noise-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; }
-  #noiseToggleBtn { background: #1a1a1a; border: 1px solid #2a2a2a; color: #555; font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .dial-noise-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; }
+  #noiseToggleBtn { background: #2a2a2a; border: 1px solid #555; color: #aaa; font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border-radius: 3px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
   #noiseToggleBtn:hover { border-color: var(--green); color: var(--green); }
   #noiseToggleBtn.on { border-color: var(--green); color: var(--green); background: #0d1f18; }
 
@@ -136,12 +136,12 @@
 
   /* ══ MODE DIAL ══ */
   #dial-trigger { position: fixed; bottom: 0; right: 0; width: 80px; height: 80px; z-index: 60; cursor: pointer; }
-  #dial-panel { position: fixed; bottom: 20px; right: 20px; background: #111; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 18px; z-index: 60; opacity: 0; pointer-events: none; transform: translateY(8px) scale(0.96); transition: opacity 0.2s, transform 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 200px; }
+  #dial-panel { position: fixed; bottom: 20px; right: 20px; background: #1e1e1e; border: 1px solid #444; border-radius: 12px; padding: 16px 18px; z-index: 60; opacity: 0; pointer-events: none; transform: translateY(8px) scale(0.96); transition: opacity 0.2s, transform 0.2s; display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 200px; }
   #dial-panel.open { opacity: 1; pointer-events: all; transform: translateY(0) scale(1); }
-  .dial-panel-title { font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #444; }
+  .dial-panel-title { font-family: var(--font-retro); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: #888; }
   .dial-mode-name { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); transition: color 0.3s; min-height: 24px; }
   .dial-knob-wrap { position: relative; width: 80px; height: 80px; cursor: pointer; }
-  .dial-knob { width: 80px; height: 80px; border-radius: 50%; background: #1a1a1a; border: 2px solid #2a2a2a; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); position: relative; transition: transform 0.05s; }
+  .dial-knob { width: 80px; height: 80px; border-radius: 50%; background: #2a2a2a; border: 2px solid #555; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); position: relative; transition: transform 0.05s; }
   .dial-knob:active { transform: scale(0.96); }
   .dial-needle { position: absolute; width: 3px; height: 18px; background: var(--green); border-radius: 2px; left: 50%; top: 6px; transform-origin: 50% 34px; transform: translateX(-50%) rotate(-135deg); transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1), background 0.3s; }
   .dial-center-dot { position: absolute; width: 14px; height: 14px; background: #222; border: 1px solid #333; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
@@ -149,9 +149,9 @@
   .dial-pos { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
   .dial-pos-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a2a2a; border: 1px solid #333; transition: background 0.2s, transform 0.2s; }
   .dial-pos-dot.active { background: var(--green); border-color: var(--green); transform: scale(1.4); }
-  .dial-pos-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.1em; color: #333; text-transform: uppercase; transition: color 0.2s; }
+  .dial-pos-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.1em; color: #777; text-transform: uppercase; transition: color 0.2s; }
   .dial-pos-label.active { color: var(--green); }
-  .dial-divider { width: 1px; height: 16px; background: #2a2a2a; }
+  .dial-divider { width: 1px; height: 16px; background: #444; }
   #dial-hint { position: fixed; bottom: 12px; right: 16px; font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: #2a2a2a; z-index: 59; transition: color 0.2s; cursor: pointer; }
   #dial-hint:hover { color: #444; }
   body:hover #dial-hint { color: #2e2e2e; }
@@ -166,25 +166,25 @@
   /* ══ TIMER OVERLAY ══ */
   #timer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   #timer-overlay.open { opacity: 1; pointer-events: all; }
-  #timer-card { background: #111; border: 1px solid var(--green); border-radius: 12px; padding: 24px 28px; min-width: 320px; max-width: 400px; display: flex; flex-direction: column; gap: 16px; transform: translateY(12px); transition: transform 0.25s; }
+  #timer-card { background: #1e1e1e; border: 1px solid var(--green); border-radius: 12px; padding: 24px 28px; min-width: 320px; max-width: 400px; display: flex; flex-direction: column; gap: 16px; transform: translateY(12px); transition: transform 0.25s; }
   #timer-overlay.open #timer-card { transform: translateY(0); }
   .tc-title { font-family: var(--font-retro); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--green); display: flex; justify-content: space-between; align-items: center; }
-  .tc-close { color: #444; cursor: pointer; font-size: 16px; line-height: 1; transition: color 0.2s; }
+  .tc-close { color: #888; cursor: pointer; font-size: 16px; line-height: 1; transition: color 0.2s; }
   .tc-close:hover { color: var(--tan); }
   .tc-tabs { display: flex; gap: 6px; }
-  .tc-tab { flex: 1; padding: 6px; text-align: center; border-radius: 4px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; }
+  .tc-tab { flex: 1; padding: 6px; text-align: center; border-radius: 4px; border: 1px solid #555; background: #2a2a2a; color: #aaa; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; }
   .tc-tab.active { background: var(--green); color: #fff; border-color: var(--green); }
   .tc-time { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .tc-time label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; }
-  .tc-input { width: 60px; background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 4px; color: var(--green); font-size: 22px; font-weight: 700; text-align: center; padding: 6px 4px; font-family: var(--font-retro); outline: none; transition: border-color 0.2s; }
+  .tc-time label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; }
+  .tc-input { width: 60px; background: #2a2a2a; border: 1px solid #555; border-radius: 4px; color: var(--green); font-size: 22px; font-weight: 700; text-align: center; padding: 6px 4px; font-family: var(--font-retro); outline: none; transition: border-color 0.2s; }
   .tc-input:focus { border-color: var(--green); }
   .tc-sep { color: var(--green); font-size: 24px; font-weight: 700; font-family: var(--font-retro); }
   .tc-sound { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .tc-sound-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #444; flex-shrink: 0; }
-  .tc-snd { flex: 1; min-width: 80px; padding: 5px 6px; border-radius: 3px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .tc-sound-label { font-family: var(--font-retro); font-size: 8px; letter-spacing: 0.2em; text-transform: uppercase; color: #888; flex-shrink: 0; }
+  .tc-snd { flex: 1; min-width: 80px; padding: 5px 6px; border-radius: 3px; border: 1px solid #555; background: #2a2a2a; color: #aaa; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
   .tc-snd.active { border-color: var(--green); color: var(--green); background: #0d1f18; }
   .tc-btns { display: flex; gap: 8px; }
-  .tc-btn { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #444; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
+  .tc-btn { flex: 1; padding: 10px; border-radius: 5px; border: 1px solid #555; background: #2a2a2a; color: #bbb; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; font-family: var(--font-retro); transition: all 0.2s; text-align: center; }
   .tc-btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
   .tc-btn.primary:hover { opacity: 0.85; }
   .tc-btn:hover:not(.primary) { border-color: #444; color: #666; }
