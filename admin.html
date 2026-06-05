@@ -20,20 +20,21 @@
     --radius:       10px;
   }
 
+  /* ── LIGHTENED DARK MODE ── */
   [data-theme="dark"] {
     --green:      #00a86b;
     --green-dark: #007a4d;
-    --green-dim:  #002a1a;
+    --green-dim:  #0a3020;
     --tan:        #C4BEB5;
-    --bg:         #0a0a0a;
-    --surface:    #111111;
-    --surface2:   #181818;
-    --border:     #222222;
-    --border2:    #2a2a2a;
+    --bg:         #1a1a1a;
+    --surface:    #242424;
+    --surface2:   #2c2c2c;
+    --border:     #383838;
+    --border2:    #404040;
     --text:       #f0ebe0;
-    --text-mid:   #888880;
-    --text-dim:   #444440;
-    --header-bg:  #080808;
+    --text-mid:   #aaa8a0;
+    --text-dim:   #686860;
+    --header-bg:  #141414;
     --red:        #cc3333;
     --orange:     #cc7700;
     --toggle-bg:  #f0ebe0;
@@ -113,7 +114,7 @@
   #content { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
 
   .section-label {
-    font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
     letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-dim);
     padding: 0 2px; margin-bottom: 6px;
   }
@@ -147,9 +148,9 @@
     border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
   }
   .pending-item:last-child { margin-bottom: 0; }
-  .pending-sender { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; }
-  .pending-lines  { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.6; margin-bottom: 10px; }
-  .pending-meta   { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .pending-sender { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--orange); text-transform: uppercase; margin-bottom: 6px; }
+  .pending-lines  { font-family: var(--font-mono); font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.6; margin-bottom: 10px; }
+  .pending-meta   { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
   .pending-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .approved-item {
@@ -158,9 +159,9 @@
     border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
   }
   .approved-item:last-child { margin-bottom: 0; }
-  .approved-sender { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 6px; }
-  .approved-lines  { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.5; margin-bottom: 8px; }
-  .approved-meta   { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .approved-sender { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: var(--green); text-transform: uppercase; margin-bottom: 6px; }
+  .approved-lines  { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.5; margin-bottom: 8px; }
+  .approved-meta   { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
   .expires-soon    { color: var(--orange); }
 
   .btn {
@@ -191,17 +192,18 @@
   }
   .expire-select:focus { border-color: var(--green); }
 
+  /* ── BIGGER FORM FIELDS ── */
   .form-field {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 10px 12px;
-    font-family: var(--font-mono); font-size: 13px; color: var(--text);
+    font-family: var(--font-mono); font-size: 15px; color: var(--text);
     width: 100%; outline: none; transition: border-color 0.15s, background 0.2s;
     -webkit-appearance: none; margin-bottom: 8px;
   }
   .form-field:focus { border-color: var(--green); }
   .form-field::placeholder { color: var(--text-dim); }
   .form-hint {
-    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
     color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;
   }
   .form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -222,7 +224,7 @@
   .toggle-switch input:checked + .toggle-slider { background: var(--green); }
   .toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
 
-  .empty-state { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; padding: 20px 0; }
+  .empty-state { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; padding: 20px 0; }
   .loading-row { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px 0; }
   .loading-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: ldot 1.2s infinite ease-in-out; }
   .loading-dot:nth-child(2) { animation-delay: 0.2s; }
@@ -243,14 +245,14 @@
 
   .stats-row { display: flex; gap: 8px; }
   .stat-block { flex: 1; background: var(--surface2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 12px; text-align: center; transition: background 0.2s; }
-  .stat-num   { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
-  .stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
+  .stat-num   { font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--text); display: block; line-height: 1; margin-bottom: 4px; }
+  .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
 
   .display-link {
     display: block; text-align: center; text-decoration: none;
-    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
     letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--tan); padding: 12px;
+    color: var(--tan); padding: 14px;
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 8px; transition: border-color 0.15s, background 0.2s;
   }
@@ -267,16 +269,16 @@
   .slide-item.drag-over { border-color: var(--green); }
   .slide-drag-handle { color: var(--text-dim); font-size: 16px; padding-top: 2px; flex-shrink: 0; cursor: grab; }
   .slide-info { flex: 1; min-width: 0; }
-  .slide-type { font-family: var(--font-mono); font-size: 9px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
+  .slide-type { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 4px; }
   .slide-type.slot { color: var(--tan); }
-  .slide-preview { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .slide-meta { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+  .slide-preview { font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .slide-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
   .slide-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: flex-start; }
   .slide-toggle { cursor: pointer; font-size: 18px; line-height: 1; padding-top: 1px; }
   .slide-line-input {
     background: var(--surface); border: 1px solid var(--border2);
     border-radius: 6px; padding: 8px 10px;
-    font-family: var(--font-mono); font-size: 12px; color: var(--text);
+    font-family: var(--font-mono); font-size: 13px; color: var(--text);
     width: 100%; outline: none; margin-bottom: 6px;
     transition: border-color 0.15s; letter-spacing: 0.04em;
   }
@@ -284,10 +286,10 @@
   .slide-line-input::placeholder { color: var(--text-dim); }
   .char-count { font-family: var(--font-mono); font-size: 9px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; margin-bottom: 6px; }
 
-  .bday-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .bday-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .bday-row:last-child { border-bottom: none; }
-  .bday-name { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--text); }
-  .bday-date { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
+  .bday-name { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--text); }
+  .bday-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
 
   .upload-area {
     background: var(--surface2); border: 1px dashed var(--border2);
@@ -296,7 +298,7 @@
   }
   .upload-area:hover { border-color: var(--green); }
   .upload-area input { display: none; }
-  .upload-label { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+  .upload-label { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
 
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.85);
@@ -317,7 +319,6 @@
   .modal-title  { font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--green); padding: 0 16px 12px; border-bottom: 1px solid var(--border); }
   .modal-body   { padding: 14px 16px; }
 
-  /* ══ OBJECTIVES — updated styles ══ */
   .obj-period-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
   .obj-tab {
     font-family: var(--font-mono); font-size: 10px; font-weight: 700;
@@ -338,7 +339,7 @@
   .obj-title-input {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 10px 12px;
-    font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+    font-family: var(--font-mono); font-size: 15px; font-weight: 700;
     color: var(--text); width: 100%; outline: none;
     transition: border-color 0.15s, background 0.2s; letter-spacing: 0.04em;
   }
@@ -349,7 +350,7 @@
   .obj-line-input {
     background: var(--surface2); border: 1px solid var(--border2);
     border-radius: 6px; padding: 8px 10px 8px 28px;
-    font-family: var(--font-mono); font-size: 12px;
+    font-family: var(--font-mono); font-size: 14px;
     color: var(--text); width: 100%; outline: none;
     transition: border-color 0.15s, background 0.2s;
   }
@@ -362,9 +363,7 @@
   .obj-char-count { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); letter-spacing: 0.1em; text-align: right; margin-top: -4px; }
   .obj-char-count.over { color: var(--red); }
 
-  .obj-section-divider {
-    border: none; border-top: 1px solid var(--border2); margin: 4px 0;
-  }
+  .obj-section-divider { border: none; border-top: 1px solid var(--border2); margin: 4px 0; }
 
   .obj-mode-row {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
@@ -417,7 +416,6 @@
   }
   .obj-action-row { display: flex; gap: 8px; }
 
-  /* UDL hint box */
   .udl-hint {
     background: var(--green-dim); border: 1px solid var(--green);
     border-radius: 6px; padding: 8px 12px;
@@ -445,18 +443,15 @@
 
 <div id="content">
 
-  <!-- Stats -->
   <div class="stats-row" id="statsRow">
     <div class="stat-block"><span class="stat-num" id="statPending">—</span><span class="stat-label">Pending</span></div>
     <div class="stat-block"><span class="stat-num" id="statLive">—</span><span class="stat-label">Live Now</span></div>
     <div class="stat-block"><span class="stat-num" id="statTotal">—</span><span class="stat-label">All Time</span></div>
   </div>
 
-  <!-- Quick links -->
   <a class="display-link" href="display.html" target="_blank">▶ Open TV Display</a>
   <a class="display-link" href="mobile.html" target="_blank">📱 Open Mobile View</a>
 
-  <!-- Pending approval queue -->
   <div>
     <div class="section-label">⏳ Pending Approval</div>
     <div class="card">
@@ -466,7 +461,6 @@
     </div>
   </div>
 
-  <!-- Live approved posts -->
   <div>
     <div class="section-label">✓ Live on Board</div>
     <div class="card">
@@ -476,7 +470,7 @@
     </div>
   </div>
 
-  <!-- Teacher quick post -->
+  <!-- ── 6-LINE TEACHER POST ── -->
   <div>
     <div class="section-label">📢 Post Direct Message</div>
     <div class="card">
@@ -489,6 +483,9 @@
         <input class="form-field" id="tLine1" placeholder="Line 1 (required)" maxlength="28">
         <input class="form-field" id="tLine2" placeholder="Line 2 (optional)" maxlength="28">
         <input class="form-field" id="tLine3" placeholder="Line 3 (optional)" maxlength="28">
+        <input class="form-field" id="tLine4" placeholder="Line 4 (optional)" maxlength="28">
+        <input class="form-field" id="tLine5" placeholder="Line 5 (optional)" maxlength="28">
+        <input class="form-field" id="tLine6" placeholder="Line 6 (optional)" maxlength="28">
         <div class="form-row">
           <div class="form-hint" style="margin:0;flex-shrink:0">Expires after</div>
           <select class="expire-select" id="tExpire">
@@ -504,7 +501,6 @@
     </div>
   </div>
 
-  <!-- ══ PERIOD OBJECTIVES — updated ══ -->
   <div>
     <div class="section-label">📋 Period Objectives</div>
     <div class="card">
@@ -518,7 +514,6 @@
     </div>
   </div>
 
-  <!-- Screen toggles -->
   <div>
     <div class="section-label">🎛 Screen Toggles</div>
     <div class="card">
@@ -532,7 +527,6 @@
     </div>
   </div>
 
-  <!-- Honor roll upload -->
   <div>
     <div class="section-label">🏆 Honor Roll</div>
     <div class="card">
@@ -551,7 +545,6 @@
     </div>
   </div>
 
-  <!-- Slide editor -->
   <div>
     <div class="section-label">🎬 Slide Editor</div>
     <div class="card">
@@ -568,7 +561,7 @@
     </div>
   </div>
 
-  <!-- Birthday manager -->
+  <!-- ── BIRTHDAY MANAGER: FIXED DAY DROPDOWN ── -->
   <div>
     <div class="section-label">🎂 Birthday Manager</div>
     <div class="card">
@@ -591,7 +584,17 @@
           </select>
           <select class="expire-select" id="bdDay" style="flex:1">
             <option value="">Day</option>
-            ${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            <option value="13">13</option><option value="14">14</option><option value="15">15</option>
+            <option value="16">16</option><option value="17">17</option><option value="18">18</option>
+            <option value="19">19</option><option value="20">20</option><option value="21">21</option>
+            <option value="22">22</option><option value="23">23</option><option value="24">24</option>
+            <option value="25">25</option><option value="26">26</option><option value="27">27</option>
+            <option value="28">28</option><option value="29">29</option><option value="30">30</option>
+            <option value="31">31</option>
           </select>
           <button class="btn btn-approve" onclick="addBirthday()">Add</button>
         </div>
@@ -600,7 +603,6 @@
     </div>
   </div>
 
-  <!-- Custom countdowns -->
   <div>
     <div class="section-label">⏱ Custom Countdowns</div>
     <div class="card">
@@ -612,14 +614,10 @@
         <div class="form-row">
           <input class="form-field" id="cdDate" type="date" style="flex:1;margin:0">
           <select class="expire-select" id="cdEmoji">
-            <option value="📅">📅</option>
-            <option value="🎓">🎓</option>
-            <option value="🏆">🏆</option>
-            <option value="🎉">🎉</option>
-            <option value="🚌">🚌</option>
-            <option value="🎭">🎭</option>
-            <option value="⚽">⚽</option>
-            <option value="🎸">🎸</option>
+            <option value="📅">📅</option><option value="🎓">🎓</option>
+            <option value="🏆">🏆</option><option value="🎉">🎉</option>
+            <option value="🚌">🚌</option><option value="🎭">🎭</option>
+            <option value="⚽">⚽</option><option value="🎸">🎸</option>
           </select>
         </div>
         <button class="btn btn-approve" style="width:100%;margin-top:4px" onclick="addCountdown()">Add Countdown</button>
@@ -628,7 +626,6 @@
     </div>
   </div>
 
-  <!-- Events & Countdowns -->
   <div>
     <div class="section-label">📅 Events &amp; Countdowns</div>
     <div class="card">
@@ -661,9 +658,8 @@
     </div>
   </div>
 
-</div><!-- /#content -->
+</div>
 
-<!-- Slide edit modal -->
 <div class="modal-overlay" id="slideModal" onclick="closeSlideModal(event)">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
@@ -679,7 +675,6 @@
 <script>
 document.getElementById('roomBadge').textContent = 'ROOM ' + CLASSROOM_CONFIG.room;
 
-/* ════ THEME ════ */
 (function() {
   const saved = localStorage.getItem('cw-theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
@@ -714,7 +709,6 @@ function setSyncStatus(state, label) {
   document.getElementById('syncLabel').textContent = label;
 }
 
-/* ════ TIME HELPERS ════ */
 function timeAgo(iso) {
   const diff = Math.floor((new Date() - new Date(iso)) / 60000);
   if (diff < 1)  return 'just now';
@@ -739,7 +733,6 @@ function expiresClass(iso) {
   return diff < 120 ? 'expires-soon' : '';
 }
 
-/* ════ LOAD DATA ════ */
 async function loadAll() {
   setSyncStatus('', 'Loading...');
   try {
@@ -763,13 +756,12 @@ async function loadStats() {
   document.getElementById('statTotal').textContent   = total?.length ?? '—';
 }
 
-/* ════ PENDING QUEUE ════ */
 async function loadPending() {
   const rows = await cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.pending&order=created_at.asc`);
   const el = document.getElementById('pendingQueue');
   if (!rows || !rows.length) { el.innerHTML = '<div class="empty-state">No pending posts</div>'; return; }
   el.innerHTML = rows.map(r => {
-    const lines = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
+    const lines = [r.line1, r.line2, r.line3, r.line4, r.line5, r.line6].filter(l => l && l.trim()).join('<br>');
     const sender = r.sender || 'Anonymous';
     return `<div class="pending-item" id="pending-${r.id}">
       <div class="pending-sender">From ${sender}</div>
@@ -806,14 +798,13 @@ async function denyPost(id) {
   else { showToast('Error denying post', true); if (btn) { btn.disabled = false; btn.textContent = '✕ Deny'; } }
 }
 
-/* ════ APPROVED LIST ════ */
 async function loadApproved() {
   const now  = new Date().toISOString();
   const rows = await cwSupabaseFetch(`cw_messages?room=eq.${CW.room}&status=eq.approved&expires_at=gt.${now}&order=created_at.desc`);
   const el = document.getElementById('approvedList');
   if (!rows || !rows.length) { el.innerHTML = '<div class="empty-state">No live posts right now</div>'; return; }
   el.innerHTML = rows.map(r => {
-    const lines = [r.line1, r.line2, r.line3].filter(l => l && l.trim()).join('<br>');
+    const lines = [r.line1, r.line2, r.line3, r.line4, r.line5, r.line6].filter(l => l && l.trim()).join('<br>');
     const sender = r.sender || 'Anonymous';
     const expCls = expiresClass(r.expires_at);
     return `<div class="approved-item" id="approved-${r.id}">
@@ -839,28 +830,28 @@ async function killPost(id) {
   } else { showToast('Error removing post', true); if (btn) { btn.disabled = false; btn.textContent = '⚡ Remove Now'; } }
 }
 
-/* ════ TEACHER DIRECT POST ════ */
+/* ── TEACHER POST: 6 LINES ── */
 async function postTeacherMessage() {
   const line1 = (document.getElementById('tLine1')?.value || '').trim().toUpperCase();
   const line2 = (document.getElementById('tLine2')?.value || '').trim().toUpperCase();
   const line3 = (document.getElementById('tLine3')?.value || '').trim().toUpperCase();
+  const line4 = (document.getElementById('tLine4')?.value || '').trim().toUpperCase();
+  const line5 = (document.getElementById('tLine5')?.value || '').trim().toUpperCase();
+  const line6 = (document.getElementById('tLine6')?.value || '').trim().toUpperCase();
   const hours = parseInt(document.getElementById('tExpire')?.value || '24');
   const btn   = document.querySelector('.btn-post');
   if (!line1) { document.getElementById('tLine1').focus(); showToast('Line 1 is required', true); return; }
   if (btn) { btn.disabled = true; btn.textContent = 'Posting...'; }
   const expiresAt = new Date(Date.now() + hours * 3600000).toISOString();
-  const res = await cwSupabasePost('cw_messages', { room:CW.room, sender:CLASSROOM_CONFIG.teacher, line1, line2, line3, status:'approved', active:true, expires_at:expiresAt, expire_hours:hours });
+  const res = await cwSupabasePost('cw_messages', { room:CW.room, sender:CLASSROOM_CONFIG.teacher, line1, line2, line3, line4, line5, line6, status:'approved', active:true, expires_at:expiresAt, expire_hours:hours });
   if (res) {
-    document.getElementById('tLine1').value = '';
-    document.getElementById('tLine2').value = '';
-    document.getElementById('tLine3').value = '';
+    ['tLine1','tLine2','tLine3','tLine4','tLine5','tLine6'].forEach(id => { document.getElementById(id).value = ''; });
     showToast('✓ Posted — live for ' + hours + 'h');
     await loadAll();
   } else { showToast('Error posting message', true); }
   if (btn) { btn.disabled = false; btn.textContent = 'Post to Board Now'; }
 }
 
-/* ════ SCREEN TOGGLES ════ */
 const SCREEN_LABELS = {
   calendar:'Calendar', schedule:'Schedule', birthday:'Birthdays',
   countdown:'Countdowns', weather:'Weather', menu:'Menu',
@@ -887,7 +878,6 @@ function toggleScreen(key, enabled) {
   showToast((enabled ? '✓ ' : '✕ ') + SCREEN_LABELS[key] + (enabled ? ' enabled' : ' disabled'));
 }
 
-/* ════ HONOR ROLL ════ */
 async function loadHonorRollCount() {
   const rows = await cwFetchHonorRoll();
   document.getElementById('honorRollCount').textContent = rows ? rows.length + ' students' : '0 students';
@@ -907,7 +897,7 @@ async function uploadHonorRoll(input) {
   const parsed = [];
   for (let i = 1; i < rows.length; i++) {
     const cols  = rows[i].replace(/\r/g,'').split(',');
-    const clean = c => (cols[c]||'').replace(/^"|"$/g,'').trim();
+    const clean = c => (cols[c]||''). replace(/^"|"$/g,'').trim();
     const name  = clean(nameIdx);
     const grade = clean(gradeIdx);
     if (name && grade) parsed.push({ room: CW.room, name, grade, active: true, quarter: 'Q3' });
@@ -925,7 +915,6 @@ async function uploadHonorRoll(input) {
   } catch(e) { showToast('Upload error — try again', true); document.getElementById('uploadLabel').textContent = 'Tap to select CSV file'; }
 }
 
-/* ════ CUSTOM COUNTDOWNS ════ */
 async function loadCountdowns() {
   const rows = await cwSupabaseFetch(`cw_countdowns?room=eq.${CW.room}&active=eq.true&order=date.asc`);
   const el = document.getElementById('countdownList');
@@ -935,8 +924,8 @@ async function loadCountdowns() {
     const label = days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : days + ' days';
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
       <div>
-        <div style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text)">${r.emoji} ${r.label}</div>
-        <div style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px">${r.date} · ${label}</div>
+        <div style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text)">${r.emoji} ${r.label}</div>
+        <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px">${r.date} · ${label}</div>
       </div>
       <button class="btn btn-kill" onclick="removeCountdown('${r.id}')">✕</button>
     </div>`;
@@ -959,7 +948,6 @@ async function removeCountdown(id) {
   else { showToast('Error removing', true); }
 }
 
-/* ════ SLIDE EDITOR ════ */
 const MON_NAMES = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const SLOT_LABELS = {
   calendar:'Calendar Feed', schedule:'Bell Schedule', birthday:'Birthdays',
@@ -1055,7 +1043,7 @@ function editSlide(id) {
     <div class="form-row" style="margin-top:4px">
       <div class="form-hint" style="margin:0">Speed (seconds)</div>
       <select class="expire-select" id="sSpeed">
-        ${[6,8,10,12,15,18,20,25,30].map(v => `<option value="${v}"${s.speed==v?' selected':''}>${v}s</option>`).join('')}
+        ${[6,8,10,12,15,18,20,25,30].map(v => `<option value="${v}"${s.speed==v?' selected':''}}>${v}s</option>`).join('')}
       </select>
     </div>
     <button class="btn btn-approve" style="width:100%;margin-top:12px" onclick="saveSlide('${id}')">Save Screen</button>
@@ -1085,7 +1073,7 @@ function openAddSlide() {
     <div class="form-row" style="margin-top:4px">
       <div class="form-hint" style="margin:0">Speed (seconds)</div>
       <select class="expire-select" id="sSpeed">
-        ${[6,8,10,12,15,18,20,25,30].map(v => `<option value="${v}"${v===10?' selected':''}>${v}s</option>`).join('')}
+        ${[6,8,10,12,15,18,20,25,30].map(v => `<option value="${v}"${v===10?' selected':''}}>${v}s</option>`).join('')}
       </select>
     </div>
     <button class="btn btn-approve" style="width:100%;margin-top:12px" onclick="createSlide()">Add Screen</button>
@@ -1110,7 +1098,6 @@ function closeSlideModal(e) {
   document.body.style.overflow = '';
 }
 
-/* ════ BIRTHDAY MANAGER ════ */
 let birthdayData = [];
 
 async function loadBirthdays() {
@@ -1154,10 +1141,6 @@ async function removeBirthday(id) {
   else { showToast('Error removing birthday', true); }
 }
 
-/* ════════════════════════════════════════════════════════
-   PERIOD OBJECTIVES — simplified to 3 fields
-   Title (28) + Today's Objective (80) + You've got it when (80)
-════════════════════════════════════════════════════════ */
 const PERIODS = ['P1','P2','P3','P4','P5','P6','P7'];
 let objData         = {};
 let objActivePeriod = null;
@@ -1221,27 +1204,21 @@ function renderObjectivesEditor(currentKey) {
 
   el.innerHTML = `
     <div class="obj-period-tabs">${tabs}</div>
-
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div class="form-hint" style="margin:0">${objActivePeriod} Objectives</div>
       <span class="obj-status-badge ${status}">${status==='live'?'● Live':status==='scheduled'?'📅 Scheduled':'○ Not set'}</span>
     </div>
-
     <div class="udl-hint" style="margin-bottom:10px">
       UDL best practice: State what students are doing today and what success looks like so they can self-assess.
     </div>
-
     <div class="obj-form">
-
       <div class="form-hint">Period Title (28 chars)</div>
       <input class="obj-title-input" id="objTitle"
         placeholder="${objActivePeriod} · TODAY'S LESSON"
         maxlength="28" value="${obj.title||''}"
         oninput="updateObjCharCount('objTitleCount', this.value, 28)">
       <div class="obj-char-count" id="objTitleCount">${(obj.title||'').length}/28</div>
-
       <hr class="obj-section-divider">
-
       <div class="form-hint">Today's Objective (80 chars)</div>
       <div class="obj-line-wrap">
         <span class="obj-bullet">▸</span>
@@ -1251,9 +1228,7 @@ function renderObjectivesEditor(currentKey) {
           oninput="updateObjCharCount('objCount1', this.value, 80)">
       </div>
       <div class="obj-char-count" id="objCount1">${(obj.line1||'').length}/80</div>
-
       <hr class="obj-section-divider">
-
       <div class="form-hint" style="color:var(--green)">You've got it when... (80 chars)</div>
       <div class="obj-line-wrap">
         <span class="obj-bullet success">✓</span>
@@ -1263,14 +1238,12 @@ function renderObjectivesEditor(currentKey) {
           oninput="updateObjCharCount('objCount2', this.value, 80)">
       </div>
       <div class="obj-char-count" id="objCount2">${(obj.line2||'').length}/80</div>
-
       <div class="obj-date-row">
         <span class="obj-date-label">Date</span>
         <input type="date" class="obj-date-input" id="objDate"
           value="${obj.scheduled_date||today}" min="${today}">
         <span class="obj-date-hint">Today = live now · future date = pre-load</span>
       </div>
-
       <div class="obj-mode-row">
         <span class="obj-mode-label">Show mode</span>
         <select class="obj-mode-select" id="objMode" onchange="toggleTimedField()">
@@ -1279,10 +1252,9 @@ function renderObjectivesEditor(currentKey) {
           <option value="manual"${obj.display_mode==='manual'?' selected':''}>Manual — until I turn it off</option>
         </select>
         <select id="objTimedMinutes" style="display:${obj.display_mode==='timed'?'block':'none'}">
-          ${[5,10,15,20].map(m=>`<option value="${m}"${obj.timed_minutes==m?' selected':''}>${m} min</option>`).join('')}
+          ${[5,10,15,20].map(m=>`<option value="${m}"${obj.timed_minutes==m?' selected':''}}>${m} min</option>`).join('')}
         </select>
       </div>
-
       <div class="obj-action-row">
         <button class="btn btn-approve" style="flex:1" onclick="saveObjectives()">
           ${status==='inactive'?'▶ Save & Go Live':status==='scheduled'?'📅 Update Schedule':'✓ Update & Keep Live'}
@@ -1290,7 +1262,6 @@ function renderObjectivesEditor(currentKey) {
         ${status!=='inactive'?`<button class="btn btn-kill" onclick="clearObjectives()">Stop Showing</button>`:''}
         <button class="btn btn-secondary" onclick="clearObjForm()">Clear Form</button>
       </div>
-
       ${status==='scheduled'?`<div style="font-family:var(--font-mono);font-size:9px;color:var(--orange);letter-spacing:0.1em;text-align:center;padding:4px 0">Scheduled for ${obj.scheduled_date} · Won't show until that date</div>`:''}
     </div>`;
 }
@@ -1318,20 +1289,15 @@ async function saveObjectives() {
   const title  = (document.getElementById('objTitle')?.value || '').trim();
   const line1  = (document.getElementById('objLine1')?.value || '').trim();
   const line2  = (document.getElementById('objLine2')?.value || '').trim();
-
   if (!line1) { showToast("Today's Objective is required", true); return; }
-
   const body = {
-    title,
-    line1,   // Today's Objective
-    line2,   // You've got it when...
+    title, line1, line2,
     line3: '', line4: '', line5: '', line6: '',
     display_mode:  document.getElementById('objMode')?.value || 'always',
     timed_minutes: parseInt(document.getElementById('objTimedMinutes')?.value || '10'),
     active:        true,
     updated_at:    new Date().toISOString(),
   };
-
   const existing = objData[period];
   let res;
   if (existing?.id) {
@@ -1339,7 +1305,6 @@ async function saveObjectives() {
   } else {
     res = await cwSupabasePost('cw_objectives', { ...body, room: CW.room, period });
   }
-
   if (res) {
     objData[period] = { ...(existing||{}), ...body, period };
     showToast('✓ ' + period + ' objectives live on board');
@@ -1365,7 +1330,6 @@ function clearObjForm() {
   document.getElementById('objCount2').textContent     = '0/80';
 }
 
-/* ════ EVENTS & COUNTDOWNS ════ */
 async function loadEventsList() {
   const wrap = document.getElementById('events-list');
   if (!wrap) return;
@@ -1382,7 +1346,7 @@ async function loadEventsList() {
       const pastStyle = days < 0 ? 'opacity:0.4;' : '';
       return `<div style="display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--border);${pastStyle}">
         <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);min-width:80px;">${e.date}</span>
-        <span style="font-family:var(--font-mono);font-size:12px;font-weight:700;color:var(--text);flex:1;">${e.label}</span>
+        <span style="font-family:var(--font-mono);font-size:13px;font-weight:700;color:var(--text);flex:1;">${e.label}</span>
         <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);min-width:50px;text-align:right;">${dayStr}</span>
         <button onclick="deleteEvent('${e.id}')" style="background:none;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:0 4px;line-height:1;">×</button>
       </div>`;
@@ -1432,7 +1396,6 @@ function clearEventsCSV() {
   if (status) { status.textContent = ''; status.style.color = ''; }
 }
 
-/* ════ INIT ════ */
 buildToggles();
 loadAll();
 loadSlides();
