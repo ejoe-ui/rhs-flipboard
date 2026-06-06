@@ -1,0 +1,22 @@
+{
+  "name": "Cowboy Wire · Riverdale High School",
+  "short_name": "Cowboy Wire",
+  "description": "RHS Classroom Display — Room 27",
+  "start_url": "/rhs-flipboard/display.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0d0d0d",
+  "theme_color": "#005640",
+  "icons": [
+    {
+      "src": "RHSCOWBOYlogo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "RHSCOWBOYlogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
