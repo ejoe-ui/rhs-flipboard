@@ -16,7 +16,6 @@
     --font-mono:    'DM Mono', 'Courier New', monospace;
   }
 
-  /* ══ LIGHT MODE ══ */
   [data-theme="light"] {
     --green:        #005640;
     --green-dark:   #003d2e;
@@ -36,20 +35,19 @@
     --toggle-text:  #f0ebe0;
   }
 
-  /* ══ DARK MODE ══ */
   [data-theme="dark"] {
     --green:        #00a86b;
     --green-dark:   #007a4d;
     --green-light:  #002a1a;
     --tan:          #C4BEB5;
-    --bg:           #0a0a0a;
-    --surface:      #111111;
-    --surface2:     #181818;
-    --border:       #2a2a2a;
+    --bg:           #1a1a1a;
+    --surface:      #242424;
+    --surface2:     #2c2c2c;
+    --border:       #383838;
     --text:         #f0ebe0;
-    --text-mid:     #888880;
-    --text-dim:     #444440;
-    --header-bg:    #050505;
+    --text-mid:     #aaa8a0;
+    --text-dim:     #686860;
+    --header-bg:    #141414;
     --header-text:  #f0ebe0;
     --shadow:       rgba(0,0,0,0.4);
     --toggle-bg:    #f0ebe0;
@@ -63,7 +61,6 @@
     transition: background 0.2s, color 0.2s;
   }
 
-  /* ══ HEADER ══ */
   header {
     background: var(--header-bg);
     padding: 20px 40px 18px;
@@ -121,14 +118,12 @@
     background: linear-gradient(90deg, var(--green-dark), var(--green), var(--tan), var(--green), var(--green-dark));
   }
 
-  /* ══ MAIN ══ */
   main {
     padding: 32px 40px;
     display: flex; flex-direction: column; gap: 36px;
     max-width: 1400px; margin: 0 auto;
   }
 
-  /* ══ SECTION ══ */
   .section-head  { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
   .section-pip   { width: 12px; height: 12px; border-radius: 2px; background: var(--green); flex-shrink: 0; }
   .section-pip.muted { background: var(--text-dim); }
@@ -144,7 +139,6 @@
   }
   .section-rule  { flex: 1; height: 1px; background: var(--border); }
 
-  /* ══ CARDS ══ */
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 12px; }
 
   .link-card {
@@ -206,7 +200,6 @@
   .qr-panel.open { display: flex; }
   .qr-label { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); }
 
-  /* ══ FOOTER ══ */
   footer {
     background: var(--header-bg); border-top: 3px solid var(--green);
     padding: 16px 40px;
@@ -216,7 +209,6 @@
   .footer-text { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: #555; }
   .footer-text span { color: var(--green); }
 
-  /* ══ RESPONSIVE ══ */
   @media (max-width: 700px) {
     header { padding: 16px; flex-wrap: wrap; }
     main   { padding: 20px 16px; gap: 28px; }
@@ -278,7 +270,6 @@
 </footer>
 
 <script>
-/* ════ THEME ════ */
 (function() {
   const saved = localStorage.getItem('cw-theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
@@ -299,7 +290,6 @@ function updateToggleLabel(theme) {
   if (btn) btn.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
 }
 
-/* ════ DATA ════ */
 const COWBOY = [
   {
     icon:'📺', name:'TV Display',
@@ -318,8 +308,8 @@ const COWBOY = [
     dark: { bg:'#002a1a', fg:'#00a86b', br:'#00562a', ac:'#00a86b' },
   },
   {
-    icon:'⚙️', name:'Admin Panel',
-    desc:'Teacher dashboard. Approve posts, manage slides, add birthdays, post direct messages, upload honor roll, add countdowns.',
+    icon:'🎛', name:'The Switchboard',
+    desc:'Teacher dashboard for Cowboy Wire. Approve posts, manage slides, add birthdays, post direct messages, upload honor roll, add countdowns.',
     url:'https://ejoe-ui.github.io/rhs-flipboard/admin.html',
     badge:'Teacher Only',
     light:{ bg:'#fdf8e8', fg:'#7a5a00', br:'#ddc870', ac:'#7a5a00' },
@@ -337,7 +327,7 @@ const COWBOY = [
 
 const PASSABLE = [
   {
-    icon:'🎓', name:'Teacher Dashboard',
+    icon:'🚉', name:'The Relay Station',
     desc:'Issue passes, view students out, return passes, and manage your class.',
     url:'https://hall-pass-lime.vercel.app/teacher',
     badge:'Teacher',
@@ -370,7 +360,6 @@ const PASSABLE = [
   },
 ];
 
-/* ════ RENDER ════ */
 let qc = 0;
 
 function renderCards() {
@@ -410,7 +399,6 @@ function buildCard(p, th) {
   return a;
 }
 
-/* ════ QR + COPY ════ */
 function toggleQR(e, id, url) {
   e.preventDefault(); e.stopPropagation();
   const panel  = document.getElementById(id);
@@ -433,7 +421,6 @@ function copyUrl(e, btn, url) {
   });
 }
 
-/* ════ CLOCK ════ */
 function tick() {
   const now = new Date(); let h = now.getHours();
   const m   = now.getMinutes().toString().padStart(2,'0');
