@@ -95,22 +95,22 @@ const SCHEDULES = {
   BLOCK_WED: {
     label: 'BLOCK DAY · 1-3-5-7',
     periods: [
-      { name: 'P1/P2',  start: '8:10',  end: '9:57'  },
+      { name: 'P1',  start: '8:10',  end: '9:57'  },
       { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
-      { name: 'P3/P4',  start: '10:16', end: '11:59' },
+      { name: 'P3',  start: '10:16', end: '11:59' },
       { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
-      { name: 'P5/P6',  start: '12:37', end: '2:20'  },
+      { name: 'P5',  start: '12:37', end: '2:20'  },
       { name: 'P7',     start: '2:24',  end: '3:15'  },
     ],
   },
   BLOCK_THU: {
     label: 'BLOCK DAY · 2-4-6-7',
     periods: [
-      { name: 'P1/P2',  start: '8:10',  end: '9:57'  },
+      { name: 'P2',  start: '8:10',  end: '9:57'  },
       { name: 'BRUNCH', start: '9:57',  end: '10:12', break: true },
-      { name: 'P3/P4',  start: '10:16', end: '11:59' },
+      { name: 'P4',  start: '10:16', end: '11:59' },
       { name: 'LUNCH',  start: '11:59', end: '12:33', break: true },
-      { name: 'P5/P6',  start: '12:37', end: '2:20'  },
+      { name: 'P6',  start: '12:37', end: '2:20'  },
       { name: 'P7',     start: '2:24',  end: '3:15'  },
     ],
   },
